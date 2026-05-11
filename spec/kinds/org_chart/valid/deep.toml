@@ -1,0 +1,31 @@
+kind = "org_chart"
+title = "Engineering Division"
+
+[[nodes]]
+id = "vp"
+label = "VP of Engineering"
+
+[[nodes]]
+id = "backend"
+label = "Backend Team"
+parent = "vp"
+
+[[nodes]]
+id = "frontend"
+label = "Frontend Team"
+parent = "vp"
+
+[[nodes]]
+id = "be1"
+label = "Alice"
+parent = "backend"
+
+[[nodes]]
+id = "be2"
+label = "Bob"
+parent = "backend"
+
+[[nodes]]
+id = "fe1"
+label = "Carol"
+parent = "frontend"

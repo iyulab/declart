@@ -23,7 +23,7 @@ A cycle diagram. Items are arranged as steps in a closed loop, connected by dire
 - The last item connects back to the first item, forming a closed loop.
 - Directional arrows point clockwise between adjacent nodes.
 - Each node is a rectangular box centered on its position.
-- Colors cycle through the apex-to-base gradient across all nodes.
+- Colors cycle through the apex-to-base gradient across all nodes. Colors are positional decorators — they do not indicate importance or priority among steps in the cycle.
 
 ## Example
 

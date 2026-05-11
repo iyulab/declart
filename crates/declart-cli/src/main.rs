@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use declart_core::render::{Theme, DEFAULT_THEME, MONOCHROME_THEME};
+use declart_core::render::{Theme, ACCESSIBLE_THEME, DEFAULT_THEME, MONOCHROME_THEME, WARM_THEME};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -21,7 +21,7 @@ enum Commands {
         /// Output file [default: input with format extension]
         #[arg(short, long)]
         output: Option<PathBuf>,
-        /// Theme to use for rendering [default, monochrome]
+        /// Theme to use for rendering [default, monochrome, accessible, warm]
         #[arg(long, default_value = "default")]
         theme: String,
         /// Override canvas width in pixels (height scales proportionally)
@@ -41,7 +41,7 @@ enum Commands {
     },
     /// Print a starter TOML declaration for a diagram kind
     Init {
-        /// Diagram kind: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone
+        /// Diagram kind: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone, org_chart, funnel
         kind: String,
     },
     /// Watch a file and re-render on every change
@@ -51,7 +51,7 @@ enum Commands {
         /// Output file [default: input with format extension]
         #[arg(short, long)]
         output: Option<PathBuf>,
-        /// Theme to use for rendering [default, monochrome]
+        /// Theme to use for rendering [default, monochrome, accessible, warm]
         #[arg(long, default_value = "default")]
         theme: String,
         /// Override canvas width in pixels (height scales proportionally)
@@ -95,7 +95,7 @@ fn run() -> Result<()> {
         Commands::Init { kind } => {
             let template = init_template(&kind).with_context(|| {
                 format!(
-                    "unknown kind `{}`\n  = hint: Available kinds: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone",
+                    "unknown kind `{}`\n  = hint: Available kinds: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone, org_chart, funnel",
                     kind
                 )
             })?;
@@ -185,8 +185,10 @@ fn resolve_theme(name: &str) -> Result<&'static declart_core::render::Theme> {
     match name {
         "default" => Ok(&DEFAULT_THEME),
         "monochrome" => Ok(&MONOCHROME_THEME),
+        "accessible" => Ok(&ACCESSIBLE_THEME),
+        "warm" => Ok(&WARM_THEME),
         other => anyhow::bail!(
-            "unknown theme `{}`\n  = hint: Available themes: default, monochrome",
+            "unknown theme `{}`\n  = hint: Available themes: default, monochrome, accessible, warm",
             other
         ),
     }
@@ -320,6 +322,39 @@ label = "Cause B"
 
 [[causes]]
 label = "Cause C"
+"#,
+        ),
+        "org_chart" => Some(
+            r#"kind = "org_chart"
+title = "My Org Chart"
+
+[[nodes]]
+id = "root"
+label = "CEO"
+
+[[nodes]]
+id = "left"
+label = "CTO"
+parent = "root"
+
+[[nodes]]
+id = "right"
+label = "CFO"
+parent = "root"
+"#,
+        ),
+        "funnel" => Some(
+            r#"kind = "funnel"
+title = "My Funnel"
+
+[[items]]
+label = "Stage 1"
+
+[[items]]
+label = "Stage 2"
+
+[[items]]
+label = "Stage 3"
 "#,
         ),
         _ => None,

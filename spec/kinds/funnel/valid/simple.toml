@@ -1,0 +1,14 @@
+kind = "funnel"
+title = "Marketing Funnel"
+
+[[items]]
+label = "Awareness"
+
+[[items]]
+label = "Interest"
+
+[[items]]
+label = "Consideration"
+
+[[items]]
+label = "Conversion"

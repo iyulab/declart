@@ -1,0 +1,5 @@
+kind = "hub_spoke"
+center = "Hub"
+
+[[spokes]]
+label = "Lone Spoke"

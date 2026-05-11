@@ -1,7 +1,7 @@
 mod raw;
 
 use crate::error::DeclartError;
-use crate::model::{Diagram, Emphasis, FishboneCause, FishboneDiagram, HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram, TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet};
+use crate::model::{Diagram, Emphasis, FishboneCause, FishboneDiagram, HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram, OrgChartDiagram, OrgChartNode, TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet};
 
 /// Parses a TOML declaration string into a validated [`Diagram`].
 ///
@@ -11,7 +11,7 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
     let probe: raw::KindProbe = toml::from_str(input)?;
 
     match probe.kind.as_str() {
-        "pyramid" | "process" | "cycle" => {
+        "pyramid" | "process" | "cycle" | "funnel" => {
             let raw: raw::RawItemsDiagram = toml::from_str(input)?;
             validate_items(raw)
         }
@@ -34,6 +34,10 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
         "fishbone" => {
             let raw: raw::RawFishboneDiagram = toml::from_str(input)?;
             validate_fishbone(raw)
+        }
+        "org_chart" => {
+            let raw: raw::RawOrgChartDiagram = toml::from_str(input)?;
+            validate_org_chart(raw)
         }
         other => Err(DeclartError::UnknownKind(other.to_string())),
     }
@@ -67,8 +71,12 @@ fn validate_items(raw: raw::RawItemsDiagram) -> Result<Diagram, DeclartError> {
         return Err(DeclartError::EmptyItems);
     }
     let kind_str = raw.kind.as_str();
-    if kind_str == "cycle" && raw.items.len() < 2 {
-        return Err(DeclartError::TooFewItems { kind: "cycle", min: 2, got: raw.items.len() });
+    let n_items = raw.items.len();
+    if kind_str == "cycle" && n_items < 2 {
+        return Err(DeclartError::TooFewItems { kind: "cycle", min: 2, got: n_items });
+    }
+    if kind_str == "funnel" && n_items < 2 {
+        return Err(DeclartError::TooFewItems { kind: "funnel", min: 2, got: n_items });
     }
     let items = parse_items(raw.items)?;
     let inner = ItemsDiagram { title: raw.title, items };
@@ -76,6 +84,7 @@ fn validate_items(raw: raw::RawItemsDiagram) -> Result<Diagram, DeclartError> {
         "pyramid" => Diagram::Pyramid(inner),
         "process" => Diagram::Process(inner),
         "cycle" => Diagram::Cycle(inner),
+        "funnel" => Diagram::Funnel(inner),
         _ => unreachable!(),
     };
     Ok(diagram)
@@ -212,10 +221,65 @@ fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
     Ok(Diagram::Venn(VennDiagram { title: raw.title, sets, intersections }))
 }
 
+fn validate_org_chart(raw: raw::RawOrgChartDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "org_chart");
+    if raw.nodes.is_empty() {
+        return Err(DeclartError::EmptyItems);
+    }
+    // Validate: exactly one root (no parent), all parent references exist, no cycles.
+    let ids: std::collections::HashSet<&str> = raw.nodes.iter().map(|n| n.id.as_str()).collect();
+    if ids.len() != raw.nodes.len() {
+        return Err(DeclartError::InvalidValue {
+            field: "id".to_string(),
+            value: "(duplicate)".to_string(),
+            hint: "Each node id must be unique within the diagram".to_string(),
+        });
+    }
+    for node in &raw.nodes {
+        if let Some(parent) = &node.parent {
+            if !ids.contains(parent.as_str()) {
+                return Err(DeclartError::InvalidValue {
+                    field: "parent".to_string(),
+                    value: parent.clone(),
+                    hint: "parent must reference an existing node id".to_string(),
+                });
+            }
+            if node.id == *parent {
+                return Err(DeclartError::InvalidValue {
+                    field: "parent".to_string(),
+                    value: parent.clone(),
+                    hint: "A node cannot be its own parent".to_string(),
+                });
+            }
+        }
+    }
+    let roots: Vec<&raw::RawOrgChartNode> = raw.nodes.iter().filter(|n| n.parent.is_none()).collect();
+    if roots.is_empty() {
+        return Err(DeclartError::InvalidValue {
+            field: "parent".to_string(),
+            value: "(all nodes have parents)".to_string(),
+            hint: "Exactly one root node (with no parent) is required".to_string(),
+        });
+    }
+    if roots.len() > 1 {
+        return Err(DeclartError::InvalidValue {
+            field: "parent".to_string(),
+            value: format!("{} root nodes", roots.len()),
+            hint: "Exactly one root node (with no parent) is required".to_string(),
+        });
+    }
+    let nodes = raw.nodes.into_iter().map(|n| OrgChartNode {
+        id: n.id,
+        label: n.label,
+        parent: n.parent,
+    }).collect();
+    Ok(Diagram::OrgChart(OrgChartDiagram { title: raw.title, nodes }))
+}
+
 fn validate_hub_spoke(raw: raw::RawHubSpokeDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "hub_spoke");
-    if raw.spokes.is_empty() {
-        return Err(DeclartError::EmptyItems);
+    if raw.spokes.len() < 2 {
+        return Err(DeclartError::TooFewItems { kind: "hub_spoke", min: 2, got: raw.spokes.len() });
     }
     let spokes = parse_items(raw.spokes)?;
     Ok(Diagram::HubSpoke(HubSpokeDiagram {

@@ -27,3 +27,5 @@
 - [Venn](kinds/venn.md)
 - [Timeline](kinds/timeline.md)
 - [Fishbone](kinds/fishbone.md)
+- [Org Chart](kinds/org_chart.md)
+- [Funnel](kinds/funnel.md)

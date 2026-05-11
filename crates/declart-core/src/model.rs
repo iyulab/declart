@@ -89,6 +89,23 @@ pub struct FishboneDiagram {
     pub causes: Vec<FishboneCause>,
 }
 
+/// A single node in an org chart, identified by a unique string id.
+#[derive(Debug, Clone)]
+pub struct OrgChartNode {
+    /// Unique identifier within the diagram. Referenced by `parent` on child nodes.
+    pub id: String,
+    pub label: String,
+    /// `None` for the root node; references `id` of the parent node for all others.
+    pub parent: Option<String>,
+}
+
+/// Model for the Org Chart kind — hierarchical tree of labeled nodes.
+#[derive(Debug, Clone)]
+pub struct OrgChartDiagram {
+    pub title: Option<String>,
+    pub nodes: Vec<OrgChartNode>,
+}
+
 /// The parsed, validated representation of a diagram declaration.
 #[derive(Debug, Clone)]
 pub enum Diagram {
@@ -100,6 +117,8 @@ pub enum Diagram {
     Venn(VennDiagram),
     Timeline(TimelineDiagram),
     Fishbone(FishboneDiagram),
+    OrgChart(OrgChartDiagram),
+    Funnel(ItemsDiagram),
 }
 
 #[cfg(test)]

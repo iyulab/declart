@@ -132,3 +132,23 @@ fn fishbone_valid_examples_parse_successfully() {
 fn fishbone_invalid_examples_fail_to_parse() {
     assert_invalid_examples("fishbone");
 }
+
+#[test]
+fn org_chart_valid_examples_parse_successfully() {
+    assert_valid_examples("org_chart");
+}
+
+#[test]
+fn org_chart_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("org_chart");
+}
+
+#[test]
+fn funnel_valid_examples_parse_successfully() {
+    assert_valid_examples("funnel");
+}
+
+#[test]
+fn funnel_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("funnel");
+}

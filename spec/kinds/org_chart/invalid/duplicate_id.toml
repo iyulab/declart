@@ -1,0 +1,10 @@
+kind = "org_chart"
+
+[[nodes]]
+id = "a"
+label = "Node A"
+
+[[nodes]]
+id = "a"
+label = "Duplicate"
+parent = "a"

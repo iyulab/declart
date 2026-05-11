@@ -34,8 +34,10 @@ Anchored on the categories PowerPoint SmartArt established, prioritizing what ex
 - Venn — set intersections
 - Timeline — date-anchored events
 - Fishbone / Ishikawa — cause-and-effect
+- Org Chart — hierarchical tree of nodes
+- Funnel — tapered conversion stages (marketing/sales)
 
-Additional kinds (Funnel, Org Chart, Roadmap, etc.) may be considered after the core kinds stabilize.
+Additional kinds (Roadmap, Swimlane, etc.) may be considered after the core kinds stabilize.
 
 ### Output
 
@@ -63,11 +65,13 @@ Explicit boundaries that protect focus:
 
 ## Status
 
+v0.9.0 — Org Chart kind (hierarchical tree), Funnel kind (tapered stages), accessible/warm themes (Okabe-Ito + terracotta), truncate_text() helper (ellipsis for long labels), Hub-Spoke min-2 spokes validation, Phase 8-C research (theme system design + expressiveness levers).
+
 v0.8.0 — Fishbone standard visuals (arrowhead + diagonal sub-items), Matrix quadrant position field, Playground Header/Footer branding, URL permalink, Preview zoom/pan, label_size_min accessibility improvement, Timeline dynamic canvas width.
 
 | Area | Status |
 |------|--------|
-| All 8 diagram kinds | ✅ v0.3 |
+| All 8 original diagram kinds | ✅ v0.3 |
 | Emphasis rendering, `init`, themes, width, error locations | ✅ v0.4 |
 | `declart-core` public API (doc comments, `Theme::by_name`) | ✅ v0.5 |
 | WASM bindings (`declart-wasm`) | ✅ v0.5 |
@@ -87,6 +91,12 @@ v0.8.0 — Fishbone standard visuals (arrowhead + diagonal sub-items), Matrix qu
 | Playground Header/Footer branding (GitHub, Docs, license) | ✅ v0.8 |
 | Playground Preview zoom/pan (wheel + drag + fit) | ✅ v0.8 |
 | Timeline dynamic canvas width (n × 55px minimum spacing) | ✅ v0.8 |
+| accessible theme (Okabe-Ito Blue palette, color-blind safe) | ✅ v0.9 |
+| warm theme (terracotta gradient for consulting decks) | ✅ v0.9 |
+| `truncate_text()` helper (ellipsis for over-width labels in Process) | ✅ v0.9 |
+| Hub-Spoke min 2 spokes validation | ✅ v0.9 |
+| Org Chart kind (hierarchical tree, flat TOML + parent refs) | ✅ v0.9 |
+| Funnel kind (tapered stages, marketing/sales pipelines) | ✅ v0.9 |
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 

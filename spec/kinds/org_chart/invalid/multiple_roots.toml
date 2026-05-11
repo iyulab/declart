@@ -1,0 +1,14 @@
+kind = "org_chart"
+
+[[nodes]]
+id = "root1"
+label = "Root 1"
+
+[[nodes]]
+id = "root2"
+label = "Root 2"
+
+[[nodes]]
+id = "child"
+label = "Child"
+parent = "root1"

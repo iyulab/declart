@@ -1,8 +1,10 @@
 pub(crate) mod cycle;
 pub(crate) mod fishbone;
 pub(crate) mod font;
+pub(crate) mod funnel;
 pub(crate) mod hub_spoke;
 pub(crate) mod matrix;
+pub(crate) mod org_chart;
 pub(crate) mod process;
 pub(crate) mod pyramid;
 mod svg;
@@ -10,7 +12,7 @@ pub mod theme;
 pub(crate) mod timeline;
 pub(crate) mod venn;
 
-pub use theme::{Theme, DEFAULT_THEME, MONOCHROME_THEME};
+pub use theme::{Theme, ACCESSIBLE_THEME, DEFAULT_THEME, MONOCHROME_THEME, WARM_THEME};
 
 use crate::{Diagram, DeclartError};
 
@@ -31,6 +33,8 @@ pub fn render_opts(diagram: &Diagram, theme: &Theme, width: Option<u32>) -> Resu
         Diagram::Venn(d) => venn::render(d, theme),
         Diagram::Timeline(d) => timeline::render(d, theme),
         Diagram::Fishbone(d) => fishbone::render(d, theme),
+        Diagram::OrgChart(d) => org_chart::render(d, theme),
+        Diagram::Funnel(d) => funnel::render(d, theme),
     };
     if let Some(w) = width {
         Ok(apply_width(svg, w))

@@ -243,7 +243,7 @@
   <h1>Declart Playground</h1>
   <p>Edit TOML on the left — see your diagram instantly on the right</p>
   <div class="header-links">
-    <span class="header-badge">v0.8.0</span>
+    <span class="header-badge">v0.9.0</span>
     <a href="https://github.com/iyulab/declart" target="_blank" rel="noopener">GitHub</a>
     <a href="../introduction.html" target="_blank" rel="noopener">Docs</a>
   </div>
@@ -261,6 +261,8 @@
       <option value="venn">Venn — Skills Overlap</option>
       <option value="timeline">Timeline — Product Launch</option>
       <option value="fishbone">Fishbone — Website Performance</option>
+      <option value="org_chart">Org Chart — Engineering Division</option>
+      <option value="funnel">Funnel — Marketing Conversion</option>
     </select>
   </label>
   <label>
@@ -268,6 +270,8 @@
     <select id="theme-select">
       <option value="default">Default</option>
       <option value="monochrome">Monochrome</option>
+      <option value="accessible">Accessible</option>
+      <option value="warm">Warm</option>
     </select>
   </label>
   <span id="status" class="loading">Loading WASM…</span>
@@ -297,7 +301,7 @@
 </div>
 
 <footer>
-  <span>Declart v0.8.0 &nbsp;·&nbsp; MIT License</span>
+  <span>Declart v0.9.0 &nbsp;·&nbsp; MIT License</span>
   <span>
     <a href="https://github.com/iyulab/declart" target="_blank" rel="noopener">GitHub</a>
     &nbsp;·&nbsp;
@@ -466,6 +470,59 @@ label = "Database"
 
 [[causes.items]]
 label = "Slow queries"
+`,
+
+  org_chart: `kind = "org_chart"
+title = "Engineering Division"
+
+[[nodes]]
+id = "vp"
+label = "VP of Engineering"
+
+[[nodes]]
+id = "backend"
+label = "Backend Team"
+parent = "vp"
+
+[[nodes]]
+id = "frontend"
+label = "Frontend Team"
+parent = "vp"
+
+[[nodes]]
+id = "be1"
+label = "Alice"
+parent = "backend"
+
+[[nodes]]
+id = "be2"
+label = "Bob"
+parent = "backend"
+
+[[nodes]]
+id = "fe1"
+label = "Carol"
+parent = "frontend"
+`,
+
+  funnel: `kind = "funnel"
+title = "Marketing Conversion"
+
+[[items]]
+label = "Awareness"
+emphasis = "primary"
+
+[[items]]
+label = "Interest"
+
+[[items]]
+label = "Consideration"
+
+[[items]]
+label = "Intent"
+
+[[items]]
+label = "Conversion"
 `,
 };
 

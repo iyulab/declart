@@ -24,7 +24,7 @@ A process diagram. Items are arranged as sequential steps from left to right. Us
 - Directional arrows connect adjacent boxes, pointing right.
 - Box widths are equal and fill the available canvas width.
 - Canvas width scales to guarantee a minimum box width of 100px.
-- Color interpolates from the first step (left) to the last step (right).
+- Color interpolates from the first step (left) to the last step (right). Colors are positional decorators that help distinguish steps visually — they do not indicate relative importance.
 
 ## Example
 

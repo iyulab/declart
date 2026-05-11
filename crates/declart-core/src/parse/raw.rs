@@ -96,6 +96,24 @@ pub struct RawTimelineEvent {
     pub label: String,
 }
 
+/// Raw representation for the org_chart kind.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawOrgChartDiagram {
+    pub kind: String,
+    pub title: Option<String>,
+    #[serde(default)]
+    pub nodes: Vec<RawOrgChartNode>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawOrgChartNode {
+    pub id: String,
+    pub label: String,
+    pub parent: Option<String>,
+}
+
 /// Raw representation for the fishbone kind.
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]

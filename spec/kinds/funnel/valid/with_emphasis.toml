@@ -1,0 +1,16 @@
+kind = "funnel"
+title = "Sales Pipeline"
+
+[[items]]
+label = "Leads"
+emphasis = "primary"
+
+[[items]]
+label = "Qualified"
+
+[[items]]
+label = "Proposal"
+
+[[items]]
+label = "Closed Won"
+emphasis = "secondary"

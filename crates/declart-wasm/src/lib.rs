@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 /// Renders a TOML diagram declaration to SVG.
 ///
 /// - `input`: TOML declaration string
-/// - `theme`: `"default"` or `"monochrome"` (unknown values fall back to `"default"`)
+/// - `theme`: `"default"`, `"monochrome"`, `"accessible"`, or `"warm"` (unknown values fall back to `"default"`)
 /// - `width`: optional canvas width in pixels (height scales proportionally)
 ///
 /// Returns the SVG string on success, or a `JsError` with a descriptive message on failure.
@@ -30,13 +30,13 @@ pub fn validate(input: &str) -> Result<(), JsError> {
 /// Returns a comma-separated list of supported theme names.
 #[wasm_bindgen]
 pub fn themes() -> String {
-    "default,monochrome".to_string()
+    Theme::names().join(",")
 }
 
 /// Returns a comma-separated list of supported diagram kind names.
 #[wasm_bindgen]
 pub fn kinds() -> String {
-    "pyramid,process,cycle,matrix,hub_spoke,venn,timeline,fishbone".to_string()
+    "pyramid,process,cycle,matrix,hub_spoke,venn,timeline,fishbone,org_chart,funnel".to_string()
 }
 
 #[cfg(test)]
@@ -103,9 +103,11 @@ label = "Item"
     }
 
     #[test]
-    fn kinds_returns_all_eight() {
+    fn kinds_returns_all_supported() {
         let k = kinds();
         assert!(k.contains("pyramid"));
         assert!(k.contains("fishbone"));
+        assert!(k.contains("org_chart"));
+        assert!(k.contains("funnel"));
     }
 }

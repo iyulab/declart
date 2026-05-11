@@ -61,11 +61,20 @@ pub struct Theme {
 
 impl Theme {
     /// Returns the built-in theme matching `name`, or `&DEFAULT_THEME` if unrecognised.
+    ///
+    /// Built-in themes: `"default"`, `"monochrome"`, `"accessible"`, `"warm"`.
     pub fn by_name(name: &str) -> &'static Theme {
         match name {
             "monochrome" => &MONOCHROME_THEME,
+            "accessible" => &ACCESSIBLE_THEME,
+            "warm" => &WARM_THEME,
             _ => &DEFAULT_THEME,
         }
+    }
+
+    /// Returns the names of all built-in themes.
+    pub fn names() -> &'static [&'static str] {
+        &["default", "monochrome", "accessible", "warm"]
     }
 }
 
@@ -107,4 +116,46 @@ pub static MONOCHROME_THEME: Theme = Theme {
         label_size_min: 10.0,
     },
     title_color: Color::new(40, 40, 40),
+};
+
+/// Colorblind-safe theme based on the Okabe-Ito palette (Blue → Sky blue).
+/// Distinguishable under deuteranopia and protanopia.
+/// WCAG AA contrast: #0072B2 on #FFFFFF = 5.1:1.
+pub static ACCESSIBLE_THEME: Theme = Theme {
+    name: "accessible",
+    background: Color::new(255, 255, 255),
+    layers: LayerGradient {
+        apex: Color::new(0, 114, 178),   // Okabe-Ito Blue #0072B2
+        base: Color::new(86, 180, 233),  // Okabe-Ito Sky blue #56B4E9
+    },
+    text: TextColors {
+        on_dark: Color::new(255, 255, 255),
+        on_light: Color::new(0, 74, 115),
+    },
+    typography: Typography {
+        title_size: 18.0,
+        label_size: 14.0,
+        label_size_min: 10.0,
+    },
+    title_color: Color::new(0, 114, 178),
+};
+
+/// Warm terracotta-to-peach gradient. Suitable for consulting and marketing decks.
+pub static WARM_THEME: Theme = Theme {
+    name: "warm",
+    background: Color::new(255, 250, 247),
+    layers: LayerGradient {
+        apex: Color::new(139, 37, 0),    // Deep terracotta #8B2500
+        base: Color::new(244, 193, 161), // Light peach #F4C1A1
+    },
+    text: TextColors {
+        on_dark: Color::new(255, 250, 247),
+        on_light: Color::new(139, 37, 0),
+    },
+    typography: Typography {
+        title_size: 18.0,
+        label_size: 14.0,
+        label_size_min: 10.0,
+    },
+    title_color: Color::new(139, 37, 0),
 };
