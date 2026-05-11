@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use crate::model::ItemsDiagram;
+use crate::model::{Emphasis, ItemsDiagram};
 use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
 const NODE_W: f32 = 110.0;
@@ -96,21 +96,30 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
     for (i, item) in diagram.items.iter().enumerate() {
         let i_f = i as f32;
         let t = if n_f > 1.0 { i_f / (n_f - 1.0) } else { 0.0 };
-        let node_color = theme.layers.apex.interpolate(&theme.layers.base, t);
+        let base_color = theme.layers.apex.interpolate(&theme.layers.base, t);
+        let node_color = match &item.emphasis {
+            Some(Emphasis::Secondary) => base_color.interpolate(&theme.layers.base, 0.3),
+            _ => base_color,
+        };
         let text_color = if node_color.is_dark() {
             &theme.text.on_dark
         } else {
             &theme.text.on_light
+        };
+        let (stroke_color, stroke_width) = match &item.emphasis {
+            Some(Emphasis::Primary) => (theme.background.to_hex(), 3.0_f32),
+            _ => ("none".to_string(), 0.0_f32),
         };
 
         let (nx, ny) = centers[i];
         let x = nx - NODE_W / 2.0;
         let y = ny - NODE_H / 2.0;
 
-        builder.polygon(
+        builder.polygon_stroked(
             &[(x, y), (x + NODE_W, y), (x + NODE_W, y + NODE_H), (x, y + NODE_H)],
             &node_color.to_hex(),
-            "none",
+            &stroke_color,
+            stroke_width,
         );
 
         let available_width = NODE_W * 0.85;
@@ -121,7 +130,8 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
                 .max(theme.typography.label_size_min);
         }
 
-        builder.text(nx, ny, &item.label, &text_color.to_hex(), font_size);
+        let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
+        builder.text_weighted(nx, ny, &item.label, &text_color.to_hex(), font_size, is_bold);
     }
 
     builder.build(&theme.background.to_hex())

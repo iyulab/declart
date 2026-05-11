@@ -35,4 +35,6 @@ When a kind supports item-level emphasis, it uses this field:
 
 The engine decides visual representation. Omitting `emphasis` means default weight.
 
-> **Note:** `emphasis` is parsed and validated but not yet reflected in rendered output. Visual differentiation of emphasized items is planned for v0.4.
+The engine decides visual representation:
+- `primary`: white outline stroke + bold text
+- `secondary`: lighter color tint

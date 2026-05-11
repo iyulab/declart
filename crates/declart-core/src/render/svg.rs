@@ -14,14 +14,24 @@ impl SvgBuilder {
     }
 
     pub fn polygon(&mut self, points: &[(f32, f32)], fill: &str, stroke: &str) {
+        self.polygon_stroked(points, fill, stroke, 0.0);
+    }
+
+    pub fn polygon_stroked(
+        &mut self,
+        points: &[(f32, f32)],
+        fill: &str,
+        stroke: &str,
+        stroke_width: f32,
+    ) {
         let pts: String = points
             .iter()
             .map(|(x, y)| format!("{:.1},{:.1}", x, y))
             .collect::<Vec<_>>()
             .join(" ");
         self.elements.push(format!(
-            r#"<polygon points="{}" fill="{}" stroke="{}" stroke-width="0"/>"#,
-            pts, fill, stroke
+            r#"<polygon points="{}" fill="{}" stroke="{}" stroke-width="{:.1}"/>"#,
+            pts, fill, stroke, stroke_width
         ));
     }
 
@@ -43,6 +53,22 @@ impl SvgBuilder {
         self.elements.push(format!(
             r#"<text x="{:.1}" y="{:.1}" fill="{}" font-size="{:.1}" font-family="Noto Sans, sans-serif" text-anchor="middle" dominant-baseline="middle">{}</text>"#,
             x, y, fill, font_size, escape_xml(content)
+        ));
+    }
+
+    pub fn text_weighted(
+        &mut self,
+        x: f32,
+        y: f32,
+        content: &str,
+        fill: &str,
+        font_size: f32,
+        bold: bool,
+    ) {
+        let weight = if bold { "bold" } else { "normal" };
+        self.elements.push(format!(
+            r#"<text x="{:.1}" y="{:.1}" fill="{}" font-size="{:.1}" font-family="Noto Sans, sans-serif" font-weight="{}" text-anchor="middle" dominant-baseline="middle">{}</text>"#,
+            x, y, fill, font_size, weight, escape_xml(content)
         ));
     }
 

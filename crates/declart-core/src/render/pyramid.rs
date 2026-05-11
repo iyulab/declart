@@ -1,4 +1,4 @@
-use crate::model::ItemsDiagram;
+use crate::model::{Emphasis, ItemsDiagram};
 use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
 const CANVAS_WIDTH: f32 = 600.0;
@@ -31,11 +31,19 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let n_layers = diagram.items.len() as f32;
 
         let t = if n_layers > 1.0 { i_f / (n_layers - 1.0) } else { 0.0 };
-        let layer_color = theme.layers.apex.interpolate(&theme.layers.base, t);
+        let base_color = theme.layers.apex.interpolate(&theme.layers.base, t);
+        let layer_color = match &item.emphasis {
+            Some(Emphasis::Secondary) => base_color.interpolate(&theme.layers.base, 0.3),
+            _ => base_color,
+        };
         let text_color = if layer_color.is_dark() {
             &theme.text.on_dark
         } else {
             &theme.text.on_light
+        };
+        let (stroke_color, stroke_width) = match &item.emphasis {
+            Some(Emphasis::Primary) => (theme.background.to_hex(), 3.0_f32),
+            _ => ("none".to_string(), 0.0_f32),
         };
 
         let top_width = PYRAMID_WIDTH * (i_f / n_layers);
@@ -48,7 +56,7 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let bottom_left = CENTER_X - bottom_width / 2.0;
         let bottom_right = CENTER_X + bottom_width / 2.0;
 
-        builder.polygon(
+        builder.polygon_stroked(
             &[
                 (top_left, top_y),
                 (top_right, top_y),
@@ -56,7 +64,8 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
                 (bottom_left, bottom_y),
             ],
             &layer_color.to_hex(),
-            "none",
+            &stroke_color,
+            stroke_width,
         );
 
         let available_width = bottom_width * 0.8;
@@ -69,8 +78,9 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             }
         }
 
+        let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
         let center_y = (top_y + bottom_y) / 2.0;
-        builder.text(CENTER_X, center_y, &item.label, &text_color.to_hex(), font_size);
+        builder.text_weighted(CENTER_X, center_y, &item.label, &text_color.to_hex(), font_size, is_bold);
     }
 
     builder.build(&theme.background.to_hex())

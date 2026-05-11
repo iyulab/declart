@@ -1,4 +1,4 @@
-use crate::model::ItemsDiagram;
+use crate::model::{Emphasis, ItemsDiagram};
 use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
 const BOX_HEIGHT: f32 = 60.0;
@@ -47,17 +47,25 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let i_f = i as f32;
         let n_items = diagram.items.len() as f32;
         let t = if n_items > 1.0 { i_f / (n_items - 1.0) } else { 0.0 };
-        let box_color = theme.layers.apex.interpolate(&theme.layers.base, t);
+        let base_color = theme.layers.apex.interpolate(&theme.layers.base, t);
+        let box_color = match &item.emphasis {
+            Some(Emphasis::Secondary) => base_color.interpolate(&theme.layers.base, 0.3),
+            _ => base_color,
+        };
         let text_color = if box_color.is_dark() {
             &theme.text.on_dark
         } else {
             &theme.text.on_light
         };
+        let (stroke_color, stroke_width) = match &item.emphasis {
+            Some(Emphasis::Primary) => (theme.background.to_hex(), 3.0_f32),
+            _ => ("none".to_string(), 0.0_f32),
+        };
 
         let box_left = PADDING + i_f * (box_width + ARROW_GAP);
         let box_right = box_left + box_width;
 
-        builder.polygon(
+        builder.polygon_stroked(
             &[
                 (box_left, box_top),
                 (box_right, box_top),
@@ -65,7 +73,8 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
                 (box_left, box_bottom),
             ],
             &box_color.to_hex(),
-            "none",
+            &stroke_color,
+            stroke_width,
         );
 
         let available_width = box_width * 0.85;
@@ -76,9 +85,10 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
                 .max(theme.typography.label_size_min);
         }
 
+        let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
         let center_x = box_left + box_width / 2.0;
         let center_y = box_top + BOX_HEIGHT / 2.0;
-        builder.text(center_x, center_y, &item.label, &text_color.to_hex(), font_size);
+        builder.text_weighted(center_x, center_y, &item.label, &text_color.to_hex(), font_size, is_bold);
     }
 
     builder.build(&theme.background.to_hex())
