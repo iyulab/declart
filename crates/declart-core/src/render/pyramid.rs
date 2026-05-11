@@ -1,20 +1,39 @@
 use crate::model::{Emphasis, ItemsDiagram};
 use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
-const CANVAS_WIDTH: f32 = 600.0;
+const CANVAS_BASE_W: f32 = 600.0;
 const LAYER_HEIGHT: f32 = 60.0;
 const PADDING_H: f32 = 20.0;
 const TITLE_AREA: f32 = 60.0;
 const BOTTOM_PAD: f32 = 20.0;
-const PYRAMID_WIDTH: f32 = CANVAS_WIDTH - PADDING_H * 2.0;
-const CENTER_X: f32 = CANVAS_WIDTH / 2.0;
+const PYRAMID_WIDTH: f32 = CANVAS_BASE_W - PADDING_H * 2.0;
+const CENTER_X: f32 = CANVAS_BASE_W / 2.0;
+const LEADER_GAP: f32 = 12.0;
 
 pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
     let n = diagram.items.len() as f32;
     let title_height = if diagram.title.is_some() { TITLE_AREA } else { PADDING_H };
-    let canvas_height = title_height + n * LAYER_HEIGHT + BOTTOM_PAD;
 
-    let mut builder = SvgBuilder::new(CANVAS_WIDTH, canvas_height);
+    // Pre-pass: compute canvas width, expanding right when layers need leader lines.
+    let mut canvas_width = CANVAS_BASE_W;
+    for (i, item) in diagram.items.iter().enumerate() {
+        let i_f = i as f32;
+        let top_width = PYRAMID_WIDTH * (i_f / n);
+        let bottom_width = PYRAMID_WIDTH * ((i_f + 1.0) / n);
+        let mid_width = (top_width + bottom_width) / 2.0;
+        let available_width = mid_width * 0.85;
+        if available_width > 0.0
+            && font::measure_text(&item.label, theme.typography.label_size_min) > available_width
+        {
+            let text_w = font::measure_text(&item.label, theme.typography.label_size);
+            let right_edge = CENTER_X + mid_width / 2.0;
+            let needed = right_edge + LEADER_GAP + text_w + PADDING_H;
+            canvas_width = canvas_width.max(needed);
+        }
+    }
+
+    let canvas_height = title_height + n * LAYER_HEIGHT + BOTTOM_PAD;
+    let mut builder = SvgBuilder::new(canvas_width, canvas_height);
 
     if let Some(title) = &diagram.title {
         builder.text(
@@ -50,6 +69,7 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let bottom_width = PYRAMID_WIDTH * ((i_f + 1.0) / n_layers);
         let top_y = title_height + i_f * LAYER_HEIGHT;
         let bottom_y = top_y + LAYER_HEIGHT;
+        let center_y = (top_y + bottom_y) / 2.0;
 
         let top_left = CENTER_X - top_width / 2.0;
         let top_right = CENTER_X + top_width / 2.0;
@@ -68,31 +88,51 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             stroke_width,
         );
 
-        // Use mid-width (width at text center height) for accurate constraint.
         let mid_width = (top_width + bottom_width) / 2.0;
         let available_width = mid_width * 0.85;
-        let mut font_size = theme.typography.label_size;
-        if available_width > 0.0 {
-            let text_width = font::measure_text(&item.label, font_size);
-            if text_width > available_width {
-                font_size = (font_size * available_width / text_width)
-                    .max(theme.typography.label_size_min);
+
+        let needs_leader = available_width > 0.0
+            && font::measure_text(&item.label, theme.typography.label_size_min) > available_width;
+
+        if needs_leader {
+            // Draw label outside the layer with a leader line on the right.
+            let right_edge = CENTER_X + mid_width / 2.0;
+            let text_w = font::measure_text(&item.label, theme.typography.label_size);
+            let text_x = right_edge + LEADER_GAP + text_w / 2.0;
+            let leader_color = &theme.title_color.to_hex();
+            builder.line(right_edge, center_y, right_edge + LEADER_GAP, center_y, leader_color, 1.0);
+            let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
+            builder.text_weighted(
+                text_x,
+                center_y,
+                &item.label,
+                leader_color,
+                theme.typography.label_size,
+                is_bold,
+            );
+        } else {
+            let mut font_size = theme.typography.label_size;
+            if available_width > 0.0 {
+                let text_width = font::measure_text(&item.label, font_size);
+                if text_width > available_width {
+                    font_size = (font_size * available_width / text_width)
+                        .max(theme.typography.label_size_min);
+                }
             }
-        }
-        let label = if available_width > 0.0 {
-            let tw = font::measure_text(&item.label, font_size);
-            if tw > available_width {
-                truncate_label(&item.label, available_width, font_size)
+            let label = if available_width > 0.0 {
+                let tw = font::measure_text(&item.label, font_size);
+                if tw > available_width {
+                    truncate_label(&item.label, available_width, font_size)
+                } else {
+                    item.label.clone()
+                }
             } else {
                 item.label.clone()
-            }
-        } else {
-            item.label.clone()
-        };
+            };
 
-        let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
-        let center_y = (top_y + bottom_y) / 2.0;
-        builder.text_weighted(CENTER_X, center_y, &label, &text_color.to_hex(), font_size, is_bold);
+            let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
+            builder.text_weighted(CENTER_X, center_y, &label, &text_color.to_hex(), font_size, is_bold);
+        }
     }
 
     builder.build(&theme.background.to_hex())
@@ -170,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn render_long_apex_label_truncates_with_ellipsis() {
+    fn render_long_apex_label_uses_leader_line() {
         let d = ItemsDiagram {
             title: None,
             items: (0..7)
@@ -181,10 +221,33 @@ mod tests {
                 .collect(),
         };
         let svg = render(&d, &DEFAULT_THEME);
-        // Label should either appear unchanged or be truncated with ellipsis
-        assert!(
-            svg.contains("Self-Actualization") || svg.contains("…"),
-            "long apex label should render (possibly truncated)"
-        );
+        // With leader line: full label appears untruncated (no ellipsis)
+        assert!(svg.contains("Self-Actualization"), "long apex label should appear in full via leader line");
+        assert!(!svg.contains("…"), "leader line should avoid truncation");
+        // A <line> element exists for the leader line (pyramids have no lines otherwise)
+        assert!(svg.contains("<line"), "leader line element should be present");
+    }
+
+    #[test]
+    fn render_very_long_apex_label_expands_canvas() {
+        // 12-layer pyramid: apex mid_width≈23, right_edge≈312.
+        // needed = 312 + 12 + text_w + 20. For expansion: text_w > 256.
+        // "An Extremely Long Self-Actualization Goal" at 14px ≈ 273px > 256 → needed > 600.
+        let long_label = "An Extremely Long Self-Actualization Goal";
+        let d = ItemsDiagram {
+            title: None,
+            items: (0..12)
+                .map(|i| Item {
+                    label: if i == 0 { long_label.to_string() } else { format!("L{}", i) },
+                    emphasis: None,
+                })
+                .collect(),
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains(long_label), "full label should appear via leader line");
+        let width_start = svg.find("width=\"").unwrap() + 7;
+        let width_end = svg[width_start..].find('"').unwrap() + width_start;
+        let width: f32 = svg[width_start..width_end].parse().unwrap();
+        assert!(width > CANVAS_BASE_W, "canvas should expand for very long apex label, got {}", width);
     }
 }

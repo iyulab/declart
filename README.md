@@ -63,7 +63,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-v0.6.0 — eight diagram kinds, PNG export, watch mode, WASM + FFI bindings, interactive playground, spec site (mdBook, GitHub Pages pending), Node.js npm package.
+v0.7.0 — rendering bug fixes (Hub-Spoke/Cycle connector gaps, Pyramid apex leader line), Matrix axis direction indicators, Playground v2 (draft protection, SVG export, error line highlighting, resize handle).
 
 | Area | Status |
 |------|--------|
@@ -77,6 +77,10 @@ v0.6.0 — eight diagram kinds, PNG export, watch mode, WASM + FFI bindings, int
 | Interactive playground (WASM, all 8 kinds, live render) | ✅ v0.5.1 |
 | PNG export (`--format png`) | ✅ v0.6 |
 | Watch mode (`declart watch`) | ✅ v0.6 |
+| Hub-Spoke / Cycle connector rendering fix | ✅ v0.7 |
+| Pyramid apex label (leader line) | ✅ v0.7 |
+| Matrix axis direction (Low/High) | ✅ v0.7 |
+| Playground v2 (draft, export, error UX, resize) | ✅ v0.7 |
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 

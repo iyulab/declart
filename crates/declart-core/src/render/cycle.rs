@@ -5,6 +5,12 @@ use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
 const NODE_W: f32 = 110.0;
 const NODE_H: f32 = 50.0;
+
+fn rect_clip(ux: f32, uy: f32, hw: f32, hh: f32) -> f32 {
+    let tx = if ux.abs() > 1e-6 { hw / ux.abs() } else { f32::INFINITY };
+    let ty = if uy.abs() > 1e-6 { hh / uy.abs() } else { f32::INFINITY };
+    tx.min(ty)
+}
 const PADDING: f32 = 30.0;
 const TITLE_AREA: f32 = 50.0;
 const ARROW_SHAFT: f32 = 3.0;
@@ -62,10 +68,11 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let ux = dx / len;
         let uy = dy / len;
 
-        let start_x = x1 + ux * node_half_diag;
-        let start_y = y1 + uy * node_half_diag;
-        let end_x = x2 - ux * node_half_diag;
-        let end_y = y2 - uy * node_half_diag;
+        let t = rect_clip(ux, uy, NODE_W / 2.0, NODE_H / 2.0);
+        let start_x = x1 + ux * t;
+        let start_y = y1 + uy * t;
+        let end_x = x2 - ux * t;
+        let end_y = y2 - uy * t;
 
         let arrow_color = &theme.layers.apex.to_hex();
 

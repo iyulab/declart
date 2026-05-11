@@ -11,12 +11,19 @@ const PADDING: f32 = 30.0;
 const TITLE_AREA: f32 = 50.0;
 const LINE_W: f32 = 2.0;
 
+/// Returns the scalar t such that (cx + ux*t, cy + uy*t) lies exactly on the
+/// edge of a rectangle centered at (cx, cy) with half-extents (hw, hh).
+fn rect_clip(ux: f32, uy: f32, hw: f32, hh: f32) -> f32 {
+    let tx = if ux.abs() > 1e-6 { hw / ux.abs() } else { f32::INFINITY };
+    let ty = if uy.abs() > 1e-6 { hh / uy.abs() } else { f32::INFINITY };
+    tx.min(ty)
+}
+
 pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
     let n = diagram.spokes.len();
     let n_f = n as f32;
 
     let spoke_half_diag = ((SPOKE_W / 2.0).powi(2) + (SPOKE_H / 2.0).powi(2)).sqrt();
-    let hub_half_diag = ((HUB_W / 2.0).powi(2) + (HUB_H / 2.0).powi(2)).sqrt();
 
     let radius = if n >= 2 {
         f32::max(150.0, spoke_half_diag / (PI / n_f).sin() * 1.2)
@@ -64,10 +71,12 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
         }
         let ux = dx / len;
         let uy = dy / len;
-        let start_x = cx + ux * hub_half_diag;
-        let start_y = cy + uy * hub_half_diag;
-        let end_x = sx - ux * spoke_half_diag;
-        let end_y = sy - uy * spoke_half_diag;
+        let t_hub = rect_clip(ux, uy, HUB_W / 2.0, HUB_H / 2.0);
+        let start_x = cx + ux * t_hub;
+        let start_y = cy + uy * t_hub;
+        let t_spoke = rect_clip(ux, uy, SPOKE_W / 2.0, SPOKE_H / 2.0);
+        let end_x = sx - ux * t_spoke;
+        let end_y = sy - uy * t_spoke;
         builder.line(start_x, start_y, end_x, end_y, line_color, LINE_W);
     }
 

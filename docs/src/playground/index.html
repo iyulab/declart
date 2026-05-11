@@ -88,18 +88,25 @@
 
     .main {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 4px 1fr;
       flex: 1;
       overflow: hidden;
     }
+
+    .resize-handle {
+      background: var(--border);
+      cursor: col-resize;
+      transition: background 0.15s;
+    }
+    .resize-handle:hover,
+    .resize-handle.dragging { background: var(--accent); }
 
     .pane {
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      border-right: 1px solid var(--border);
+      min-height: 0;
     }
-    .pane:last-child { border-right: none; }
 
     .pane-label {
       padding: 5px 14px;
@@ -111,7 +118,25 @@
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+
+    .pane-btn {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--label);
+      cursor: pointer;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .pane-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .pane-btn:disabled { opacity: 0.4; cursor: default; }
 
     #input {
       flex: 1;
@@ -130,6 +155,7 @@
     .preview-area {
       flex: 1;
       overflow: auto;
+      min-height: 0;
       background: var(--surface);
       padding: 20px;
     }
@@ -158,9 +184,10 @@
 
     @media (max-width: 680px) {
       body { overflow: auto; }
-      .main { grid-template-columns: 1fr; height: auto; }
+      .main { grid-template-columns: 1fr !important; height: auto; }
+      .resize-handle { display: none; }
       #input { min-height: 220px; }
-      .pane { border-right: none; border-bottom: 1px solid var(--border); }
+      .pane { border-bottom: 1px solid var(--border); }
     }
   </style>
 </head>
@@ -195,13 +222,17 @@
   <span id="status" class="loading">Loading WASM…</span>
 </div>
 
-<div class="main">
+<div class="main" id="main-grid">
   <div class="pane">
     <div class="pane-label">TOML Input</div>
     <textarea id="input" spellcheck="false" autocomplete="off" autocorrect="off"></textarea>
   </div>
+  <div class="resize-handle" id="resize-handle" title="Drag to resize"></div>
   <div class="pane">
-    <div class="pane-label">SVG Preview</div>
+    <div class="pane-label">
+      SVG Preview
+      <button id="download-svg" class="pane-btn" disabled title="Download SVG">↓ SVG</button>
+    </div>
     <div class="preview-area">
       <div id="preview"></div>
       <div id="error" class="hidden"></div>
@@ -371,15 +402,60 @@ label = "Slow queries"
 `,
 };
 
-const inputEl    = document.getElementById('input');
-const previewEl  = document.getElementById('preview');
-const errorEl    = document.getElementById('error');
-const exampleSel = document.getElementById('example-select');
-const themeSel   = document.getElementById('theme-select');
-const statusEl   = document.getElementById('status');
-const svgParser  = new DOMParser();
+// Panel resize
+const mainGrid    = document.getElementById('main-grid');
+const resizeHandle = document.getElementById('resize-handle');
+let dragging = false;
+
+resizeHandle.addEventListener('mousedown', e => {
+  dragging = true;
+  resizeHandle.classList.add('dragging');
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const rect = mainGrid.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const total = rect.width - 4; // subtract handle width
+  const leftFr = Math.max(0.15, Math.min(0.85, x / total));
+  const rightFr = 1 - leftFr;
+  mainGrid.style.gridTemplateColumns = `${leftFr}fr 4px ${rightFr}fr`;
+});
+
+document.addEventListener('mouseup', () => {
+  if (!dragging) return;
+  dragging = false;
+  resizeHandle.classList.remove('dragging');
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+});
+
+const inputEl      = document.getElementById('input');
+const previewEl    = document.getElementById('preview');
+const errorEl      = document.getElementById('error');
+const exampleSel   = document.getElementById('example-select');
+const themeSel     = document.getElementById('theme-select');
+const statusEl     = document.getElementById('status');
+const downloadBtn  = document.getElementById('download-svg');
+const svgParser    = new DOMParser();
+const DRAFT_KEY    = 'declart-draft';
 
 let wasmReady = false;
+
+function saveDraft() {
+  try { localStorage.setItem(DRAFT_KEY, inputEl.value); } catch (_) {}
+}
+
+function loadDraft() {
+  try { return localStorage.getItem(DRAFT_KEY); } catch (_) { return null; }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+}
 
 function showSvg(svgString) {
   const doc = svgParser.parseFromString(svgString, 'image/svg+xml');
@@ -388,6 +464,21 @@ function showSvg(svgString) {
     throw new Error('SVG parse error: ' + (root.textContent || 'unknown'));
   }
   previewEl.replaceChildren(root);
+  downloadBtn.disabled = false;
+}
+
+function extractLineCol(msg) {
+  const m = msg.match(/at line (\d+), column (\d+)/);
+  return m ? { line: parseInt(m[1], 10), col: parseInt(m[2], 10) } : null;
+}
+
+function jumpEditorToLine(line, col) {
+  const lines = inputEl.value.split('\n');
+  let offset = 0;
+  for (let i = 0; i < line - 1 && i < lines.length; i++) offset += lines[i].length + 1;
+  const end = offset + (lines[line - 1]?.length ?? 0);
+  inputEl.setSelectionRange(offset + col - 1, end);
+  inputEl.focus();
 }
 
 function update() {
@@ -401,19 +492,49 @@ function update() {
     statusEl.className = 'ok';
   } catch (e) {
     previewEl.replaceChildren();
-    errorEl.textContent = e.message || String(e);
+    downloadBtn.disabled = true;
+    const msg = e.message || String(e);
+    const loc = extractLineCol(msg);
+    errorEl.textContent = msg;
     errorEl.classList.remove('hidden');
-    statusEl.textContent = '✗ Error';
+    statusEl.textContent = loc ? `✗ Line ${loc.line}` : '✗ Error';
     statusEl.className = 'err';
+    if (loc) jumpEditorToLine(loc.line, loc.col);
   }
 }
 
+downloadBtn.addEventListener('click', () => {
+  const svgEl = previewEl.querySelector('svg');
+  if (!svgEl) return;
+  const blob = new Blob([svgEl.outerHTML], { type: 'image/svg+xml' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: 'diagram.svg',
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
 exampleSel.addEventListener('change', () => {
-  inputEl.value = EXAMPLES[exampleSel.value] ?? '';
+  const example = EXAMPLES[exampleSel.value] ?? '';
+  if (inputEl.value !== example && inputEl.value.trim() !== '') {
+    if (!confirm('Replace your current TOML with this example?')) {
+      // Revert selector to the previously displayed example
+      exampleSel.value = Object.keys(EXAMPLES).find(k => EXAMPLES[k] === inputEl.value) ?? exampleSel.value;
+      return;
+    }
+  }
+  inputEl.value = example;
+  clearDraft();
   update();
 });
+
 themeSel.addEventListener('change', update);
-inputEl.addEventListener('input', update);
+
+inputEl.addEventListener('input', () => {
+  saveDraft();
+  update();
+});
 
 (async () => {
   try {
@@ -421,7 +542,8 @@ inputEl.addEventListener('input', update);
     wasmReady = true;
     statusEl.textContent = '✓ Ready';
     statusEl.className = 'ok';
-    inputEl.value = EXAMPLES[exampleSel.value];
+    const draft = loadDraft();
+    inputEl.value = draft ?? EXAMPLES[exampleSel.value];
     update();
   } catch (e) {
     statusEl.textContent = '✗ WASM load failed';

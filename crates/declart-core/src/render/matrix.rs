@@ -3,8 +3,9 @@ use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
 const CANVAS_SIZE: f32 = 500.0;
 const TITLE_AREA: f32 = 50.0;
-const PADDING: f32 = 50.0; // space for axis labels
+const PADDING: f32 = 50.0;
 const AXIS_LABEL_SIZE: f32 = 13.0;
+const AXIS_DIRECTION_SIZE: f32 = 9.0;
 const AXIS_LINE_W: f32 = 2.0;
 
 pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
@@ -86,27 +87,21 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
     builder.line(grid_left, mid_y, grid_right, mid_y, axis_color, AXIS_LINE_W);
     builder.line(mid_x, grid_top, mid_x, grid_bottom, axis_color, AXIS_LINE_W);
 
-    // X-axis label (below grid, centered)
-    builder.text(
-        (grid_left + grid_right) / 2.0,
-        canvas_h - PADDING / 3.0,
-        &diagram.x_axis,
-        &theme.title_color.to_hex(),
-        AXIS_LABEL_SIZE,
-    );
-
-    // Y-axis label (left of grid, centered, would need rotation — approximate with vertical position)
-    // SVG text rotation requires transform attribute; add via raw element
+    let label_color = &theme.title_color.to_hex();
+    let dir_color = &theme.title_color.to_hex();
+    let x_label_y = canvas_h - PADDING / 3.0;
     let y_label_x = PADDING / 3.0;
     let y_label_y = (grid_top + grid_bottom) / 2.0;
-    builder.text_rotated(
-        y_label_x,
-        y_label_y,
-        &diagram.y_axis,
-        &theme.title_color.to_hex(),
-        AXIS_LABEL_SIZE,
-        -90.0,
-    );
+
+    // X-axis: centered label + Low/High direction indicators at grid edges
+    builder.text((grid_left + grid_right) / 2.0, x_label_y, &diagram.x_axis, label_color, AXIS_LABEL_SIZE);
+    builder.text(grid_left, x_label_y, "Low", dir_color, AXIS_DIRECTION_SIZE);
+    builder.text(grid_right, x_label_y, "High", dir_color, AXIS_DIRECTION_SIZE);
+
+    // Y-axis: rotated label + Low/High at grid bottom/top (horizontal, no rotation needed for short words)
+    builder.text_rotated(y_label_x, y_label_y, &diagram.y_axis, label_color, AXIS_LABEL_SIZE, -90.0);
+    builder.text(y_label_x, grid_bottom, "Low", dir_color, AXIS_DIRECTION_SIZE);
+    builder.text(y_label_x, grid_top, "High", dir_color, AXIS_DIRECTION_SIZE);
 
     builder.build(&theme.background.to_hex())
 }
@@ -155,6 +150,9 @@ mod tests {
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.contains("Importance"));
         assert!(svg.contains("Urgency"));
+        // Direction indicators
+        assert!(svg.matches(">Low<").count() >= 2, "should have Low indicator for both axes");
+        assert!(svg.matches(">High<").count() >= 2, "should have High indicator for both axes");
     }
 
     #[test]
