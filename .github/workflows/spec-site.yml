@@ -18,7 +18,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Rust wasm32 target
         run: rustup target add wasm32-unknown-unknown
@@ -48,6 +48,9 @@ jobs:
 
       - name: Build spec site
         run: mdbook build docs/
+
+      - name: Copy WASM into book output
+        run: cp -r docs/src/playground/wasm docs/book/playground/wasm
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
