@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "crates/declart-core",
+    "crates/declart-cli",
+]
+resolver = "2"
