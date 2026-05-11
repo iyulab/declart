@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Declart Playground</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --editor-bg: #1e1e2e;
+      --editor-text: #cdd6f4;
+      --border: #e2e8f0;
+      --header-bg: #1a2540;
+      --header-text: #e2e8f0;
+      --label: #64748b;
+      --accent: #3b82f6;
+      --ok: #16a34a;
+      --err-bg: #fff0f0;
+      --err-border: #fca5a5;
+      --err-text: #b91c1c;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: #1e293b;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 10px 20px;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    header h1 { font-size: 1.05rem; font-weight: 600; letter-spacing: 0.03em; }
+    header p  { font-size: 0.78rem; color: #94a3b8; }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 7px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--label);
+      font-weight: 500;
+    }
+
+    .controls select {
+      font-size: 0.8rem;
+      padding: 3px 7px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: #1e293b;
+      cursor: pointer;
+    }
+
+    #status {
+      margin-left: auto;
+      font-size: 0.74rem;
+      color: var(--label);
+    }
+    #status.loading { color: var(--accent); }
+    #status.ok      { color: var(--ok); }
+    #status.err     { color: var(--err-text); }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+    .pane:last-child { border-right: none; }
+
+    .pane-label {
+      padding: 5px 14px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--label);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    #input {
+      flex: 1;
+      padding: 16px;
+      font-family: "Cascadia Code", "JetBrains Mono", "Fira Code", Consolas, monospace;
+      font-size: 0.82rem;
+      line-height: 1.65;
+      background: var(--editor-bg);
+      color: var(--editor-text);
+      border: none;
+      resize: none;
+      outline: none;
+      tab-size: 2;
+    }
+
+    .preview-area {
+      flex: 1;
+      overflow: auto;
+      background: var(--surface);
+      padding: 20px;
+    }
+
+    #preview svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    #error {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: var(--err-bg);
+      border: 1px solid var(--err-border);
+      border-radius: var(--radius);
+      color: var(--err-text);
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 680px) {
+      body { overflow: auto; }
+      .main { grid-template-columns: 1fr; height: auto; }
+      #input { min-height: 220px; }
+      .pane { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Declart Playground</h1>
+  <p>Edit TOML on the left — see your diagram instantly on the right</p>
+</header>
+
+<div class="controls">
+  <label>
+    Example
+    <select id="example-select">
+      <option value="pyramid">Pyramid — Maslow's Hierarchy</option>
+      <option value="process">Process — Software Release Pipeline</option>
+      <option value="cycle">Cycle — PDCA</option>
+      <option value="matrix">Matrix — Eisenhower Matrix</option>
+      <option value="hub_spoke">Hub-and-Spoke — Cloud Architecture</option>
+      <option value="venn">Venn — Skills Overlap</option>
+      <option value="timeline">Timeline — Product Launch</option>
+      <option value="fishbone">Fishbone — Website Performance</option>
+    </select>
+  </label>
+  <label>
+    Theme
+    <select id="theme-select">
+      <option value="default">Default</option>
+      <option value="monochrome">Monochrome</option>
+    </select>
+  </label>
+  <span id="status" class="loading">Loading WASM…</span>
+</div>
+
+<div class="main">
+  <div class="pane">
+    <div class="pane-label">TOML Input</div>
+    <textarea id="input" spellcheck="false" autocomplete="off" autocorrect="off"></textarea>
+  </div>
+  <div class="pane">
+    <div class="pane-label">SVG Preview</div>
+    <div class="preview-area">
+      <div id="preview"></div>
+      <div id="error" class="hidden"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import init, { render } from './wasm/declart_wasm.js';
+
+const EXAMPLES = {
+  pyramid: `kind = "pyramid"
+title = "Maslow's Hierarchy of Needs"
+
+[[items]]
+label = "Self-actualization"
+
+[[items]]
+label = "Esteem"
+
+[[items]]
+label = "Love & Belonging"
+
+[[items]]
+label = "Safety"
+
+[[items]]
+label = "Physiological"
+`,
+
+  process: `kind = "process"
+title = "Software Release Pipeline"
+
+[[items]]
+label = "Code Review"
+
+[[items]]
+label = "Build"
+
+[[items]]
+label = "Test"
+
+[[items]]
+label = "Deploy"
+
+[[items]]
+label = "Monitor"
+`,
+
+  cycle: `kind = "cycle"
+title = "PDCA Cycle"
+
+[[items]]
+label = "Plan"
+
+[[items]]
+label = "Do"
+
+[[items]]
+label = "Check"
+
+[[items]]
+label = "Act"
+`,
+
+  matrix: `kind = "matrix"
+title = "Eisenhower Matrix"
+x_axis = "Importance"
+y_axis = "Urgency"
+
+[[quadrants]]
+label = "Do First"
+
+[[quadrants]]
+label = "Schedule"
+
+[[quadrants]]
+label = "Delegate"
+
+[[quadrants]]
+label = "Eliminate"
+`,
+
+  hub_spoke: `kind = "hub_spoke"
+title = "Cloud Architecture"
+
+center = "API Gateway"
+
+[[spokes]]
+label = "Auth Service"
+
+[[spokes]]
+label = "User Service"
+
+[[spokes]]
+label = "Order Service"
+
+[[spokes]]
+label = "Payment Service"
+
+[[spokes]]
+label = "Notification"
+`,
+
+  venn: `kind = "venn"
+title = "Skills Overlap"
+
+[[sets]]
+label = "Design"
+
+[[sets]]
+label = "Engineering"
+
+[[intersections]]
+sets = ["Design", "Engineering"]
+label = "UX Engineering"
+`,
+
+  timeline: `kind = "timeline"
+title = "Product Launch History"
+
+[[events]]
+date = "2024-01-15"
+label = "Alpha"
+
+[[events]]
+date = "2024-04-01"
+label = "Beta"
+
+[[events]]
+date = "2024-07-20"
+label = "Launch"
+
+[[events]]
+date = "2024-12-01"
+label = "v2.0"
+`,
+
+  fishbone: `kind = "fishbone"
+title = "Website Performance Issues"
+
+effect = "Slow Page Load"
+
+[[causes]]
+label = "Server"
+
+[[causes.items]]
+label = "CPU saturation"
+
+[[causes.items]]
+label = "Memory limits"
+
+[[causes]]
+label = "Network"
+
+[[causes.items]]
+label = "Bandwidth"
+
+[[causes]]
+label = "Code"
+
+[[causes]]
+label = "Database"
+
+[[causes.items]]
+label = "Slow queries"
+`,
+};
+
+const inputEl    = document.getElementById('input');
+const previewEl  = document.getElementById('preview');
+const errorEl    = document.getElementById('error');
+const exampleSel = document.getElementById('example-select');
+const themeSel   = document.getElementById('theme-select');
+const statusEl   = document.getElementById('status');
+const svgParser  = new DOMParser();
+
+let wasmReady = false;
+
+function showSvg(svgString) {
+  const doc = svgParser.parseFromString(svgString, 'image/svg+xml');
+  const root = doc.documentElement;
+  if (root.nodeName === 'parsererror') {
+    throw new Error('SVG parse error: ' + (root.textContent || 'unknown'));
+  }
+  previewEl.replaceChildren(root);
+}
+
+function update() {
+  if (!wasmReady) return;
+  try {
+    const svg = render(inputEl.value, themeSel.value, undefined);
+    showSvg(svg);
+    errorEl.textContent = '';
+    errorEl.classList.add('hidden');
+    statusEl.textContent = '✓ OK';
+    statusEl.className = 'ok';
+  } catch (e) {
+    previewEl.replaceChildren();
+    errorEl.textContent = e.message || String(e);
+    errorEl.classList.remove('hidden');
+    statusEl.textContent = '✗ Error';
+    statusEl.className = 'err';
+  }
+}
+
+exampleSel.addEventListener('change', () => {
+  inputEl.value = EXAMPLES[exampleSel.value] ?? '';
+  update();
+});
+themeSel.addEventListener('change', update);
+inputEl.addEventListener('input', update);
+
+(async () => {
+  try {
+    await init();
+    wasmReady = true;
+    statusEl.textContent = '✓ Ready';
+    statusEl.className = 'ok';
+    inputEl.value = EXAMPLES[exampleSel.value];
+    update();
+  } catch (e) {
+    statusEl.textContent = '✗ WASM load failed';
+    statusEl.className = 'err';
+    errorEl.textContent =
+      'Failed to load WASM module.\n' +
+      'Serve via HTTP: mdbook serve docs/  (opening index.html as file:// will not work)\n\n' +
+      (e.message || String(e));
+    errorEl.classList.remove('hidden');
+  }
+})();
+</script>
+
+</body>
+</html>

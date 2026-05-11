@@ -63,7 +63,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-v0.5.0 — eight diagram kinds, WASM + FFI bindings, spec site (mdBook, GitHub Pages pending), Node.js npm package.
+v0.5.1 — eight diagram kinds, WASM + FFI bindings, interactive playground, spec site (mdBook, GitHub Pages pending), Node.js npm package.
 
 | Area | Status |
 |------|--------|
@@ -74,6 +74,7 @@ v0.5.0 — eight diagram kinds, WASM + FFI bindings, spec site (mdBook, GitHub P
 | C ABI (`declart-ffi` + `declart.h`) | ✅ v0.5 |
 | Node.js npm package (`@iyulab/declart`) | ✅ v0.5 |
 | Spec site (mdBook skeleton + CI) | ✅ v0.5 (GitHub Pages not yet enabled) |
+| Interactive playground (WASM, all 8 kinds, live render) | ✅ v0.5.1 |
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 

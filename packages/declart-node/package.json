@@ -1,6 +1,6 @@
 {
   "name": "@iyulab/declart",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Declarative diagram engine — declare what to show, the engine renders SVG",
   "license": "MIT",
   "repository": {

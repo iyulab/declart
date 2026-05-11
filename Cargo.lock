@@ -157,7 +157,7 @@ checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 
 [[package]]
 name = "declart-cli"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -166,7 +166,7 @@ dependencies = [
 
 [[package]]
 name = "declart-core"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "fontdue",
  "serde",
@@ -176,14 +176,14 @@ dependencies = [
 
 [[package]]
 name = "declart-ffi"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "declart-core",
 ]
 
 [[package]]
 name = "declart-wasm"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "declart-core",
  "wasm-bindgen",

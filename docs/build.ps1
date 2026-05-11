@@ -10,4 +10,9 @@ Get-ChildItem spec/kinds/*.md | ForEach-Object {
     Copy-Item $_.FullName "docs/src/kinds/$($_.Name)"
 }
 
+Write-Host "Building WASM for playground..."
+New-Item -ItemType Directory -Force docs/src/playground/wasm | Out-Null
+$wasmOutDir = (Resolve-Path "docs/src/playground/wasm").Path
+wasm-pack build crates/declart-wasm --target web --out-dir $wasmOutDir --release
+
 mdbook build docs/

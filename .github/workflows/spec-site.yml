@@ -6,6 +6,7 @@ on:
     paths:
       - "spec/**"
       - "docs/**"
+      - "crates/declart-wasm/**"
 
 permissions:
   contents: write
@@ -15,6 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Rust wasm32 target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Install mdBook
         run: |
@@ -29,6 +36,12 @@ jobs:
           for f in spec/kinds/*.md; do
             cp "$f" "docs/src/kinds/$(basename "$f")"
           done
+
+      - name: Build WASM for playground
+        run: |
+          mkdir -p docs/src/playground/wasm
+          wasm-pack build crates/declart-wasm --target web \
+            --out-dir "$(pwd)/docs/src/playground/wasm" --release
 
       - name: Build spec site
         run: mdbook build docs/

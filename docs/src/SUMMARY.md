@@ -4,6 +4,12 @@
 
 ---
 
+# Try It
+
+- [Interactive Playground](playground.md)
+
+---
+
 # Reference
 
 - [Principles](principles.md)
