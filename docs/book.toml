@@ -1,0 +1,16 @@
+[book]
+authors = ["iyulab"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Declart"
+description = "Declarative diagram engine — declare what to show, the engine decides how it looks."
+
+[output.html]
+git-repository-url = "https://github.com/iyulab/declart"
+git-repository-icon = "fa-github"
+no-section-label = true
+
+[output.html.fold]
+enable = true
+level = 0

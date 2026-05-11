@@ -1,0 +1,38 @@
+# Declart
+
+**Declare what to show. The engine decides how it looks.**
+
+Declart is a declarative diagram engine. You write a TOML file describing the structure of your diagram, and Declart renders it to SVG. No layout coordinates. No styling choices. Just content.
+
+## Quick Start
+
+```bash
+# Install
+cargo install declart-cli
+
+# Scaffold a starter diagram
+declart init pyramid > diagram.toml
+
+# Render to SVG
+declart render diagram.toml
+
+# Validate without rendering
+declart validate diagram.toml
+```
+
+## Supported Kinds
+
+| Kind | Use case |
+|------|----------|
+| `pyramid` | Hierarchies, Maslow, priority layers |
+| `process` | Sequential steps, workflows |
+| `cycle` | Closed loops, PDCA, lifecycles |
+| `matrix` | 2×2 prioritization, Eisenhower |
+| `hub_spoke` | Central concept with related items |
+| `venn` | Set intersections, overlapping groups |
+| `timeline` | Date-anchored events |
+| `fishbone` | Cause-and-effect, root cause analysis |
+
+## Design Philosophy
+
+See [Principles](principles.md) for the full design rationale. The key idea: declarations express *what* exists, not *how* it looks. The engine owns visual decisions.
