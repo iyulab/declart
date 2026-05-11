@@ -1,2 +1,4 @@
-claudedocs/
 CLAUDE.md
+claudedocs/
+target/
+*.svg
