@@ -1,0 +1,13 @@
+kind = "venn"
+
+[[sets]]
+label = "A"
+
+[[sets]]
+label = "B"
+
+[[sets]]
+label = "C"
+
+[[sets]]
+label = "D"

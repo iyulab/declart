@@ -1,0 +1,7 @@
+kind = "venn"
+
+[[sets]]
+label = "Group A"
+
+[[sets]]
+label = "Group B"

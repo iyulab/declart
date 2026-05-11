@@ -25,6 +25,13 @@ impl SvgBuilder {
         ));
     }
 
+    pub fn circle(&mut self, cx: f32, cy: f32, r: f32, fill: &str, fill_opacity: f32) {
+        self.elements.push(format!(
+            r#"<circle cx="{:.1}" cy="{:.1}" r="{:.1}" fill="{}" fill-opacity="{:.2}"/>"#,
+            cx, cy, r, fill, fill_opacity
+        ));
+    }
+
     pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, stroke: &str, stroke_width: f32) {
         self.elements.push(format!(
             r#"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="{}" stroke-width="{:.1}"/>"#,

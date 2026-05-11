@@ -1,0 +1,12 @@
+kind = "hub_spoke"
+
+center = "Core"
+
+[[spokes]]
+label = "Module A"
+
+[[spokes]]
+label = "Module B"
+
+[[spokes]]
+label = "Module C"

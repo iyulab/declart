@@ -1,0 +1,5 @@
+kind = "timeline"
+
+[[events]]
+date = "2024-01-01"
+label = "Only Event"

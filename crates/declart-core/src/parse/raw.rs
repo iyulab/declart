@@ -40,3 +40,75 @@ pub struct RawItem {
 pub struct RawQuadrant {
     pub label: String,
 }
+
+/// Raw representation for the hub_spoke kind.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawHubSpokeDiagram {
+    pub kind: String,
+    pub title: Option<String>,
+    pub center: String,
+    #[serde(default)]
+    pub spokes: Vec<RawItem>,
+}
+
+/// Raw representation for the venn kind.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawVennDiagram {
+    pub kind: String,
+    pub title: Option<String>,
+    #[serde(default)]
+    pub sets: Vec<RawVennSet>,
+    #[serde(default)]
+    pub intersections: Vec<RawVennIntersection>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawVennSet {
+    pub label: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawVennIntersection {
+    pub sets: Vec<String>,
+    pub label: String,
+}
+
+/// Raw representation for the timeline kind.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawTimelineDiagram {
+    pub kind: String,
+    pub title: Option<String>,
+    #[serde(default)]
+    pub events: Vec<RawTimelineEvent>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawTimelineEvent {
+    pub date: String,
+    pub label: String,
+}
+
+/// Raw representation for the fishbone kind.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawFishboneDiagram {
+    pub kind: String,
+    pub title: Option<String>,
+    pub effect: String,
+    #[serde(default)]
+    pub causes: Vec<RawFishboneCause>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawFishboneCause {
+    pub label: String,
+    #[serde(default)]
+    pub items: Vec<RawItem>,
+}

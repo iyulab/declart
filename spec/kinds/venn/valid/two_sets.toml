@@ -1,0 +1,12 @@
+kind = "venn"
+title = "Skills Overlap"
+
+[[sets]]
+label = "Design"
+
+[[sets]]
+label = "Engineering"
+
+[[intersections]]
+sets = ["Design", "Engineering"]
+label = "UX Engineering"

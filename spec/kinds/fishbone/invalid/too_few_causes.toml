@@ -1,0 +1,5 @@
+kind = "fishbone"
+effect = "Effect"
+
+[[causes]]
+label = "Only One"

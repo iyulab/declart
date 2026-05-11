@@ -1,0 +1,4 @@
+kind = "hub_spoke"
+
+[[spokes]]
+label = "Spoke 1"

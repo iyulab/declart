@@ -6,7 +6,7 @@ Rules that apply to every Declart declaration file.
 
 | Field | Type   | Description                          |
 |-------|--------|--------------------------------------|
-| kind  | string | The diagram kind. See `kinds/` for valid values. |
+| kind  | string | One of: `pyramid`, `process`, `cycle`, `matrix`, `hub_spoke`, `venn`, `timeline`, `fishbone` |
 
 ## Optional fields
 

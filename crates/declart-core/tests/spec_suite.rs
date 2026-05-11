@@ -94,3 +94,43 @@ fn matrix_valid_examples_parse_successfully() {
 fn matrix_invalid_examples_fail_to_parse() {
     assert_invalid_examples("matrix");
 }
+
+#[test]
+fn hub_spoke_valid_examples_parse_successfully() {
+    assert_valid_examples("hub_spoke");
+}
+
+#[test]
+fn hub_spoke_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("hub_spoke");
+}
+
+#[test]
+fn venn_valid_examples_parse_successfully() {
+    assert_valid_examples("venn");
+}
+
+#[test]
+fn venn_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("venn");
+}
+
+#[test]
+fn timeline_valid_examples_parse_successfully() {
+    assert_valid_examples("timeline");
+}
+
+#[test]
+fn timeline_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("timeline");
+}
+
+#[test]
+fn fishbone_valid_examples_parse_successfully() {
+    assert_valid_examples("fishbone");
+}
+
+#[test]
+fn fishbone_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("fishbone");
+}

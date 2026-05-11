@@ -1,10 +1,14 @@
 pub(crate) mod cycle;
+pub(crate) mod fishbone;
 pub(crate) mod font;
+pub(crate) mod hub_spoke;
 pub(crate) mod matrix;
 pub(crate) mod process;
 pub(crate) mod pyramid;
 mod svg;
 pub mod theme;
+pub(crate) mod timeline;
+pub(crate) mod venn;
 
 pub use theme::{Theme, DEFAULT_THEME};
 
@@ -16,5 +20,9 @@ pub fn render(diagram: &Diagram, theme: &Theme) -> Result<String, DeclartError> 
         Diagram::Process(d) => Ok(process::render(d, theme)),
         Diagram::Cycle(d) => Ok(cycle::render(d, theme)),
         Diagram::Matrix(d) => Ok(matrix::render(d, theme)),
+        Diagram::HubSpoke(d) => Ok(hub_spoke::render(d, theme)),
+        Diagram::Venn(d) => Ok(venn::render(d, theme)),
+        Diagram::Timeline(d) => Ok(timeline::render(d, theme)),
+        Diagram::Fishbone(d) => Ok(fishbone::render(d, theme)),
     }
 }

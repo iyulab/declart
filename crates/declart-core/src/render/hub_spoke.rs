@@ -1,0 +1,166 @@
+use std::f32::consts::PI;
+
+use crate::model::HubSpokeDiagram;
+use crate::render::{font, svg::SvgBuilder, theme::Theme};
+
+const HUB_W: f32 = 140.0;
+const HUB_H: f32 = 55.0;
+const SPOKE_W: f32 = 110.0;
+const SPOKE_H: f32 = 44.0;
+const PADDING: f32 = 30.0;
+const TITLE_AREA: f32 = 50.0;
+const LINE_W: f32 = 2.0;
+
+pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
+    let n = diagram.spokes.len();
+    let n_f = n as f32;
+
+    let spoke_half_diag = ((SPOKE_W / 2.0).powi(2) + (SPOKE_H / 2.0).powi(2)).sqrt();
+    let hub_half_diag = ((HUB_W / 2.0).powi(2) + (HUB_H / 2.0).powi(2)).sqrt();
+
+    let radius = if n >= 2 {
+        f32::max(150.0, spoke_half_diag / (PI / n_f).sin() * 1.2)
+    } else {
+        180.0
+    };
+
+    let diagram_size = 2.0 * (radius + spoke_half_diag + PADDING);
+    let title_h = if diagram.title.is_some() { TITLE_AREA } else { PADDING };
+    let canvas_w = diagram_size;
+    let canvas_h = diagram_size + title_h;
+    let cx = canvas_w / 2.0;
+    let cy = title_h + diagram_size / 2.0;
+
+    let mut builder = SvgBuilder::new(canvas_w, canvas_h);
+
+    if let Some(title) = &diagram.title {
+        builder.text(
+            canvas_w / 2.0,
+            TITLE_AREA / 2.0,
+            title,
+            &theme.title_color.to_hex(),
+            theme.typography.title_size,
+        );
+    }
+
+    let spoke_centers: Vec<(f32, f32)> = (0..n)
+        .map(|i| {
+            let angle = -PI / 2.0 + 2.0 * PI * i as f32 / n_f;
+            (cx + radius * angle.cos(), cy + radius * angle.sin())
+        })
+        .collect();
+
+    let spoke_color = theme.layers.base;
+    let hub_color = theme.layers.apex;
+    let line_color = &hub_color.to_hex();
+
+    // Draw connection lines first (behind nodes)
+    for &(sx, sy) in &spoke_centers {
+        let dx = sx - cx;
+        let dy = sy - cy;
+        let len = (dx * dx + dy * dy).sqrt();
+        if len < 1.0 {
+            continue;
+        }
+        let ux = dx / len;
+        let uy = dy / len;
+        let start_x = cx + ux * hub_half_diag;
+        let start_y = cy + uy * hub_half_diag;
+        let end_x = sx - ux * spoke_half_diag;
+        let end_y = sy - uy * spoke_half_diag;
+        builder.line(start_x, start_y, end_x, end_y, line_color, LINE_W);
+    }
+
+    // Draw spoke nodes
+    let spoke_text_color = if spoke_color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+    for (i, spoke) in diagram.spokes.iter().enumerate() {
+        let (sx, sy) = spoke_centers[i];
+        let x = sx - SPOKE_W / 2.0;
+        let y = sy - SPOKE_H / 2.0;
+
+        builder.polygon(
+            &[(x, y), (x + SPOKE_W, y), (x + SPOKE_W, y + SPOKE_H), (x, y + SPOKE_H)],
+            &spoke_color.to_hex(),
+            "none",
+        );
+
+        let available = SPOKE_W * 0.85;
+        let mut fs = theme.typography.label_size;
+        let tw = font::measure_text(&spoke.label, fs);
+        if tw > available && available > 0.0 {
+            fs = (fs * available / tw).max(theme.typography.label_size_min);
+        }
+        builder.text(sx, sy, &spoke.label, &spoke_text_color.to_hex(), fs);
+    }
+
+    // Draw hub node on top
+    let hub_text_color = if hub_color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+    let hx = cx - HUB_W / 2.0;
+    let hy = cy - HUB_H / 2.0;
+    builder.polygon(
+        &[(hx, hy), (hx + HUB_W, hy), (hx + HUB_W, hy + HUB_H), (hx, hy + HUB_H)],
+        &hub_color.to_hex(),
+        "none",
+    );
+
+    let available = HUB_W * 0.85;
+    let mut fs = theme.typography.label_size;
+    let tw = font::measure_text(&diagram.center, fs);
+    if tw > available && available > 0.0 {
+        fs = (fs * available / tw).max(theme.typography.label_size_min);
+    }
+    builder.text(cx, cy, &diagram.center, &hub_text_color.to_hex(), fs);
+
+    builder.build(&theme.background.to_hex())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{HubSpokeDiagram, Item};
+    use crate::render::DEFAULT_THEME;
+
+    fn make_diagram(n: usize, title: Option<&str>) -> HubSpokeDiagram {
+        HubSpokeDiagram {
+            title: title.map(String::from),
+            center: "Hub".to_string(),
+            spokes: (0..n)
+                .map(|i| Item { label: format!("Spoke {}", i + 1), emphasis: None })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn render_produces_svg_element() {
+        let d = make_diagram(4, Some("Test"));
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.starts_with("<svg"));
+        assert!(svg.ends_with("</svg>"));
+    }
+
+    #[test]
+    fn render_includes_hub_and_spoke_labels() {
+        let d = make_diagram(4, None);
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains("Hub"));
+        assert!(svg.contains("Spoke 1"));
+        assert!(svg.contains("Spoke 4"));
+    }
+
+    #[test]
+    fn render_has_correct_polygon_count() {
+        let d = make_diagram(5, None);
+        let svg = render(&d, &DEFAULT_THEME);
+        // N spoke boxes + 1 hub box = N+1
+        let count = svg.matches("<polygon").count();
+        assert_eq!(count, 6, "expected 6 polygons for 5 spokes + hub");
+    }
+
+    #[test]
+    fn render_has_n_connection_lines() {
+        let d = make_diagram(5, None);
+        let svg = render(&d, &DEFAULT_THEME);
+        let count = svg.matches("<line").count();
+        assert_eq!(count, 5, "expected 5 lines for 5 spokes");
+    }
+}

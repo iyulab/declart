@@ -1,0 +1,8 @@
+kind = "venn"
+color = "blue"
+
+[[sets]]
+label = "A"
+
+[[sets]]
+label = "B"

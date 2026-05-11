@@ -59,14 +59,18 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-Pre-alpha. v0.2 implements four diagram kinds end-to-end: TOML declaration → parse → SVG render → CLI.
+Pre-alpha. v0.3 implements eight diagram kinds end-to-end: TOML declaration → parse → SVG render → CLI.
 
-| Kind    | Status |
-|---------|--------|
-| Pyramid | ✅ v0.1 |
-| Process | ✅ v0.2 |
-| Cycle   | ✅ v0.2 |
-| Matrix 2×2 | ✅ v0.2 |
+| Kind           | Status |
+|----------------|--------|
+| Pyramid        | ✅ v0.1 |
+| Process        | ✅ v0.2 |
+| Cycle          | ✅ v0.2 |
+| Matrix 2×2     | ✅ v0.2 |
+| Hub-and-Spoke  | ✅ v0.3 |
+| Venn           | ✅ v0.3 |
+| Timeline       | ✅ v0.3 |
+| Fishbone       | ✅ v0.3 |
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 

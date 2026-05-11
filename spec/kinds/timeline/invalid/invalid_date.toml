@@ -1,0 +1,9 @@
+kind = "timeline"
+
+[[events]]
+date = "January 2024"
+label = "Start"
+
+[[events]]
+date = "2024-06-01"
+label = "End"

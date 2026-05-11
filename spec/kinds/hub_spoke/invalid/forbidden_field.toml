@@ -1,0 +1,6 @@
+kind = "hub_spoke"
+center = "Hub"
+color = "blue"
+
+[[spokes]]
+label = "Spoke 1"

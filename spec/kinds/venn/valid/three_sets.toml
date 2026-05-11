@@ -1,0 +1,27 @@
+kind = "venn"
+title = "Product Development"
+
+[[sets]]
+label = "Desirable"
+
+[[sets]]
+label = "Feasible"
+
+[[sets]]
+label = "Viable"
+
+[[intersections]]
+sets = ["Desirable", "Feasible"]
+label = "Useful"
+
+[[intersections]]
+sets = ["Feasible", "Viable"]
+label = "Sustainable"
+
+[[intersections]]
+sets = ["Desirable", "Viable"]
+label = "Lovable"
+
+[[intersections]]
+sets = ["Desirable", "Feasible", "Viable"]
+label = "Product-Market Fit"

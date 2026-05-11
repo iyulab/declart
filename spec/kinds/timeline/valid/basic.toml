@@ -1,0 +1,18 @@
+kind = "timeline"
+title = "Product Launch History"
+
+[[events]]
+date = "2024-01-15"
+label = "Alpha"
+
+[[events]]
+date = "2024-04-01"
+label = "Beta"
+
+[[events]]
+date = "2024-07-20"
+label = "Launch"
+
+[[events]]
+date = "2024-12-01"
+label = "v2.0"

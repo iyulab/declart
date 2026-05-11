@@ -1,0 +1,19 @@
+kind = "hub_spoke"
+title = "Cloud Architecture"
+
+center = "API Gateway"
+
+[[spokes]]
+label = "Auth Service"
+
+[[spokes]]
+label = "User Service"
+
+[[spokes]]
+label = "Order Service"
+
+[[spokes]]
+label = "Payment Service"
+
+[[spokes]]
+label = "Notification"

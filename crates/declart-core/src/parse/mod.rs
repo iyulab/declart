@@ -1,7 +1,7 @@
 mod raw;
 
 use crate::error::DeclartError;
-use crate::model::{Diagram, Emphasis, Item, ItemsDiagram, MatrixDiagram};
+use crate::model::{Diagram, Emphasis, FishboneCause, FishboneDiagram, HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram, TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet};
 
 pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
     let probe: raw::KindProbe = toml::from_str(input)?;
@@ -14,6 +14,22 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
         "matrix" => {
             let raw: raw::RawMatrixDiagram = toml::from_str(input)?;
             validate_matrix(raw)
+        }
+        "hub_spoke" => {
+            let raw: raw::RawHubSpokeDiagram = toml::from_str(input)?;
+            validate_hub_spoke(raw)
+        }
+        "venn" => {
+            let raw: raw::RawVennDiagram = toml::from_str(input)?;
+            validate_venn(raw)
+        }
+        "timeline" => {
+            let raw: raw::RawTimelineDiagram = toml::from_str(input)?;
+            validate_timeline(raw)
+        }
+        "fishbone" => {
+            let raw: raw::RawFishboneDiagram = toml::from_str(input)?;
+            validate_fishbone(raw)
         }
         other => Err(DeclartError::UnknownKind(other.to_string())),
     }
@@ -74,6 +90,94 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
         x_axis: raw.x_axis,
         y_axis: raw.y_axis,
         quadrants,
+    }))
+}
+
+fn validate_fishbone(raw: raw::RawFishboneDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "fishbone");
+    if raw.causes.len() < 2 {
+        return Err(DeclartError::TooFewItems { kind: "fishbone", min: 2, got: raw.causes.len() });
+    }
+    let causes = raw
+        .causes
+        .into_iter()
+        .map(|c| -> Result<FishboneCause, DeclartError> {
+            let items = parse_items(c.items)?;
+            Ok(FishboneCause { label: c.label, items })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(Diagram::Fishbone(FishboneDiagram {
+        title: raw.title,
+        effect: raw.effect,
+        causes,
+    }))
+}
+
+fn validate_timeline(raw: raw::RawTimelineDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "timeline");
+    if raw.events.len() < 2 {
+        return Err(DeclartError::TooFewItems { kind: "timeline", min: 2, got: raw.events.len() });
+    }
+    for event in &raw.events {
+        if !is_valid_iso_date(&event.date) {
+            return Err(DeclartError::InvalidValue {
+                field: "date".to_string(),
+                value: event.date.clone(),
+                hint: "Date must be in ISO 8601 format: YYYY-MM-DD".to_string(),
+            });
+        }
+    }
+    let mut events: Vec<TimelineEvent> = raw
+        .events
+        .into_iter()
+        .map(|e| TimelineEvent { date: e.date, label: e.label })
+        .collect();
+    events.sort_by(|a, b| a.date.cmp(&b.date));
+    Ok(Diagram::Timeline(TimelineDiagram { title: raw.title, events }))
+}
+
+fn is_valid_iso_date(s: &str) -> bool {
+    let bytes = s.as_bytes();
+    if bytes.len() != 10 {
+        return false;
+    }
+    if bytes[4] != b'-' || bytes[7] != b'-' {
+        return false;
+    }
+    bytes[..4].iter().all(|b| b.is_ascii_digit())
+        && bytes[5..7].iter().all(|b| b.is_ascii_digit())
+        && bytes[8..10].iter().all(|b| b.is_ascii_digit())
+}
+
+fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "venn");
+    let n = raw.sets.len();
+    if n < 2 || n > 3 {
+        return Err(DeclartError::InvalidValue {
+            field: "sets".to_string(),
+            value: format!("{} sets", n),
+            hint: "Venn diagrams require exactly 2 or 3 sets".to_string(),
+        });
+    }
+    let sets = raw.sets.into_iter().map(|s| VennSet { label: s.label }).collect();
+    let intersections = raw
+        .intersections
+        .into_iter()
+        .map(|i| VennIntersection { sets: i.sets, label: i.label })
+        .collect();
+    Ok(Diagram::Venn(VennDiagram { title: raw.title, sets, intersections }))
+}
+
+fn validate_hub_spoke(raw: raw::RawHubSpokeDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "hub_spoke");
+    if raw.spokes.is_empty() {
+        return Err(DeclartError::EmptyItems);
+    }
+    let spokes = parse_items(raw.spokes)?;
+    Ok(Diagram::HubSpoke(HubSpokeDiagram {
+        title: raw.title,
+        center: raw.center,
+        spokes,
     }))
 }
 

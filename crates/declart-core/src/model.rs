@@ -27,6 +27,64 @@ pub struct MatrixDiagram {
     pub quadrants: Vec<Item>,
 }
 
+/// Model for the Hub-and-Spoke kind.
+#[derive(Debug, Clone)]
+pub struct HubSpokeDiagram {
+    pub title: Option<String>,
+    pub center: String,
+    pub spokes: Vec<Item>,
+}
+
+/// A set in a Venn diagram.
+#[derive(Debug, Clone)]
+pub struct VennSet {
+    pub label: String,
+}
+
+/// A labeled intersection region in a Venn diagram.
+#[derive(Debug, Clone)]
+pub struct VennIntersection {
+    pub sets: Vec<String>,
+    pub label: String,
+}
+
+/// Model for the Venn diagram kind (2–3 sets).
+#[derive(Debug, Clone)]
+pub struct VennDiagram {
+    pub title: Option<String>,
+    pub sets: Vec<VennSet>,
+    pub intersections: Vec<VennIntersection>,
+}
+
+/// A single event on a timeline.
+#[derive(Debug, Clone)]
+pub struct TimelineEvent {
+    pub date: String,
+    pub label: String,
+}
+
+/// Model for the Timeline kind.
+#[derive(Debug, Clone)]
+pub struct TimelineDiagram {
+    pub title: Option<String>,
+    pub events: Vec<TimelineEvent>,
+}
+
+/// A single cause branch in a fishbone diagram (may have sub-causes).
+#[derive(Debug, Clone)]
+pub struct FishboneCause {
+    pub label: String,
+    pub items: Vec<Item>,
+}
+
+/// Model for the Fishbone (Ishikawa) kind.
+#[derive(Debug, Clone)]
+pub struct FishboneDiagram {
+    pub title: Option<String>,
+    pub effect: String,
+    pub causes: Vec<FishboneCause>,
+}
+
 /// The parsed, validated representation of a diagram declaration.
 #[derive(Debug, Clone)]
 pub enum Diagram {
@@ -34,6 +92,10 @@ pub enum Diagram {
     Process(ItemsDiagram),
     Cycle(ItemsDiagram),
     Matrix(MatrixDiagram),
+    HubSpoke(HubSpokeDiagram),
+    Venn(VennDiagram),
+    Timeline(TimelineDiagram),
+    Fishbone(FishboneDiagram),
 }
 
 #[cfg(test)]

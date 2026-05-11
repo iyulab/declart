@@ -2,7 +2,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum DeclartError {
-    #[error("unknown diagram kind: `{0}`\n  = hint: Valid kinds are: pyramid, process, cycle, matrix")]
+    #[error("unknown diagram kind: `{0}`\n  = hint: Valid kinds are: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone")]
     UnknownKind(String),
 
     #[error("invalid quadrant count: expected exactly 4, got {0}")]

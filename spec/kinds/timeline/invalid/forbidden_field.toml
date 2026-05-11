@@ -1,0 +1,10 @@
+kind = "timeline"
+color = "blue"
+
+[[events]]
+date = "2024-01-01"
+label = "Start"
+
+[[events]]
+date = "2024-06-01"
+label = "End"

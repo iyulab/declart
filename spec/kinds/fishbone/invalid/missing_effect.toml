@@ -1,0 +1,7 @@
+kind = "fishbone"
+
+[[causes]]
+label = "Cause 1"
+
+[[causes]]
+label = "Cause 2"

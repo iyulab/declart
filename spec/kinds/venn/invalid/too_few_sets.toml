@@ -1,0 +1,4 @@
+kind = "venn"
+
+[[sets]]
+label = "Only One"
