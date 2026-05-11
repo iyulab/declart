@@ -15,6 +15,6 @@ pub enum DeclartError {
         hint: String,
     },
 
-    #[error("parse error: {0}\n  = hint: Check for forbidden fields (color, font, size, etc.) or missing required fields.")]
+    #[error("parse error\n  = hint: Check for forbidden fields (color, font, size, etc.) or missing required fields.")]
     Parse(#[from] toml::de::Error),
 }

@@ -20,8 +20,7 @@ enum Commands {
         /// Output SVG file [default: input with .svg extension]
         #[arg(short, long)]
         output: Option<PathBuf>,
-        /// Theme name
-        #[arg(long, default_value = "default")]
+        #[arg(long, default_value = "default", hide = true)]
         theme: String,
         /// Write SVG to stdout instead of file
         #[arg(long)]

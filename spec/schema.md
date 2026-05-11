@@ -34,3 +34,5 @@ When a kind supports item-level emphasis, it uses this field:
 | `secondary` | Secondary importance                 |
 
 The engine decides visual representation. Omitting `emphasis` means default weight.
+
+> **v0.1 note:** `emphasis` is parsed and validated but not yet reflected in rendered output. Visual differentiation of emphasized items is planned for a future release.
