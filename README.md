@@ -59,9 +59,68 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-Pre-alpha. The syntax, schema, CLI surface, and engine architecture are not yet decided.
+Pre-alpha. v0.1 implements the Pyramid diagram kind end-to-end: TOML declaration → parse → SVG render → CLI.
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
+
+## Install
+
+```bash
+cargo install --git https://github.com/iyulab/declart
+```
+
+Or build locally:
+
+```bash
+git clone https://github.com/iyulab/declart
+cd declart
+cargo build --release
+# binary at target/release/declart
+```
+
+## Usage
+
+Create a declaration file:
+
+```toml
+# hierarchy.toml
+kind = "pyramid"
+title = "Maslow's Hierarchy of Needs"
+
+[[items]]
+label = "Self-actualization"
+
+[[items]]
+label = "Esteem"
+
+[[items]]
+label = "Love & Belonging"
+
+[[items]]
+label = "Safety"
+
+[[items]]
+label = "Physiological"
+```
+
+Render to SVG:
+
+```bash
+declart render hierarchy.toml
+# writes hierarchy.svg
+```
+
+Validate without rendering:
+
+```bash
+declart validate hierarchy.toml
+```
+
+Pipe to stdout:
+
+```bash
+declart render hierarchy.toml --stdout > diagram.svg
+```
 
 ## License
 
