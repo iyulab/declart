@@ -39,6 +39,7 @@ pub struct RawItem {
 #[serde(deny_unknown_fields)]
 pub struct RawQuadrant {
     pub label: String,
+    pub emphasis: Option<String>,
 }
 
 /// Raw representation for the hub_spoke kind.
@@ -110,5 +111,13 @@ pub struct RawFishboneDiagram {
 pub struct RawFishboneCause {
     pub label: String,
     #[serde(default)]
-    pub items: Vec<RawItem>,
+    pub items: Vec<RawFishboneItem>,
+}
+
+/// Sub-cause item in a fishbone diagram. Intentionally has only `label` — emphasis is not
+/// supported on fishbone sub-items per spec.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawFishboneItem {
+    pub label: String,
 }

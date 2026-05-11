@@ -1,0 +1,18 @@
+kind = "hub_spoke"
+title = "Platform Services"
+
+center = "API Gateway"
+
+[[spokes]]
+label = "Auth"
+emphasis = "primary"
+
+[[spokes]]
+label = "Users"
+
+[[spokes]]
+label = "Orders"
+emphasis = "secondary"
+
+[[spokes]]
+label = "Payments"

@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use crate::model::HubSpokeDiagram;
+use crate::model::{Emphasis, HubSpokeDiagram};
 use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
 const HUB_W: f32 = 140.0;
@@ -72,16 +72,27 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
     }
 
     // Draw spoke nodes
-    let spoke_text_color = if spoke_color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
     for (i, spoke) in diagram.spokes.iter().enumerate() {
         let (sx, sy) = spoke_centers[i];
         let x = sx - SPOKE_W / 2.0;
         let y = sy - SPOKE_H / 2.0;
 
-        builder.polygon(
+        let box_color = match &spoke.emphasis {
+            Some(Emphasis::Secondary) => spoke_color.interpolate(&theme.background, 0.3),
+            _ => spoke_color,
+        };
+        let (stroke_color, stroke_width) = match &spoke.emphasis {
+            Some(Emphasis::Primary) => (theme.background.to_hex(), 3.0_f32),
+            _ => ("none".to_string(), 0.0_f32),
+        };
+        let text_color = if box_color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+        let bold = matches!(&spoke.emphasis, Some(Emphasis::Primary));
+
+        builder.polygon_stroked(
             &[(x, y), (x + SPOKE_W, y), (x + SPOKE_W, y + SPOKE_H), (x, y + SPOKE_H)],
-            &spoke_color.to_hex(),
-            "none",
+            &box_color.to_hex(),
+            &stroke_color,
+            stroke_width,
         );
 
         let available = SPOKE_W * 0.85;
@@ -90,7 +101,7 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
         if tw > available && available > 0.0 {
             fs = (fs * available / tw).max(theme.typography.label_size_min);
         }
-        builder.text(sx, sy, &spoke.label, &spoke_text_color.to_hex(), fs);
+        builder.text_weighted(sx, sy, &spoke.label, &text_color.to_hex(), fs, bold);
     }
 
     // Draw hub node on top
@@ -162,5 +173,34 @@ mod tests {
         let svg = render(&d, &DEFAULT_THEME);
         let count = svg.matches("<line").count();
         assert_eq!(count, 5, "expected 5 lines for 5 spokes");
+    }
+
+    #[test]
+    fn render_primary_emphasis_has_stroke_and_bold() {
+        let d = HubSpokeDiagram {
+            title: None,
+            center: "Hub".to_string(),
+            spokes: vec![
+                Item { label: "Primary".to_string(), emphasis: Some(Emphasis::Primary) },
+                Item { label: "Normal".to_string(), emphasis: None },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains("font-weight=\"bold\""), "primary spoke should be bold");
+        assert!(svg.contains("stroke-width=\"3.0\""), "primary spoke should have stroke");
+    }
+
+    #[test]
+    fn render_secondary_emphasis_has_no_stroke() {
+        let d = HubSpokeDiagram {
+            title: None,
+            center: "Hub".to_string(),
+            spokes: vec![
+                Item { label: "Secondary".to_string(), emphasis: Some(Emphasis::Secondary) },
+                Item { label: "Normal".to_string(), emphasis: None },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(!svg.contains("stroke-width=\"3.0\""), "secondary spoke should not have outline stroke");
     }
 }

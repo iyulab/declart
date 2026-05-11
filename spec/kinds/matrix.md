@@ -14,9 +14,10 @@ A two-by-two matrix diagram. Used for prioritization, strategy frameworks, and c
 
 ## Quadrant fields
 
-| Field | Required | Type   | Description                            |
-|-------|----------|--------|----------------------------------------|
-| label | yes      | string | Text displayed in the quadrant         |
+| Field    | Required | Type   | Description                                       |
+|----------|----------|--------|---------------------------------------------------|
+| label    | yes      | string | Text displayed in the quadrant                    |
+| emphasis | no       | string | `"primary"` or `"secondary"`. See schema.         |
 
 ## Quadrant order
 

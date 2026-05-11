@@ -1,4 +1,4 @@
-use crate::model::MatrixDiagram;
+use crate::model::{Emphasis, MatrixDiagram};
 use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
 const CANVAS_SIZE: f32 = 500.0;
@@ -50,24 +50,35 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
     ];
 
     for (idx, (x1, y1, x2, y2)) in cells.iter().enumerate() {
-        let color = &colors[idx];
-        let text_color = if color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+        let quadrant = &diagram.quadrants[idx];
+        let base_color = &colors[idx];
+        let box_color = match &quadrant.emphasis {
+            Some(Emphasis::Secondary) => base_color.interpolate(&theme.background, 0.3),
+            _ => *base_color,
+        };
+        let (stroke_color, stroke_width) = match &quadrant.emphasis {
+            Some(Emphasis::Primary) => (theme.background.to_hex(), 3.0_f32),
+            _ => ("none".to_string(), 0.0_f32),
+        };
+        let text_color = if box_color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+        let bold = matches!(&quadrant.emphasis, Some(Emphasis::Primary));
 
-        builder.polygon(
+        builder.polygon_stroked(
             &[(*x1, *y1), (*x2, *y1), (*x2, *y2), (*x1, *y2)],
-            &color.to_hex(),
-            "none",
+            &box_color.to_hex(),
+            &stroke_color,
+            stroke_width,
         );
 
         let cx = (x1 + x2) / 2.0;
         let cy = (y1 + y2) / 2.0;
         let cell_w = (x2 - x1) * 0.85;
         let mut font_size = theme.typography.label_size;
-        let text_w = font::measure_text(&diagram.quadrants[idx].label, font_size);
+        let text_w = font::measure_text(&quadrant.label, font_size);
         if text_w > cell_w && cell_w > 0.0 {
             font_size = (font_size * cell_w / text_w).max(theme.typography.label_size_min);
         }
-        builder.text(cx, cy, &diagram.quadrants[idx].label, &text_color.to_hex(), font_size);
+        builder.text_weighted(cx, cy, &quadrant.label, &text_color.to_hex(), font_size, bold);
     }
 
     // Axis divider lines
@@ -152,5 +163,23 @@ mod tests {
         let svg = render(&d, &DEFAULT_THEME);
         let count = svg.matches("<polygon").count();
         assert_eq!(count, 4, "expected 4 quadrant polygons, got {}", count);
+    }
+
+    #[test]
+    fn render_primary_quadrant_has_stroke_and_bold() {
+        let d = MatrixDiagram {
+            title: None,
+            x_axis: "X".to_string(),
+            y_axis: "Y".to_string(),
+            quadrants: vec![
+                Item { label: "Primary".to_string(), emphasis: Some(Emphasis::Primary) },
+                Item { label: "Q2".to_string(), emphasis: None },
+                Item { label: "Q3".to_string(), emphasis: None },
+                Item { label: "Q4".to_string(), emphasis: None },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains("font-weight=\"bold\""), "primary quadrant should be bold");
+        assert!(svg.contains("stroke-width=\"3.0\""), "primary quadrant should have stroke");
     }
 }

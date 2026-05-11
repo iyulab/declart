@@ -75,3 +75,22 @@ pub static DEFAULT_THEME: Theme = Theme {
     },
     title_color: Color::new(26, 58, 92),
 };
+
+pub static MONOCHROME_THEME: Theme = Theme {
+    name: "monochrome",
+    background: Color::new(255, 255, 255),
+    layers: LayerGradient {
+        apex: Color::new(40, 40, 40),
+        base: Color::new(200, 200, 200),
+    },
+    text: TextColors {
+        on_dark: Color::new(255, 255, 255),
+        on_light: Color::new(40, 40, 40),
+    },
+    typography: Typography {
+        title_size: 18.0,
+        label_size: 14.0,
+        label_size_min: 8.0,
+    },
+    title_color: Color::new(40, 40, 40),
+};

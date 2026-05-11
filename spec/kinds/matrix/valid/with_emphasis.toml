@@ -1,0 +1,18 @@
+kind = "matrix"
+title = "Priority Matrix"
+x_axis = "Impact"
+y_axis = "Effort"
+
+[[quadrants]]
+label = "Quick Wins"
+emphasis = "primary"
+
+[[quadrants]]
+label = "Big Bets"
+
+[[quadrants]]
+label = "Fill-Ins"
+emphasis = "secondary"
+
+[[quadrants]]
+label = "Thankless"

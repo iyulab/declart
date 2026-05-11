@@ -9,4 +9,4 @@ pub use model::{
     MatrixDiagram, TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet,
 };
 pub use parse::parse;
-pub use render::render;
+pub use render::{render, render_opts};

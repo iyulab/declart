@@ -83,8 +83,22 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
     let quadrants = raw
         .quadrants
         .into_iter()
-        .map(|q| Item { label: q.label, emphasis: None })
-        .collect();
+        .map(|q| {
+            let emphasis = match q.emphasis.as_deref() {
+                None => None,
+                Some("primary") => Some(Emphasis::Primary),
+                Some("secondary") => Some(Emphasis::Secondary),
+                Some(other) => {
+                    return Err(DeclartError::InvalidValue {
+                        field: "emphasis".to_string(),
+                        value: other.to_string(),
+                        hint: "Valid values are: primary, secondary".to_string(),
+                    })
+                }
+            };
+            Ok(Item { label: q.label, emphasis })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
     Ok(Diagram::Matrix(MatrixDiagram {
         title: raw.title,
         x_axis: raw.x_axis,
@@ -101,11 +115,11 @@ fn validate_fishbone(raw: raw::RawFishboneDiagram) -> Result<Diagram, DeclartErr
     let causes = raw
         .causes
         .into_iter()
-        .map(|c| -> Result<FishboneCause, DeclartError> {
-            let items = parse_items(c.items)?;
-            Ok(FishboneCause { label: c.label, items })
+        .map(|c| {
+            let items = c.items.into_iter().map(|i| Item { label: i.label, emphasis: None }).collect();
+            FishboneCause { label: c.label, items }
         })
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect();
     Ok(Diagram::Fishbone(FishboneDiagram {
         title: raw.title,
         effect: raw.effect,
