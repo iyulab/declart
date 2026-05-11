@@ -11,13 +11,19 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -44,19 +50,27 @@ jobs:
 
       - name: Build WASM for playground
         run: |
-          mkdir -p docs/src/playground/wasm
           wasm-pack build crates/declart-wasm --target web \
-            --out-dir "$(pwd)/docs/src/playground/wasm" --release
+            --out-dir /tmp/wasm-pkg --release
 
       - name: Build spec site
         run: mdbook build docs/
 
       - name: Copy WASM into book output
-        run: cp -r docs/src/playground/wasm docs/book/playground/wasm
+        run: |
+          mkdir -p docs/book/playground/wasm
+          cp /tmp/wasm-pkg/declart_wasm.js \
+             /tmp/wasm-pkg/declart_wasm_bg.wasm \
+             docs/book/playground/wasm/
 
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/book
-          force_orphan: true
+          path: docs/book
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
