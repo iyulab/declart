@@ -1,4 +1,4 @@
-pub mod font;
-pub mod pyramid;
-pub mod svg;
+pub(crate) mod font;
+mod pyramid;
+mod svg;
 pub mod theme;
