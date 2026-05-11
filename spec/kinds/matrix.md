@@ -14,18 +14,22 @@ A two-by-two matrix diagram. Used for prioritization, strategy frameworks, and c
 
 ## Quadrant fields
 
-| Field    | Required | Type   | Description                                       |
-|----------|----------|--------|---------------------------------------------------|
-| label    | yes      | string | Text displayed in the quadrant                    |
-| emphasis | no       | string | `"primary"` or `"secondary"`. See schema.         |
+| Field    | Required | Type   | Description                                                             |
+|----------|----------|--------|-------------------------------------------------------------------------|
+| label    | yes      | string | Text displayed in the quadrant                                          |
+| emphasis | no       | string | `"primary"` or `"secondary"`. See schema.                               |
+| position | no       | string | Explicit cell: `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"` |
 
 ## Quadrant order
 
-Quadrants are declared in reading order (left-to-right, top-to-bottom):
+**Without `position`** (default): Quadrants are declared in reading order (left-to-right, top-to-bottom):
 1. Top-left (high Y, low X)
 2. Top-right (high Y, high X)
 3. Bottom-left (low Y, low X)
 4. Bottom-right (low Y, high X)
+
+**With `position`**: All four quadrants must each declare a distinct `position`. Order in the file does not matter.
+When any quadrant has `position`, all four must specify it.
 
 ## Rendering rules
 

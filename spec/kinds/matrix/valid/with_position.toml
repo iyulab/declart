@@ -1,0 +1,20 @@
+kind = "matrix"
+title = "Eisenhower Matrix (position-based)"
+x_axis = "Importance"
+y_axis = "Urgency"
+
+[[quadrants]]
+label = "Eliminate"
+position = "bottom-right"
+
+[[quadrants]]
+label = "Do First"
+position = "top-left"
+
+[[quadrants]]
+label = "Schedule"
+position = "top-right"
+
+[[quadrants]]
+label = "Delegate"
+position = "bottom-left"

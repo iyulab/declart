@@ -40,6 +40,7 @@ pub struct RawItem {
 pub struct RawQuadrant {
     pub label: String,
     pub emphasis: Option<String>,
+    pub position: Option<String>,
 }
 
 /// Raw representation for the hub_spoke kind.

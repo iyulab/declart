@@ -39,22 +39,24 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
     }
 }
 
+fn parse_emphasis(s: Option<&str>) -> Result<Option<Emphasis>, DeclartError> {
+    match s {
+        None => Ok(None),
+        Some("primary") => Ok(Some(Emphasis::Primary)),
+        Some("secondary") => Ok(Some(Emphasis::Secondary)),
+        Some(other) => Err(DeclartError::InvalidValue {
+            field: "emphasis".to_string(),
+            value: other.to_string(),
+            hint: "Valid values are: primary, secondary".to_string(),
+        }),
+    }
+}
+
 fn parse_items(raw_items: Vec<raw::RawItem>) -> Result<Vec<Item>, DeclartError> {
     raw_items
         .into_iter()
         .map(|item| {
-            let emphasis = match item.emphasis.as_deref() {
-                None => None,
-                Some("primary") => Some(Emphasis::Primary),
-                Some("secondary") => Some(Emphasis::Secondary),
-                Some(other) => {
-                    return Err(DeclartError::InvalidValue {
-                        field: "emphasis".to_string(),
-                        value: other.to_string(),
-                        hint: "Valid values are: primary, secondary".to_string(),
-                    })
-                }
-            };
+            let emphasis = parse_emphasis(item.emphasis.as_deref())?;
             Ok(Item { label: item.label, emphasis })
         })
         .collect()
@@ -84,25 +86,49 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
     if raw.quadrants.len() != 4 {
         return Err(DeclartError::InvalidQuadrantCount(raw.quadrants.len()));
     }
-    let quadrants = raw
-        .quadrants
-        .into_iter()
-        .map(|q| {
-            let emphasis = match q.emphasis.as_deref() {
-                None => None,
-                Some("primary") => Some(Emphasis::Primary),
-                Some("secondary") => Some(Emphasis::Secondary),
-                Some(other) => {
-                    return Err(DeclartError::InvalidValue {
-                        field: "emphasis".to_string(),
-                        value: other.to_string(),
-                        hint: "Valid values are: primary, secondary".to_string(),
-                    })
-                }
+
+    let has_positions = raw.quadrants.iter().any(|q| q.position.is_some());
+
+    let quadrants = if has_positions {
+        // position-based: all four must declare a distinct position
+        let mut slots: [Option<Item>; 4] = [None, None, None, None];
+        for q in raw.quadrants {
+            let pos = q.position.ok_or_else(|| DeclartError::InvalidValue {
+                field: "position".to_string(),
+                value: "(missing)".to_string(),
+                hint: "When any quadrant has position, all must specify it. Valid: top-left, top-right, bottom-left, bottom-right".to_string(),
+            })?;
+            let slot = match pos.as_str() {
+                "top-left" => 0_usize,
+                "top-right" => 1,
+                "bottom-left" => 2,
+                "bottom-right" => 3,
+                other => return Err(DeclartError::InvalidValue {
+                    field: "position".to_string(),
+                    value: other.to_string(),
+                    hint: "Valid values: top-left, top-right, bottom-left, bottom-right".to_string(),
+                }),
             };
-            Ok(Item { label: q.label, emphasis })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+            if slots[slot].is_some() {
+                return Err(DeclartError::InvalidValue {
+                    field: "position".to_string(),
+                    value: pos,
+                    hint: "Duplicate quadrant position".to_string(),
+                });
+            }
+            slots[slot] = Some(Item { label: q.label, emphasis: parse_emphasis(q.emphasis.as_deref())? });
+        }
+        slots.into_iter().map(|s| s.unwrap()).collect::<Vec<Item>>()
+    } else {
+        // index order (backward compatible)
+        raw.quadrants
+            .into_iter()
+            .map(|q| -> Result<Item, DeclartError> {
+                Ok(Item { label: q.label, emphasis: parse_emphasis(q.emphasis.as_deref())? })
+            })
+            .collect::<Result<Vec<Item>, DeclartError>>()?
+    };
+
     Ok(Diagram::Matrix(MatrixDiagram {
         title: raw.title,
         x_axis: raw.x_axis,
@@ -280,6 +306,90 @@ label = "Q1"
 label = "Q2"
 "#;
         assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_matrix_with_position_reorders_quadrants() {
+        // Declared in reverse order: bottom-right first, then top-left, top-right, bottom-left
+        let input = r#"
+kind = "matrix"
+x_axis = "X"
+y_axis = "Y"
+
+[[quadrants]]
+label = "Bottom-Right"
+position = "bottom-right"
+
+[[quadrants]]
+label = "Top-Left"
+position = "top-left"
+
+[[quadrants]]
+label = "Top-Right"
+position = "top-right"
+
+[[quadrants]]
+label = "Bottom-Left"
+position = "bottom-left"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Matrix(d) = diagram else { panic!("expected Matrix") };
+        // Model stores in canonical order: top-left, top-right, bottom-left, bottom-right
+        assert_eq!(d.quadrants[0].label, "Top-Left");
+        assert_eq!(d.quadrants[1].label, "Top-Right");
+        assert_eq!(d.quadrants[2].label, "Bottom-Left");
+        assert_eq!(d.quadrants[3].label, "Bottom-Right");
+    }
+
+    #[test]
+    fn parse_matrix_position_rejects_duplicate() {
+        let input = r#"
+kind = "matrix"
+x_axis = "X"
+y_axis = "Y"
+
+[[quadrants]]
+label = "A"
+position = "top-left"
+
+[[quadrants]]
+label = "B"
+position = "top-left"
+
+[[quadrants]]
+label = "C"
+position = "top-right"
+
+[[quadrants]]
+label = "D"
+position = "bottom-left"
+"#;
+        assert!(parse(input).is_err(), "duplicate position should be rejected");
+    }
+
+    #[test]
+    fn parse_matrix_position_rejects_missing_on_some() {
+        let input = r#"
+kind = "matrix"
+x_axis = "X"
+y_axis = "Y"
+
+[[quadrants]]
+label = "A"
+position = "top-left"
+
+[[quadrants]]
+label = "B"
+
+[[quadrants]]
+label = "C"
+position = "top-right"
+
+[[quadrants]]
+label = "D"
+position = "bottom-left"
+"#;
+        assert!(parse(input).is_err(), "mixed position/no-position should be rejected");
     }
 
     #[test]

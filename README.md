@@ -63,7 +63,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-v0.7.0 — rendering bug fixes (Hub-Spoke/Cycle connector gaps, Pyramid apex leader line), Matrix axis direction indicators, Playground v2 (draft protection, SVG export, error line highlighting, resize handle).
+v0.8.0 — Fishbone standard visuals (arrowhead + diagonal sub-items), Matrix quadrant position field, Playground Header/Footer branding, URL permalink, Preview zoom/pan, label_size_min accessibility improvement, Timeline dynamic canvas width.
 
 | Area | Status |
 |------|--------|
@@ -81,6 +81,12 @@ v0.7.0 — rendering bug fixes (Hub-Spoke/Cycle connector gaps, Pyramid apex lea
 | Pyramid apex label (leader line) | ✅ v0.7 |
 | Matrix axis direction (Low/High) | ✅ v0.7 |
 | Playground v2 (draft, export, error UX, resize) | ✅ v0.7 |
+| Fishbone fish head (arrowhead) + diagonal sub-items | ✅ v0.8 |
+| Matrix quadrant `position` field (explicit cell mapping) | ✅ v0.8 |
+| Playground URL permalink (base64 `?d=` sharing) | ✅ v0.8 |
+| Playground Header/Footer branding (GitHub, Docs, license) | ✅ v0.8 |
+| Playground Preview zoom/pan (wheel + drag + fit) | ✅ v0.8 |
+| Timeline dynamic canvas width (n × 55px minimum spacing) | ✅ v0.8 |
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 

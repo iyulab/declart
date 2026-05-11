@@ -1,7 +1,8 @@
 use crate::model::TimelineDiagram;
 use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
-const CANVAS_WIDTH: f32 = 800.0;
+const CANVAS_WIDTH_MIN: f32 = 800.0;
+const MIN_EVENT_SPACING: f32 = 55.0; // minimum average pixels per event
 const TITLE_AREA: f32 = 50.0;
 const PADDING_H: f32 = 60.0; // horizontal padding for first/last event
 const AXIS_Y_OFFSET: f32 = 140.0; // distance from top (below title) to axis
@@ -18,11 +19,15 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
     let canvas_h = title_h + AXIS_Y_OFFSET + DATE_OFFSET + 30.0 + 40.0;
     let axis_y = title_h + AXIS_Y_OFFSET;
 
-    let mut builder = SvgBuilder::new(CANVAS_WIDTH, canvas_h);
+    // Expand canvas width when there are many events to reduce label collision
+    let n = diagram.events.len();
+    let canvas_w = f32::max(CANVAS_WIDTH_MIN, n as f32 * MIN_EVENT_SPACING + 2.0 * PADDING_H);
+
+    let mut builder = SvgBuilder::new(canvas_w, canvas_h);
 
     if let Some(title) = &diagram.title {
         builder.text(
-            CANVAS_WIDTH / 2.0,
+            canvas_w / 2.0,
             TITLE_AREA / 2.0,
             title,
             &theme.title_color.to_hex(),
@@ -31,13 +36,11 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
     }
 
     // Events are already sorted by parse
-    let n = diagram.events.len();
-
     // Map dates to x positions using string comparison (ISO dates sort lexicographically)
     let first_date = &diagram.events[0].date;
     let last_date = &diagram.events[n - 1].date;
     let date_range = date_to_days(last_date) - date_to_days(first_date);
-    let usable_width = CANVAS_WIDTH - 2.0 * PADDING_H;
+    let usable_width = canvas_w - 2.0 * PADDING_H;
 
     let x_for = |date: &str| -> f32 {
         if date_range == 0 {
@@ -52,7 +55,7 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
     builder.line(
         PADDING_H / 2.0,
         axis_y,
-        CANVAS_WIDTH - PADDING_H / 2.0,
+        canvas_w - PADDING_H / 2.0,
         axis_y,
         &theme.layers.apex.to_hex(),
         AXIS_LINE_W,

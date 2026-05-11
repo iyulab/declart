@@ -200,6 +200,30 @@ mod tests {
     }
 
     #[test]
+    fn render_5_spokes_equiangular_symmetric() {
+        // For n=5, spokes should be at equal 72° intervals from top (-PI/2)
+        // producing left-right symmetric layout: 1 top + 2 right + 2 left
+        let n = 5_usize;
+        let n_f = n as f32;
+        let angles: Vec<f32> = (0..n)
+            .map(|i| -PI / 2.0 + 2.0 * PI * i as f32 / n_f)
+            .collect();
+        let step = 2.0 * PI / n_f;
+        for i in 1..n {
+            assert!((angles[i] - angles[i - 1] - step).abs() < 1e-5, "angular step should be uniform 72°");
+        }
+        // First spoke is at top
+        assert!((angles[0] - (-PI / 2.0)).abs() < 1e-5, "first spoke should be at top");
+        // Left-right symmetry: cos of spokes i=1,4 and i=2,3 should be equal and opposite
+        let cos_1 = angles[1].cos();
+        let cos_4 = angles[4].cos();
+        assert!((cos_1 + cos_4).abs() < 1e-4, "spokes 1 and 4 should be symmetric about vertical axis");
+        let cos_2 = angles[2].cos();
+        let cos_3 = angles[3].cos();
+        assert!((cos_2 + cos_3).abs() < 1e-4, "spokes 2 and 3 should be symmetric about vertical axis");
+    }
+
+    #[test]
     fn render_secondary_emphasis_has_no_stroke() {
         let d = HubSpokeDiagram {
             title: None,

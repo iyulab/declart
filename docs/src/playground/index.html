@@ -46,6 +46,28 @@
 
     header h1 { font-size: 1.05rem; font-weight: 600; letter-spacing: 0.03em; }
     header p  { font-size: 0.78rem; color: #94a3b8; }
+    .header-links { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+    .header-links a {
+      font-size: 0.75rem; color: #94a3b8; text-decoration: none; font-weight: 500;
+      padding: 3px 8px; border: 1px solid #334155; border-radius: 4px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .header-links a:hover { color: #e2e8f0; border-color: #64748b; }
+    .header-badge { font-size: 0.68rem; color: #64748b; font-family: monospace; }
+
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 5px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      color: var(--label);
+    }
+    footer a { color: var(--label); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
 
     .controls {
       display: flex;
@@ -85,6 +107,14 @@
     #status.loading { color: var(--accent); }
     #status.ok      { color: var(--ok); }
     #status.err     { color: var(--err-text); }
+
+    #share-btn {
+      font-size: 0.75rem; padding: 3px 10px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--bg); color: var(--label); cursor: pointer; font-weight: 500;
+    }
+    #share-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    #share-btn.copied { background: var(--ok); color: #fff; border-color: var(--ok); }
 
     .main {
       display: grid;
@@ -154,16 +184,32 @@
 
     .preview-area {
       flex: 1;
-      overflow: auto;
+      overflow: hidden;
       min-height: 0;
       background: var(--surface);
+      cursor: grab;
+      user-select: none;
+    }
+    .preview-area.panning { cursor: grabbing; }
+
+    #preview {
+      transform-origin: 0 0;
+      will-change: transform;
       padding: 20px;
+      display: inline-block;
     }
 
     #preview svg {
-      width: 100%;
-      height: auto;
       display: block;
+    }
+
+    #zoom-hint {
+      position: absolute;
+      bottom: 8px; right: 12px;
+      font-size: 0.65rem;
+      color: var(--label);
+      opacity: 0.7;
+      pointer-events: none;
     }
 
     #error {
@@ -196,6 +242,11 @@
 <header>
   <h1>Declart Playground</h1>
   <p>Edit TOML on the left — see your diagram instantly on the right</p>
+  <div class="header-links">
+    <span class="header-badge">v0.8.0</span>
+    <a href="https://github.com/iyulab/declart" target="_blank" rel="noopener">GitHub</a>
+    <a href="../introduction.html" target="_blank" rel="noopener">Docs</a>
+  </div>
 </header>
 
 <div class="controls">
@@ -220,6 +271,7 @@
     </select>
   </label>
   <span id="status" class="loading">Loading WASM…</span>
+  <button id="share-btn" title="Copy shareable link to clipboard">🔗 Share</button>
 </div>
 
 <div class="main" id="main-grid">
@@ -231,14 +283,29 @@
   <div class="pane">
     <div class="pane-label">
       SVG Preview
-      <button id="download-svg" class="pane-btn" disabled title="Download SVG">↓ SVG</button>
+      <span style="display:flex;gap:6px;align-items:center">
+        <button id="reset-zoom" class="pane-btn" title="Reset zoom (double-click)">⤢ Fit</button>
+        <button id="download-svg" class="pane-btn" disabled title="Download SVG">↓ SVG</button>
+      </span>
     </div>
-    <div class="preview-area">
+    <div class="preview-area" id="preview-area" style="position:relative">
       <div id="preview"></div>
-      <div id="error" class="hidden"></div>
+      <span id="zoom-hint">scroll to zoom · drag to pan · dbl-click to reset</span>
     </div>
+    <div id="error" class="hidden"></div>
   </div>
 </div>
+
+<footer>
+  <span>Declart v0.8.0 &nbsp;·&nbsp; MIT License</span>
+  <span>
+    <a href="https://github.com/iyulab/declart" target="_blank" rel="noopener">GitHub</a>
+    &nbsp;·&nbsp;
+    <a href="../introduction.html" target="_blank" rel="noopener">Docs</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/iyulab/declart/issues" target="_blank" rel="noopener">Feedback</a>
+  </span>
+</footer>
 
 <script type="module">
 import init, { render } from './wasm/declart_wasm.js';
@@ -435,13 +502,96 @@ document.addEventListener('mouseup', () => {
 
 const inputEl      = document.getElementById('input');
 const previewEl    = document.getElementById('preview');
+const previewArea  = document.getElementById('preview-area');
 const errorEl      = document.getElementById('error');
 const exampleSel   = document.getElementById('example-select');
 const themeSel     = document.getElementById('theme-select');
 const statusEl     = document.getElementById('status');
 const downloadBtn  = document.getElementById('download-svg');
+const resetZoomBtn = document.getElementById('reset-zoom');
+const shareBtn     = document.getElementById('share-btn');
 const svgParser    = new DOMParser();
 const DRAFT_KEY    = 'declart-draft';
+
+// Zoom / Pan state
+let zScale = 1, zTx = 0, zTy = 0;
+let panning = false, panOriginX = 0, panOriginY = 0;
+
+function applyZoom() {
+  previewEl.style.transform = `translate(${zTx}px, ${zTy}px) scale(${zScale})`;
+}
+
+function fitView() {
+  const svgEl = previewEl.querySelector('svg');
+  if (!svgEl) { zScale = 1; zTx = 20; zTy = 20; applyZoom(); return; }
+  const aw = previewArea.clientWidth;
+  const ah = previewArea.clientHeight;
+  const svgW = parseFloat(svgEl.getAttribute('width')) || 860;
+  const svgH = parseFloat(svgEl.getAttribute('height')) || 500;
+  zScale = Math.min(1, (aw - 40) / svgW, (ah - 40) / svgH);
+  zTx = Math.max(20, (aw - svgW * zScale) / 2);
+  zTy = Math.max(20, (ah - svgH * zScale) / 2);
+  applyZoom();
+}
+
+previewArea.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+  const rect = previewArea.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  zTx = mx - (mx - zTx) * factor;
+  zTy = my - (my - zTy) * factor;
+  zScale = Math.max(0.1, Math.min(10, zScale * factor));
+  applyZoom();
+}, { passive: false });
+
+previewArea.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  panning = true;
+  panOriginX = e.clientX - zTx;
+  panOriginY = e.clientY - zTy;
+  previewArea.classList.add('panning');
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', e => {
+  if (!panning) return;
+  zTx = e.clientX - panOriginX;
+  zTy = e.clientY - panOriginY;
+  applyZoom();
+});
+
+document.addEventListener('mouseup', () => {
+  if (!panning) return;
+  panning = false;
+  previewArea.classList.remove('panning');
+});
+
+previewArea.addEventListener('dblclick', fitView);
+resetZoomBtn.addEventListener('click', fitView);
+
+function tomlToHash(toml) {
+  try { return btoa(encodeURIComponent(toml)); } catch (_) { return null; }
+}
+
+function hashToToml(hash) {
+  try { return decodeURIComponent(atob(hash)); } catch (_) { return null; }
+}
+
+function getPermalink() {
+  const url = new URL(location.href);
+  url.searchParams.set('d', tomlToHash(inputEl.value) || '');
+  return url.toString();
+}
+
+function updateUrl() {
+  const hash = tomlToHash(inputEl.value);
+  if (!hash) return;
+  const url = new URL(location.href);
+  url.searchParams.set('d', hash);
+  history.replaceState(null, '', url.toString());
+}
 
 let wasmReady = false;
 
@@ -465,6 +615,7 @@ function showSvg(svgString) {
   }
   previewEl.replaceChildren(root);
   downloadBtn.disabled = false;
+  fitView();
 }
 
 function extractLineCol(msg) {
@@ -490,6 +641,7 @@ function update() {
     errorEl.classList.add('hidden');
     statusEl.textContent = '✓ OK';
     statusEl.className = 'ok';
+    updateUrl();
   } catch (e) {
     previewEl.replaceChildren();
     downloadBtn.disabled = true;
@@ -502,6 +654,21 @@ function update() {
     if (loc) jumpEditorToLine(loc.line, loc.col);
   }
 }
+
+shareBtn.addEventListener('click', async () => {
+  const url = getPermalink();
+  try {
+    await navigator.clipboard.writeText(url);
+    shareBtn.textContent = '✓ Copied!';
+    shareBtn.classList.add('copied');
+    setTimeout(() => {
+      shareBtn.textContent = '🔗 Share';
+      shareBtn.classList.remove('copied');
+    }, 2000);
+  } catch (_) {
+    prompt('Copy this link:', url);
+  }
+});
 
 downloadBtn.addEventListener('click', () => {
   const svgEl = previewEl.querySelector('svg');
@@ -542,8 +709,11 @@ inputEl.addEventListener('input', () => {
     wasmReady = true;
     statusEl.textContent = '✓ Ready';
     statusEl.className = 'ok';
+    // Priority: URL ?d= param > draft > default example
+    const urlHash = new URLSearchParams(location.search).get('d');
+    const urlToml = urlHash ? hashToToml(urlHash) : null;
     const draft = loadDraft();
-    inputEl.value = draft ?? EXAMPLES[exampleSel.value];
+    inputEl.value = urlToml ?? draft ?? EXAMPLES[exampleSel.value];
     update();
   } catch (e) {
     statusEl.textContent = '✗ WASM load failed';

@@ -84,7 +84,7 @@ pub static DEFAULT_THEME: Theme = Theme {
     typography: Typography {
         title_size: 18.0,
         label_size: 14.0,
-        label_size_min: 8.0,
+        label_size_min: 10.0,
     },
     title_color: Color::new(26, 58, 92),
 };
@@ -104,7 +104,7 @@ pub static MONOCHROME_THEME: Theme = Theme {
     typography: Typography {
         title_size: 18.0,
         label_size: 14.0,
-        label_size_min: 8.0,
+        label_size_min: 10.0,
     },
     title_color: Color::new(40, 40, 40),
 };

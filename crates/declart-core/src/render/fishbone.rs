@@ -13,6 +13,8 @@ const CAUSE_BOX_W: f32 = 110.0;
 const CAUSE_BOX_H: f32 = 38.0;
 const SPINE_LINE_W: f32 = 3.0;
 const BRANCH_LINE_W: f32 = 2.0;
+const ARROW_HEAD_LEN: f32 = 14.0;
+const ARROW_HEAD_SIZE: f32 = 10.0;
 
 pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
     let title_h = if diagram.title.is_some() { TITLE_AREA } else { 20.0 };
@@ -34,18 +36,28 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
         );
     }
 
-    // Draw main spine
+    // Draw main spine (ends just before the arrowhead)
+    let effect_x = CANVAS_WIDTH - EFFECT_BOX_W - 10.0;
     builder.line(
         spine_left,
         spine_y,
-        CANVAS_WIDTH - SPINE_MARGIN_RIGHT / 4.0,
+        effect_x - ARROW_HEAD_LEN,
         spine_y,
         &theme.layers.apex.to_hex(),
         SPINE_LINE_W,
     );
+    // Arrowhead pointing right into the effect box (fish head)
+    builder.polygon(
+        &[
+            (effect_x - ARROW_HEAD_LEN, spine_y - ARROW_HEAD_SIZE),
+            (effect_x, spine_y),
+            (effect_x - ARROW_HEAD_LEN, spine_y + ARROW_HEAD_SIZE),
+        ],
+        &theme.layers.apex.to_hex(),
+        "none",
+    );
 
     // Effect box at right end
-    let effect_x = CANVAS_WIDTH - EFFECT_BOX_W - 10.0;
     let effect_y = spine_y - EFFECT_BOX_H / 2.0;
     builder.polygon(
         &[
@@ -113,16 +125,17 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
         }
         builder.text(head_x, head_y, &cause.label, &text_color.to_hex(), fs);
 
-        // Sub-items: short horizontal branches off the cause branch
+        // Sub-items: diagonal branches off the cause branch (45° away from spine)
+        let diag = SUB_BRANCH_LEN * std::f32::consts::FRAC_1_SQRT_2;
         for (j, item) in cause.items.iter().enumerate() {
-            // Interpolate along the branch line for each sub-item
             let t = (j as f32 + 1.0) / (cause.items.len() as f32 + 1.0);
             let sx = foot_x + (head_x - foot_x) * t;
             let sy = foot_y + (head_y - foot_y) * t;
 
-            // Sub-branch: horizontal line going left
-            let sub_end_x = sx - SUB_BRANCH_LEN;
-            builder.line(sx, sy, sub_end_x, sy, &sub_color.to_hex(), 1.5);
+            // Diagonal: go left and outward (away from spine) at 45°
+            let sub_end_x = sx - diag;
+            let sub_end_y = sy + sign * diag; // sign=-1 for above → goes up; +1 for below → goes down
+            builder.line(sx, sy, sub_end_x, sub_end_y, &sub_color.to_hex(), 1.5);
 
             let mut sfs = theme.typography.label_size - 2.0;
             let stw = font::measure_text(&item.label, sfs);
@@ -130,13 +143,7 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
             if stw > savail {
                 sfs = (sfs * savail / stw).max(theme.typography.label_size_min);
             }
-            builder.text(
-                sub_end_x - stw / 2.0 - 4.0,
-                sy,
-                &item.label,
-                &sub_text_color.to_hex(),
-                sfs,
-            );
+            builder.text(sub_end_x, sub_end_y + sign * sfs * 0.7, &item.label, &sub_text_color.to_hex(), sfs);
         }
     }
 
@@ -191,11 +198,28 @@ mod tests {
     }
 
     #[test]
-    fn render_has_effect_box() {
+    fn render_has_effect_box_and_arrowhead() {
         let d = make_diagram(2, false);
         let svg = render(&d, &DEFAULT_THEME);
-        // At minimum: 1 effect box + 2 cause boxes + spine lines
+        // 1 arrowhead (triangle) + 1 effect box + 2 cause boxes = 4 polygons minimum
         let polygon_count = svg.matches("<polygon").count();
-        assert!(polygon_count >= 3, "expected at least 3 polygons");
+        assert!(polygon_count >= 4, "expected at least 4 polygons (arrowhead + effect box + cause boxes)");
+    }
+
+    #[test]
+    fn render_arrowhead_is_triangle() {
+        let d = make_diagram(2, false);
+        let svg = render(&d, &DEFAULT_THEME);
+        // At least one polygon has 3 points (the arrowhead triangle)
+        let has_triangle = svg.split("<polygon").skip(1).any(|chunk| {
+            if let Some(start) = chunk.find("points=\"") {
+                let rest = &chunk[start + 8..];
+                if let Some(end) = rest.find('"') {
+                    return rest[..end].split_whitespace().count() == 3;
+                }
+            }
+            false
+        });
+        assert!(has_triangle, "should have a triangular arrowhead polygon");
     }
 }
