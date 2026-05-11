@@ -1,4 +1,4 @@
-pub mod raw;
+mod raw;
 
 use crate::{DiagramModel, DeclartError};
 
