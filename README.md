@@ -63,7 +63,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-v0.5.1 — eight diagram kinds, WASM + FFI bindings, interactive playground, spec site (mdBook, GitHub Pages pending), Node.js npm package.
+v0.6.0 — eight diagram kinds, PNG export, watch mode, WASM + FFI bindings, interactive playground, spec site (mdBook, GitHub Pages pending), Node.js npm package.
 
 | Area | Status |
 |------|--------|
@@ -75,6 +75,8 @@ v0.5.1 — eight diagram kinds, WASM + FFI bindings, interactive playground, spe
 | Node.js npm package (`@iyulab/declart`) | ✅ v0.5 |
 | Spec site (mdBook skeleton + CI) | ✅ v0.5 (GitHub Pages not yet enabled) |
 | Interactive playground (WASM, all 8 kinds, live render) | ✅ v0.5.1 |
+| PNG export (`--format png`) | ✅ v0.6 |
+| Watch mode (`declart watch`) | ✅ v0.6 |
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 
@@ -129,6 +131,21 @@ Validate without rendering:
 
 ```bash
 declart validate hierarchy.toml
+```
+
+Export to PNG:
+
+```bash
+declart render hierarchy.toml --format png
+# writes hierarchy.png
+```
+
+Watch and auto-rebuild on changes:
+
+```bash
+declart watch hierarchy.toml
+# watches hierarchy.toml, rewrites hierarchy.svg on every save
+# use --format png for PNG output
 ```
 
 Pipe to stdout:

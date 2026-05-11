@@ -1,6 +1,6 @@
 [package]
 name = "declart-cli"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 
 [[bin]]
@@ -11,3 +11,5 @@ path = "src/main.rs"
 declart-core = { path = "../declart-core" }
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
+resvg = { version = "0.47.0", default-features = false, features = ["text"] }
+notify = "8.2.0"

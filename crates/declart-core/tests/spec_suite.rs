@@ -1,11 +1,9 @@
 use std::ffi::OsStr;
 use std::fs;
-use std::path::Path;
+use std::path::PathBuf;
 
-fn spec_dir() -> &'static Path {
-    // Integration tests run from the crate root (crates/declart-core/),
-    // so ../../spec reaches the repo root spec/ directory.
-    Path::new("../../spec")
+fn spec_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../spec")
 }
 
 fn assert_valid_examples(kind: &str) {

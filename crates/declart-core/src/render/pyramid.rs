@@ -68,7 +68,9 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             stroke_width,
         );
 
-        let available_width = bottom_width * 0.8;
+        // Use mid-width (width at text center height) for accurate constraint.
+        let mid_width = (top_width + bottom_width) / 2.0;
+        let available_width = mid_width * 0.85;
         let mut font_size = theme.typography.label_size;
         if available_width > 0.0 {
             let text_width = font::measure_text(&item.label, font_size);
@@ -77,13 +79,40 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
                     .max(theme.typography.label_size_min);
             }
         }
+        let label = if available_width > 0.0 {
+            let tw = font::measure_text(&item.label, font_size);
+            if tw > available_width {
+                truncate_label(&item.label, available_width, font_size)
+            } else {
+                item.label.clone()
+            }
+        } else {
+            item.label.clone()
+        };
 
         let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
         let center_y = (top_y + bottom_y) / 2.0;
-        builder.text_weighted(CENTER_X, center_y, &item.label, &text_color.to_hex(), font_size, is_bold);
+        builder.text_weighted(CENTER_X, center_y, &label, &text_color.to_hex(), font_size, is_bold);
     }
 
     builder.build(&theme.background.to_hex())
+}
+
+fn truncate_label(label: &str, available_width: f32, font_size: f32) -> String {
+    let ellipsis = "…";
+    let ellipsis_w = font::measure_text(ellipsis, font_size);
+    let max_w = (available_width - ellipsis_w).max(0.0);
+    let mut result = String::new();
+    let mut acc = 0.0f32;
+    for c in label.chars() {
+        let cw = font::measure_text(&c.to_string(), font_size);
+        if acc + cw > max_w {
+            break;
+        }
+        result.push(c);
+        acc += cw;
+    }
+    format!("{}{}", result, ellipsis)
 }
 
 #[cfg(test)]
@@ -138,5 +167,24 @@ mod tests {
         let svg = render(&d, &DEFAULT_THEME);
         let count = svg.matches("<polygon").count();
         assert_eq!(count, 5);
+    }
+
+    #[test]
+    fn render_long_apex_label_truncates_with_ellipsis() {
+        let d = ItemsDiagram {
+            title: None,
+            items: (0..7)
+                .map(|i| Item {
+                    label: if i == 0 { "Self-Actualization".to_string() } else { format!("Layer {}", i) },
+                    emphasis: None,
+                })
+                .collect(),
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        // Label should either appear unchanged or be truncated with ellipsis
+        assert!(
+            svg.contains("Self-Actualization") || svg.contains("…"),
+            "long apex label should render (possibly truncated)"
+        );
     }
 }

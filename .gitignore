@@ -9,3 +9,4 @@ docs/src/kinds/
 crates/declart-wasm/pkg/
 packages/declart-node/wasm/
 docs/src/playground/wasm/
+.playwright-mcp/

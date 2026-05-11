@@ -18,6 +18,12 @@ declart init pyramid > diagram.toml
 # Render to SVG
 declart render diagram.toml
 
+# Render to PNG
+declart render diagram.toml --format png
+
+# Watch and auto-rebuild on changes
+declart watch diagram.toml
+
 # Validate without rendering
 declart validate diagram.toml
 ```
