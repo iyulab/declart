@@ -1,0 +1,707 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Declart</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="Declarative diagram engine — declare what to show, the engine decides how it looks.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item affix "><li class="spacer"></li><li class="chapter-item affix "><li class="part-title">Try It</li><li class="chapter-item "><a href="playground.html">Interactive Playground</a></li><li class="chapter-item affix "><li class="spacer"></li><li class="chapter-item affix "><li class="part-title">Reference</li><li class="chapter-item "><a href="principles.html">Principles</a></li><li class="chapter-item "><a href="schema.html">Common Schema</a></li><li class="chapter-item affix "><li class="spacer"></li><li class="chapter-item affix "><li class="part-title">Diagram Kinds</li><li class="chapter-item "><a href="kinds/pyramid.html">Pyramid</a></li><li class="chapter-item "><a href="kinds/process.html">Process</a></li><li class="chapter-item "><a href="kinds/cycle.html">Cycle</a></li><li class="chapter-item "><a href="kinds/matrix.html">Matrix 2×2</a></li><li class="chapter-item "><a href="kinds/hub_spoke.html">Hub-and-Spoke</a></li><li class="chapter-item "><a href="kinds/venn.html">Venn</a></li><li class="chapter-item "><a href="kinds/timeline.html">Timeline</a></li><li class="chapter-item "><a href="kinds/fishbone.html">Fishbone</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Declart</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/iyulab/declart" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="declart"><a class="header" href="#declart">Declart</a></h1>
+<p><strong>Declare what to show. The engine decides how it looks.</strong></p>
+<p>Declart is a declarative diagram engine. You write a TOML file describing the structure of your diagram, and Declart renders it to SVG. No layout coordinates. No styling choices. Just content.</p>
+<h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
+<h3 id="cli"><a class="header" href="#cli">CLI</a></h3>
+<pre><code class="language-bash"># Install
+cargo install declart-cli
+
+# Scaffold a starter diagram
+declart init pyramid &gt; diagram.toml
+
+# Render to SVG
+declart render diagram.toml
+
+# Render to PNG
+declart render diagram.toml --format png
+
+# Watch and auto-rebuild on changes
+declart watch diagram.toml
+
+# Validate without rendering
+declart validate diagram.toml
+</code></pre>
+<h3 id="nodejs"><a class="header" href="#nodejs">Node.js</a></h3>
+<pre><code class="language-js">const declart = require('@iyulab/declart');
+
+const svg = declart.render(`
+kind = "pyramid"
+title = "Maslow's Hierarchy"
+[[items]]
+label = "Self-actualization"
+[[items]]
+label = "Safety"
+`);
+</code></pre>
+<h3 id="rust-library"><a class="header" href="#rust-library">Rust (library)</a></h3>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use declart_core::{parse, render};
+use declart_core::render::DEFAULT_THEME;
+
+let diagram = parse(input)?;
+let svg = render(&amp;diagram, &amp;DEFAULT_THEME)?;
+<span class="boring">}</span></code></pre></pre>
+<h2 id="supported-kinds"><a class="header" href="#supported-kinds">Supported Kinds</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Kind</th><th>Use case</th></tr></thead><tbody>
+<tr><td><code>pyramid</code></td><td>Hierarchies, Maslow, priority layers</td></tr>
+<tr><td><code>process</code></td><td>Sequential steps, workflows</td></tr>
+<tr><td><code>cycle</code></td><td>Closed loops, PDCA, lifecycles</td></tr>
+<tr><td><code>matrix</code></td><td>2×2 prioritization, Eisenhower</td></tr>
+<tr><td><code>hub_spoke</code></td><td>Central concept with related items</td></tr>
+<tr><td><code>venn</code></td><td>Set intersections, overlapping groups</td></tr>
+<tr><td><code>timeline</code></td><td>Date-anchored events</td></tr>
+<tr><td><code>fishbone</code></td><td>Cause-and-effect, root cause analysis</td></tr>
+</tbody></table>
+</div>
+<h2 id="design-philosophy"><a class="header" href="#design-philosophy">Design Philosophy</a></h2>
+<p>See <a href="principles.html">Principles</a> for the full design rationale. The key idea: declarations express <em>what</em> exists, not <em>how</em> it looks. The engine owns visual decisions.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="interactive-playground"><a class="header" href="#interactive-playground">Interactive Playground</a></h1>
+<script>window.location.replace('./playground/index.html');</script>
+<p>→ <strong><a href="playground/index.html">Open the Declart Playground</a></strong> — no installation required</p>
+<p>Edit TOML declarations and see your diagrams rendered live in the browser.
+All 8 diagram kinds are available, with default and monochrome themes.</p>
+<blockquote>
+<p><strong>Note:</strong> The playground requires HTTP to load the WASM module.
+Use <code>mdbook serve docs/</code> for local testing rather than opening the file directly.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="declart-grammar-principles"><a class="header" href="#declart-grammar-principles">Declart Grammar Principles</a></h1>
+<p>These principles govern every declaration file format in Declart, across all diagram kinds and all implementations.</p>
+<ol>
+<li>
+<p><strong>Design exclusion.</strong> Declaration files contain no visual information: no colors, coordinates, fonts, sizes, margins, or layout hints. These are the engine's domain.</p>
+</li>
+<li>
+<p><strong>Semantics only.</strong> Fields express meaning, not appearance. <code>emphasis: primary</code> is allowed; <code>color: red</code> is not. The engine decides how emphasis looks.</p>
+</li>
+<li>
+<p><strong>LLM-predictable.</strong> Field names are single English words. Structure is flat or exactly one level deep (<code>[[items]]</code>). A language model must be able to generate a correct declaration without examples.</p>
+</li>
+<li>
+<p><strong>Minimal and concise.</strong> Each kind defines only its required fields. Optional fields are added only when proven necessary across multiple use cases. When in doubt, leave it out.</p>
+</li>
+<li>
+<p><strong>One representation per kind.</strong> There is exactly one way to express each diagram. No aliases, no alternate structures, no flags that change interpretation. Two valid declarations that express the same diagram must be byte-for-byte identical except for whitespace.</p>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="common-schema-rules"><a class="header" href="#common-schema-rules">Common Schema Rules</a></h1>
+<p>Rules that apply to every Declart declaration file.</p>
+<h2 id="required-fields"><a class="header" href="#required-fields">Required fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>kind</td><td>string</td><td>One of: <code>pyramid</code>, <code>process</code>, <code>cycle</code>, <code>matrix</code>, <code>hub_spoke</code>, <code>venn</code>, <code>timeline</code>, <code>fishbone</code></td></tr>
+</tbody></table>
+</div>
+<h2 id="optional-fields"><a class="header" href="#optional-fields">Optional fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>title</td><td>string</td><td>Display title rendered above the diagram. Omit to suppress.</td></tr>
+</tbody></table>
+</div>
+<h2 id="item-arrays"><a class="header" href="#item-arrays">Item arrays</a></h2>
+<ul>
+<li>Items are declared as <code>[[items]]</code> TOML array-of-tables.</li>
+<li>At least one item is required for all items-based kinds (pyramid, process, cycle). The matrix kind uses <code>[[quadrants]]</code> instead.</li>
+<li>Item order in the file is rendering order.</li>
+</ul>
+<h2 id="forbidden-fields"><a class="header" href="#forbidden-fields">Forbidden fields</a></h2>
+<p>Any field not listed in a kind's spec document is forbidden. Forbidden fields cause a parse error. This includes but is not limited to: <code>color</code>, <code>fill</code>, <code>stroke</code>, <code>font</code>, <code>size</code>, <code>x</code>, <code>y</code>, <code>width</code>, <code>height</code>, <code>style</code>, <code>class</code>, <code>id</code>.</p>
+<h2 id="emphasis-shared-optional-item-field"><a class="header" href="#emphasis-shared-optional-item-field">Emphasis (shared optional item field)</a></h2>
+<p>When a kind supports item-level emphasis, it uses this field:</p>
+<div class="table-wrapper"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>primary</code></td><td>Most important item in the diagram</td></tr>
+<tr><td><code>secondary</code></td><td>Secondary importance</td></tr>
+</tbody></table>
+</div>
+<p>The engine decides visual representation. Omitting <code>emphasis</code> means default weight.</p>
+<ul>
+<li><code>primary</code>: white outline stroke + bold text</li>
+<li><code>secondary</code>: lighter color tint</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="pyramid"><a class="header" href="#pyramid">Pyramid</a></h1>
+<p>A pyramid diagram. Items are arranged in horizontal layers from apex (top, first item) to base (bottom, last item). Conventionally used for hierarchies where importance or scarcity increases toward the apex.</p>
+<h2 id="fields"><a class="header" href="#fields">Fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>kind</td><td>yes</td><td><code>"pyramid"</code></td><td>Must be exactly <code>"pyramid"</code></td></tr>
+<tr><td>title</td><td>no</td><td>string</td><td>Title rendered above the pyramid</td></tr>
+<tr><td>items</td><td>yes</td><td>array of Item</td><td>At least one item required</td></tr>
+</tbody></table>
+</div>
+<h2 id="item-fields"><a class="header" href="#item-fields">Item fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>label</td><td>yes</td><td>string</td><td>Text displayed in the layer</td></tr>
+<tr><td>emphasis</td><td>no</td><td>string</td><td><code>"primary"</code> or <code>"secondary"</code>. See schema.</td></tr>
+</tbody></table>
+</div>
+<h2 id="rendering-rules"><a class="header" href="#rendering-rules">Rendering rules</a></h2>
+<ul>
+<li>First item (<code>items[0]</code>) is the apex (smallest, top).</li>
+<li>Last item (<code>items[n-1]</code>) is the base (widest, bottom).</li>
+<li>Layer widths increase linearly from apex to base.</li>
+<li>Apex layer degenerates to a triangle when it is the narrowest point.</li>
+</ul>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<pre><code class="language-toml">kind = "pyramid"
+title = "Maslow's Hierarchy of Needs"
+
+[[items]]
+label = "Self-actualization"
+
+[[items]]
+label = "Esteem"
+
+[[items]]
+label = "Love &amp; Belonging"
+
+[[items]]
+label = "Safety"
+
+[[items]]
+label = "Physiological"
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="process"><a class="header" href="#process">Process</a></h1>
+<p>A process diagram. Items are arranged as sequential steps from left to right. Used for workflows, procedures, and pipelines where order matters.</p>
+<h2 id="fields-1"><a class="header" href="#fields-1">Fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>kind</td><td>yes</td><td><code>"process"</code></td><td>Must be exactly <code>"process"</code></td></tr>
+<tr><td>title</td><td>no</td><td>string</td><td>Title rendered above the diagram</td></tr>
+<tr><td>items</td><td>yes</td><td>array of Item</td><td>At least one item required</td></tr>
+</tbody></table>
+</div>
+<h2 id="item-fields-1"><a class="header" href="#item-fields-1">Item fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>label</td><td>yes</td><td>string</td><td>Text displayed in the step box</td></tr>
+<tr><td>emphasis</td><td>no</td><td>string</td><td><code>"primary"</code> or <code>"secondary"</code>. See schema.</td></tr>
+</tbody></table>
+</div>
+<h2 id="rendering-rules-1"><a class="header" href="#rendering-rules-1">Rendering rules</a></h2>
+<ul>
+<li>Items render left to right in declaration order.</li>
+<li>Each step is a uniform box; all boxes have the same height.</li>
+<li>Directional arrows connect adjacent boxes, pointing right.</li>
+<li>Box widths are equal and fill the available canvas width.</li>
+<li>Canvas width scales to guarantee a minimum box width of 100px.</li>
+<li>Color interpolates from the first step (left) to the last step (right).</li>
+</ul>
+<h2 id="example-1"><a class="header" href="#example-1">Example</a></h2>
+<pre><code class="language-toml">kind = "process"
+title = "Software Release Pipeline"
+
+[[items]]
+label = "Code Review"
+
+[[items]]
+label = "Build"
+
+[[items]]
+label = "Test"
+
+[[items]]
+label = "Deploy"
+
+[[items]]
+label = "Monitor"
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="cycle"><a class="header" href="#cycle">Cycle</a></h1>
+<p>A cycle diagram. Items are arranged as steps in a closed loop, connected by directional arrows going clockwise. Used for recurring processes such as PDCA, feedback loops, and lifecycle models.</p>
+<h2 id="fields-2"><a class="header" href="#fields-2">Fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>kind</td><td>yes</td><td><code>"cycle"</code></td><td>Must be exactly <code>"cycle"</code></td></tr>
+<tr><td>title</td><td>no</td><td>string</td><td>Title rendered above the diagram</td></tr>
+<tr><td>items</td><td>yes</td><td>array of Item</td><td>At least two items required</td></tr>
+</tbody></table>
+</div>
+<h2 id="item-fields-2"><a class="header" href="#item-fields-2">Item fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>label</td><td>yes</td><td>string</td><td>Text displayed in the step node</td></tr>
+<tr><td>emphasis</td><td>no</td><td>string</td><td><code>"primary"</code> or <code>"secondary"</code>. See schema.</td></tr>
+</tbody></table>
+</div>
+<h2 id="rendering-rules-2"><a class="header" href="#rendering-rules-2">Rendering rules</a></h2>
+<ul>
+<li>Items are arranged clockwise in a circle, starting at the top (12 o'clock).</li>
+<li>The last item connects back to the first item, forming a closed loop.</li>
+<li>Directional arrows point clockwise between adjacent nodes.</li>
+<li>Each node is a rectangular box centered on its position.</li>
+<li>Colors cycle through the apex-to-base gradient across all nodes.</li>
+</ul>
+<h2 id="example-2"><a class="header" href="#example-2">Example</a></h2>
+<pre><code class="language-toml">kind = "cycle"
+title = "PDCA Cycle"
+
+[[items]]
+label = "Plan"
+
+[[items]]
+label = "Do"
+
+[[items]]
+label = "Check"
+
+[[items]]
+label = "Act"
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="matrix-22"><a class="header" href="#matrix-22">Matrix 2×2</a></h1>
+<p>A two-by-two matrix diagram. Used for prioritization, strategy frameworks, and categorization with two independent axes.</p>
+<h2 id="fields-3"><a class="header" href="#fields-3">Fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>kind</td><td>yes</td><td><code>"matrix"</code></td><td>Must be exactly <code>"matrix"</code></td></tr>
+<tr><td>title</td><td>no</td><td>string</td><td>Title rendered above the diagram</td></tr>
+<tr><td>x_axis</td><td>yes</td><td>string</td><td>Label for the horizontal axis</td></tr>
+<tr><td>y_axis</td><td>yes</td><td>string</td><td>Label for the vertical axis</td></tr>
+<tr><td>quadrants</td><td>yes</td><td>array of 4</td><td>Exactly 4 quadrants, in reading order</td></tr>
+</tbody></table>
+</div>
+<h2 id="quadrant-fields"><a class="header" href="#quadrant-fields">Quadrant fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>label</td><td>yes</td><td>string</td><td>Text displayed in the quadrant</td></tr>
+<tr><td>emphasis</td><td>no</td><td>string</td><td><code>"primary"</code> or <code>"secondary"</code>. See schema.</td></tr>
+</tbody></table>
+</div>
+<h2 id="quadrant-order"><a class="header" href="#quadrant-order">Quadrant order</a></h2>
+<p>Quadrants are declared in reading order (left-to-right, top-to-bottom):</p>
+<ol>
+<li>Top-left (high Y, low X)</li>
+<li>Top-right (high Y, high X)</li>
+<li>Bottom-left (low Y, low X)</li>
+<li>Bottom-right (low Y, high X)</li>
+</ol>
+<h2 id="rendering-rules-3"><a class="header" href="#rendering-rules-3">Rendering rules</a></h2>
+<ul>
+<li>The diagram is a 2×2 grid divided by a horizontal and vertical axis line.</li>
+<li>Each quadrant occupies one cell of the grid and displays its label centered.</li>
+<li><code>x_axis</code> is rendered below the horizontal center line.</li>
+<li><code>y_axis</code> is rendered to the left of the vertical center line, rotated 90°.</li>
+<li>Exactly 4 quadrants are required; more or fewer is a parse error.</li>
+</ul>
+<h2 id="example-3"><a class="header" href="#example-3">Example</a></h2>
+<pre><code class="language-toml">kind = "matrix"
+title = "Eisenhower Matrix"
+x_axis = "Importance"
+y_axis = "Urgency"
+
+[[quadrants]]
+label = "Do First"
+
+[[quadrants]]
+label = "Schedule"
+
+[[quadrants]]
+label = "Delegate"
+
+[[quadrants]]
+label = "Eliminate"
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="hub-and-spoke"><a class="header" href="#hub-and-spoke">Hub-and-Spoke</a></h1>
+<p>A hub-and-spoke diagram. A central node radiates connections to surrounding spoke nodes. Used for showing a central concept with related elements, or a hub with connected services.</p>
+<h2 id="fields-4"><a class="header" href="#fields-4">Fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>kind</td><td>yes</td><td><code>"hub_spoke"</code></td><td>Must be exactly <code>"hub_spoke"</code></td></tr>
+<tr><td>title</td><td>no</td><td>string</td><td>Title rendered above the diagram</td></tr>
+<tr><td>center</td><td>yes</td><td>string</td><td>Label for the central hub node</td></tr>
+<tr><td>spokes</td><td>yes</td><td>array of Spoke</td><td>At least one spoke required</td></tr>
+</tbody></table>
+</div>
+<h2 id="spoke-fields"><a class="header" href="#spoke-fields">Spoke fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>label</td><td>yes</td><td>string</td><td>Text displayed in the spoke node</td></tr>
+<tr><td>emphasis</td><td>no</td><td>string</td><td><code>"primary"</code> or <code>"secondary"</code>. See schema.</td></tr>
+</tbody></table>
+</div>
+<h2 id="rendering-rules-4"><a class="header" href="#rendering-rules-4">Rendering rules</a></h2>
+<ul>
+<li>The center node is rendered at the center of the diagram.</li>
+<li>Spoke nodes are arranged evenly around the center in a circle.</li>
+<li>Lines connect the center node to each spoke node.</li>
+<li>The center node is visually distinguished from spoke nodes (larger, different color).</li>
+<li>Spoke nodes use the base color; the center uses the apex color.</li>
+</ul>
+<h2 id="example-4"><a class="header" href="#example-4">Example</a></h2>
+<pre><code class="language-toml">kind = "hub_spoke"
+title = "Cloud Architecture"
+
+center = "API Gateway"
+
+[[spokes]]
+label = "Auth Service"
+
+[[spokes]]
+label = "User Service"
+
+[[spokes]]
+label = "Order Service"
+
+[[spokes]]
+label = "Payment Service"
+
+[[spokes]]
+label = "Notification"
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="venn"><a class="header" href="#venn">Venn</a></h1>
+<p>A Venn diagram. Two or three overlapping circles represent sets. Intersection regions may be labeled. Used for showing set relationships, similarities, and differences.</p>
+<h2 id="fields-5"><a class="header" href="#fields-5">Fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>kind</td><td>yes</td><td><code>"venn"</code></td><td>Must be exactly <code>"venn"</code></td></tr>
+<tr><td>title</td><td>no</td><td>string</td><td>Title rendered above the diagram</td></tr>
+<tr><td>sets</td><td>yes</td><td>array of Set</td><td>2 or 3 sets required</td></tr>
+<tr><td>intersections</td><td>no</td><td>array of Intersection</td><td>Labeled regions in the overlap areas</td></tr>
+</tbody></table>
+</div>
+<h2 id="set-fields"><a class="header" href="#set-fields">Set fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>label</td><td>yes</td><td>string</td><td>Name of the set</td></tr>
+</tbody></table>
+</div>
+<h2 id="intersection-fields"><a class="header" href="#intersection-fields">Intersection fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>sets</td><td>yes</td><td>array of string</td><td>Set labels identifying which overlap region this labels</td></tr>
+<tr><td>label</td><td>yes</td><td>string</td><td>Text displayed in the overlap region</td></tr>
+</tbody></table>
+</div>
+<h2 id="rendering-rules-5"><a class="header" href="#rendering-rules-5">Rendering rules</a></h2>
+<ul>
+<li>Circles are arranged to overlap: two sets side-by-side; three sets in a triangle.</li>
+<li>Each circle is rendered with partial opacity so overlaps are visible.</li>
+<li>Set labels appear near the outer edge of each circle (non-overlapping region).</li>
+<li>Intersection labels appear in the center of the overlap region.</li>
+<li>Exactly 2 or 3 sets are required; other counts are a parse error.</li>
+</ul>
+<h2 id="example-5"><a class="header" href="#example-5">Example</a></h2>
+<pre><code class="language-toml">kind = "venn"
+title = "Skills Overlap"
+
+[[sets]]
+label = "Design"
+
+[[sets]]
+label = "Engineering"
+
+[[intersections]]
+sets = ["Design", "Engineering"]
+label = "UX Engineering"
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="timeline"><a class="header" href="#timeline">Timeline</a></h1>
+<p>A timeline diagram. Events are placed along a horizontal axis at positions proportional to their dates. Used for project histories, product roadmaps, and chronological narratives.</p>
+<h2 id="fields-6"><a class="header" href="#fields-6">Fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>kind</td><td>yes</td><td><code>"timeline"</code></td><td>Must be exactly <code>"timeline"</code></td></tr>
+<tr><td>title</td><td>no</td><td>string</td><td>Title rendered above the diagram</td></tr>
+<tr><td>events</td><td>yes</td><td>array of Event</td><td>At least two events required</td></tr>
+</tbody></table>
+</div>
+<h2 id="event-fields"><a class="header" href="#event-fields">Event fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>date</td><td>yes</td><td>string</td><td>Date in ISO 8601 format: <code>YYYY-MM-DD</code></td></tr>
+<tr><td>label</td><td>yes</td><td>string</td><td>Text displayed above or below the event marker</td></tr>
+</tbody></table>
+</div>
+<h2 id="rendering-rules-6"><a class="header" href="#rendering-rules-6">Rendering rules</a></h2>
+<ul>
+<li>Events are sorted by date and placed along a horizontal axis.</li>
+<li>The horizontal position of each event is proportional to its date within the overall date range.</li>
+<li>Event labels alternate above and below the axis to reduce overlap.</li>
+<li>The date string is displayed below each event marker.</li>
+<li>At least two events are required to establish a time range.</li>
+</ul>
+<h2 id="example-6"><a class="header" href="#example-6">Example</a></h2>
+<pre><code class="language-toml">kind = "timeline"
+title = "Product Launch History"
+
+[[events]]
+date = "2024-01-15"
+label = "Alpha"
+
+[[events]]
+date = "2024-04-01"
+label = "Beta"
+
+[[events]]
+date = "2024-07-20"
+label = "Launch"
+
+[[events]]
+date = "2024-12-01"
+label = "v2.0"
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="fishbone-ishikawa"><a class="header" href="#fishbone-ishikawa">Fishbone (Ishikawa)</a></h1>
+<p>A fishbone (Ishikawa) cause-and-effect diagram. A central spine leads to an effect. Causes branch off the spine; each cause may have sub-causes. Used for root cause analysis and structured problem decomposition.</p>
+<h2 id="fields-7"><a class="header" href="#fields-7">Fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>kind</td><td>yes</td><td><code>"fishbone"</code></td><td>Must be exactly <code>"fishbone"</code></td></tr>
+<tr><td>title</td><td>no</td><td>string</td><td>Title rendered above the diagram</td></tr>
+<tr><td>effect</td><td>yes</td><td>string</td><td>Label for the effect (right end of the spine)</td></tr>
+<tr><td>causes</td><td>yes</td><td>array of Cause</td><td>At least two causes required</td></tr>
+</tbody></table>
+</div>
+<h2 id="cause-fields"><a class="header" href="#cause-fields">Cause fields</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>label</td><td>yes</td><td>string</td><td>Label displayed at the branch head</td></tr>
+<tr><td>items</td><td>no</td><td>array of Item</td><td>Sub-causes branching off this cause</td></tr>
+</tbody></table>
+</div>
+<h2 id="item-fields-sub-cause"><a class="header" href="#item-fields-sub-cause">Item fields (sub-cause)</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Required</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>label</td><td>yes</td><td>string</td><td>Text displayed on the sub-cause line</td></tr>
+</tbody></table>
+</div>
+<h2 id="rendering-rules-7"><a class="header" href="#rendering-rules-7">Rendering rules</a></h2>
+<ul>
+<li>The spine is a horizontal line from left to right.</li>
+<li>The effect box is at the right end of the spine.</li>
+<li>Causes alternate above and below the spine, evenly spaced.</li>
+<li>Each cause is represented by a diagonal branch line ending in a labeled box.</li>
+<li>Sub-causes are shorter branches off the cause branch.</li>
+<li>At least two causes are required.</li>
+</ul>
+<h2 id="example-7"><a class="header" href="#example-7">Example</a></h2>
+<pre><code class="language-toml">kind = "fishbone"
+title = "Website Performance Issues"
+
+effect = "Slow Page Load"
+
+[[causes]]
+label = "Server"
+
+[[causes.items]]
+label = "CPU saturation"
+
+[[causes.items]]
+label = "Memory limits"
+
+[[causes]]
+label = "Network"
+
+[[causes.items]]
+label = "Bandwidth"
+
+[[causes]]
+label = "Code"
+
+[[causes]]
+label = "Database"
+
+[[causes.items]]
+label = "Slow queries"
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>
