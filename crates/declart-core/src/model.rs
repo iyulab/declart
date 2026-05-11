@@ -1,9 +1,13 @@
+/// Optional visual weight hint applied to an item.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Emphasis {
+    /// Most important item — rendered with outline stroke and bold text.
     Primary,
+    /// Secondary importance — rendered with a lighter color tint.
     Secondary,
 }
 
+/// A labeled item with an optional emphasis hint. Used by Pyramid, Process, Cycle, and as spokes/quadrants.
 #[derive(Debug, Clone)]
 pub struct Item {
     pub label: String,

@@ -2,5 +2,7 @@
 members = [
     "crates/declart-core",
     "crates/declart-cli",
+    "crates/declart-wasm",
+    "crates/declart-ffi",
 ]
 resolver = "2"

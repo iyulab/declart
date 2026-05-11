@@ -6,6 +6,8 @@ Declart is a declarative diagram engine. You write a TOML file describing the st
 
 ## Quick Start
 
+### CLI
+
 ```bash
 # Install
 cargo install declart-cli
@@ -18,6 +20,31 @@ declart render diagram.toml
 
 # Validate without rendering
 declart validate diagram.toml
+```
+
+### Node.js
+
+```js
+const declart = require('@iyulab/declart');
+
+const svg = declart.render(`
+kind = "pyramid"
+title = "Maslow's Hierarchy"
+[[items]]
+label = "Self-actualization"
+[[items]]
+label = "Safety"
+`);
+```
+
+### Rust (library)
+
+```rust
+use declart_core::{parse, render};
+use declart_core::render::DEFAULT_THEME;
+
+let diagram = parse(input)?;
+let svg = render(&diagram, &DEFAULT_THEME)?;
 ```
 
 ## Supported Kinds

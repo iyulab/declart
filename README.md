@@ -44,7 +44,11 @@ Additional kinds (Funnel, Org Chart, Roadmap, etc.) may be considered after the 
 
 ### Distribution
 
-- **CLI first.** A library/SDK surface comes later.
+- **CLI** — `declart-cli` binary
+- **Rust library** — `declart-core` crate (parse + render API)
+- **WebAssembly** — `declart-wasm` (wasm-pack, browser + Node.js)
+- **C ABI** — `declart-ffi` (shared library + `declart.h` header, for P/Invoke and ctypes callers)
+- **Node.js** — `@iyulab/declart` npm package (WASM wrapper, CommonJS + TypeScript types)
 
 ## Non-goals
 
@@ -59,18 +63,17 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-Pre-alpha. v0.3 implements eight diagram kinds end-to-end: TOML declaration → parse → SVG render → CLI.
+v0.5.0 — eight diagram kinds, WASM + FFI bindings, spec site (mdBook, GitHub Pages pending), Node.js npm package.
 
-| Kind           | Status |
-|----------------|--------|
-| Pyramid        | ✅ v0.1 |
-| Process        | ✅ v0.2 |
-| Cycle          | ✅ v0.2 |
-| Matrix 2×2     | ✅ v0.2 |
-| Hub-and-Spoke  | ✅ v0.3 |
-| Venn           | ✅ v0.3 |
-| Timeline       | ✅ v0.3 |
-| Fishbone       | ✅ v0.3 |
+| Area | Status |
+|------|--------|
+| All 8 diagram kinds | ✅ v0.3 |
+| Emphasis rendering, `init`, themes, width, error locations | ✅ v0.4 |
+| `declart-core` public API (doc comments, `Theme::by_name`) | ✅ v0.5 |
+| WASM bindings (`declart-wasm`) | ✅ v0.5 |
+| C ABI (`declart-ffi` + `declart.h`) | ✅ v0.5 |
+| Node.js npm package (`@iyulab/declart`) | ✅ v0.5 |
+| Spec site (mdBook skeleton + CI) | ✅ v0.5 (GitHub Pages not yet enabled) |
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 

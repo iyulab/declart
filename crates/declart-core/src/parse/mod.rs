@@ -3,6 +3,10 @@ mod raw;
 use crate::error::DeclartError;
 use crate::model::{Diagram, Emphasis, FishboneCause, FishboneDiagram, HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram, TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet};
 
+/// Parses a TOML declaration string into a validated [`Diagram`].
+///
+/// Returns [`DeclartError`] for unknown kinds, forbidden fields, missing required fields,
+/// invalid values, or structural violations (e.g. wrong quadrant count).
 pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
     let probe: raw::KindProbe = toml::from_str(input)?;
 

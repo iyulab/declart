@@ -14,10 +14,13 @@ pub use theme::{Theme, DEFAULT_THEME, MONOCHROME_THEME};
 
 use crate::{Diagram, DeclartError};
 
+/// Renders `diagram` to an SVG string using the given `theme`.
 pub fn render(diagram: &Diagram, theme: &Theme) -> Result<String, DeclartError> {
     render_opts(diagram, theme, None)
 }
 
+/// Renders `diagram` to an SVG string. When `width` is `Some(px)`, the outer SVG viewport is
+/// scaled to that pixel width while the internal viewBox is preserved.
 pub fn render_opts(diagram: &Diagram, theme: &Theme, width: Option<u32>) -> Result<String, DeclartError> {
     let svg = match diagram {
         Diagram::Pyramid(d) => pyramid::render(d, theme),

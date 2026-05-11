@@ -35,6 +35,5 @@ When a kind supports item-level emphasis, it uses this field:
 
 The engine decides visual representation. Omitting `emphasis` means default weight.
 
-The engine decides visual representation:
 - `primary`: white outline stroke + bold text
 - `secondary`: lighter color tint

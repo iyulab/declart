@@ -6,3 +6,5 @@ docs/book/
 docs/src/principles.md
 docs/src/schema.md
 docs/src/kinds/
+crates/declart-wasm/pkg/
+packages/declart-node/wasm/
