@@ -171,7 +171,8 @@ fn render_bytes(input: &Path, theme: &'static Theme, width: Option<u32>, format:
 
 fn svg_to_png(svg_str: &str) -> Result<Vec<u8>> {
     use resvg::{tiny_skia, usvg};
-    let opts = usvg::Options::default();
+    let mut opts = usvg::Options::default();
+    opts.fontdb_mut().load_system_fonts();
     let tree = usvg::Tree::from_str(svg_str, &opts)?;
     let size = tree.size().to_int_size();
     let mut pixmap = tiny_skia::Pixmap::new(size.width(), size.height())
