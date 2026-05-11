@@ -8,9 +8,8 @@ fn spec_dir() -> &'static Path {
     Path::new("../../spec")
 }
 
-#[test]
-fn pyramid_valid_examples_parse_successfully() {
-    let dir = spec_dir().join("kinds/pyramid/valid");
+fn assert_valid_examples(kind: &str) {
+    let dir = spec_dir().join(format!("kinds/{}/valid", kind));
     let entries: Vec<_> = fs::read_dir(&dir)
         .unwrap_or_else(|_| panic!("spec dir not found: {}", dir.display()))
         .filter_map(|e| e.ok())
@@ -33,9 +32,8 @@ fn pyramid_valid_examples_parse_successfully() {
     }
 }
 
-#[test]
-fn pyramid_invalid_examples_fail_to_parse() {
-    let dir = spec_dir().join("kinds/pyramid/invalid");
+fn assert_invalid_examples(kind: &str) {
+    let dir = spec_dir().join(format!("kinds/{}/invalid", kind));
     let entries: Vec<_> = fs::read_dir(&dir)
         .unwrap_or_else(|_| panic!("spec dir not found: {}", dir.display()))
         .filter_map(|e| e.ok())
@@ -55,4 +53,44 @@ fn pyramid_invalid_examples_fail_to_parse() {
             path.file_name().unwrap()
         );
     }
+}
+
+#[test]
+fn pyramid_valid_examples_parse_successfully() {
+    assert_valid_examples("pyramid");
+}
+
+#[test]
+fn pyramid_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("pyramid");
+}
+
+#[test]
+fn process_valid_examples_parse_successfully() {
+    assert_valid_examples("process");
+}
+
+#[test]
+fn process_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("process");
+}
+
+#[test]
+fn cycle_valid_examples_parse_successfully() {
+    assert_valid_examples("cycle");
+}
+
+#[test]
+fn cycle_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("cycle");
+}
+
+#[test]
+fn matrix_valid_examples_parse_successfully() {
+    assert_valid_examples("matrix");
+}
+
+#[test]
+fn matrix_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("matrix");
 }

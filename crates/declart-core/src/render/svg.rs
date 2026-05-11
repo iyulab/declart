@@ -25,10 +25,32 @@ impl SvgBuilder {
         ));
     }
 
+    pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, stroke: &str, stroke_width: f32) {
+        self.elements.push(format!(
+            r#"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="{}" stroke-width="{:.1}"/>"#,
+            x1, y1, x2, y2, stroke, stroke_width
+        ));
+    }
+
     pub fn text(&mut self, x: f32, y: f32, content: &str, fill: &str, font_size: f32) {
         self.elements.push(format!(
             r#"<text x="{:.1}" y="{:.1}" fill="{}" font-size="{:.1}" font-family="Noto Sans, sans-serif" text-anchor="middle" dominant-baseline="middle">{}</text>"#,
             x, y, fill, font_size, escape_xml(content)
+        ));
+    }
+
+    pub fn text_rotated(
+        &mut self,
+        x: f32,
+        y: f32,
+        content: &str,
+        fill: &str,
+        font_size: f32,
+        degrees: f32,
+    ) {
+        self.elements.push(format!(
+            r#"<text x="{:.1}" y="{:.1}" fill="{}" font-size="{:.1}" font-family="Noto Sans, sans-serif" text-anchor="middle" dominant-baseline="middle" transform="rotate({:.1},{:.1},{:.1})">{}</text>"#,
+            x, y, fill, font_size, degrees, x, y, escape_xml(content)
         ));
     }
 

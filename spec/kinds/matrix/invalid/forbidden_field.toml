@@ -1,0 +1,16 @@
+kind = "matrix"
+x_axis = "X"
+y_axis = "Y"
+color = "blue"
+
+[[quadrants]]
+label = "Q1"
+
+[[quadrants]]
+label = "Q2"
+
+[[quadrants]]
+label = "Q3"
+
+[[quadrants]]
+label = "Q4"

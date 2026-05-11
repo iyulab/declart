@@ -1,0 +1,15 @@
+kind = "matrix"
+x_axis = "Effort"
+y_axis = "Impact"
+
+[[quadrants]]
+label = "Quick Wins"
+
+[[quadrants]]
+label = "Major Projects"
+
+[[quadrants]]
+label = "Fill-ins"
+
+[[quadrants]]
+label = "Thankless Tasks"

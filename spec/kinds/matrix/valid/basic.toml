@@ -1,0 +1,16 @@
+kind = "matrix"
+title = "Eisenhower Matrix"
+x_axis = "Importance"
+y_axis = "Urgency"
+
+[[quadrants]]
+label = "Do First"
+
+[[quadrants]]
+label = "Schedule"
+
+[[quadrants]]
+label = "Delegate"
+
+[[quadrants]]
+label = "Eliminate"

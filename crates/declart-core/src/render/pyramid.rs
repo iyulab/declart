@@ -1,4 +1,4 @@
-use crate::model::DiagramModel;
+use crate::model::ItemsDiagram;
 use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
 const CANVAS_WIDTH: f32 = 600.0;
@@ -9,14 +9,14 @@ const BOTTOM_PAD: f32 = 20.0;
 const PYRAMID_WIDTH: f32 = CANVAS_WIDTH - PADDING_H * 2.0;
 const CENTER_X: f32 = CANVAS_WIDTH / 2.0;
 
-pub fn render(model: &DiagramModel, theme: &Theme) -> String {
-    let n = model.items.len() as f32;
-    let title_height = if model.title.is_some() { TITLE_AREA } else { PADDING_H };
+pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
+    let n = diagram.items.len() as f32;
+    let title_height = if diagram.title.is_some() { TITLE_AREA } else { PADDING_H };
     let canvas_height = title_height + n * LAYER_HEIGHT + BOTTOM_PAD;
 
     let mut builder = SvgBuilder::new(CANVAS_WIDTH, canvas_height);
 
-    if let Some(title) = &model.title {
+    if let Some(title) = &diagram.title {
         builder.text(
             CENTER_X,
             title_height / 2.0,
@@ -26,9 +26,9 @@ pub fn render(model: &DiagramModel, theme: &Theme) -> String {
         );
     }
 
-    for (i, item) in model.items.iter().enumerate() {
+    for (i, item) in diagram.items.iter().enumerate() {
         let i_f = i as f32;
-        let n_layers = model.items.len() as f32;
+        let n_layers = diagram.items.len() as f32;
 
         let t = if n_layers > 1.0 { i_f / (n_layers - 1.0) } else { 0.0 };
         let layer_color = theme.layers.apex.interpolate(&theme.layers.base, t);
@@ -79,12 +79,11 @@ pub fn render(model: &DiagramModel, theme: &Theme) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{DiagramKind, DiagramModel, Item};
+    use crate::model::{Item, ItemsDiagram};
     use crate::render::DEFAULT_THEME;
 
-    fn make_model(n: usize, title: Option<&str>) -> DiagramModel {
-        DiagramModel {
-            kind: DiagramKind::Pyramid,
+    fn make_diagram(n: usize, title: Option<&str>) -> ItemsDiagram {
+        ItemsDiagram {
             title: title.map(String::from),
             items: (0..n)
                 .map(|i| Item { label: format!("Layer {}", i), emphasis: None })
@@ -94,16 +93,16 @@ mod tests {
 
     #[test]
     fn render_produces_svg_element() {
-        let model = make_model(3, Some("Test"));
-        let svg = render(&model, &DEFAULT_THEME);
+        let d = make_diagram(3, Some("Test"));
+        let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.starts_with("<svg"));
         assert!(svg.ends_with("</svg>"));
     }
 
     #[test]
     fn render_includes_all_labels() {
-        let model = make_model(3, None);
-        let svg = render(&model, &DEFAULT_THEME);
+        let d = make_diagram(3, None);
+        let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.contains("Layer 0"));
         assert!(svg.contains("Layer 1"));
         assert!(svg.contains("Layer 2"));
@@ -111,22 +110,22 @@ mod tests {
 
     #[test]
     fn render_includes_title_when_present() {
-        let model = make_model(2, Some("My Pyramid"));
-        let svg = render(&model, &DEFAULT_THEME);
+        let d = make_diagram(2, Some("My Pyramid"));
+        let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.contains("My Pyramid"));
     }
 
     #[test]
     fn render_omits_title_when_absent() {
-        let model = make_model(2, None);
-        let svg = render(&model, &DEFAULT_THEME);
+        let d = make_diagram(2, None);
+        let svg = render(&d, &DEFAULT_THEME);
         assert!(!svg.contains(">My Pyramid<"));
     }
 
     #[test]
     fn render_has_n_polygons() {
-        let model = make_model(5, None);
-        let svg = render(&model, &DEFAULT_THEME);
+        let d = make_diagram(5, None);
+        let svg = render(&d, &DEFAULT_THEME);
         let count = svg.matches("<polygon").count();
         assert_eq!(count, 5);
     }

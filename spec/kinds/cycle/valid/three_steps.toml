@@ -1,0 +1,14 @@
+kind = "cycle"
+title = "Feedback Loop"
+
+[[items]]
+label = "Observe"
+
+[[items]]
+label = "Orient"
+
+[[items]]
+label = "Decide"
+
+[[items]]
+label = "Act"

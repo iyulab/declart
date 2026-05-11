@@ -1,0 +1,13 @@
+kind = "cycle"
+
+[[items]]
+label = "Research"
+
+[[items]]
+label = "Build"
+
+[[items]]
+label = "Release"
+
+[[items]]
+label = "Learn"

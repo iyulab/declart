@@ -17,7 +17,7 @@ Rules that apply to every Declart declaration file.
 ## Item arrays
 
 - Items are declared as `[[items]]` TOML array-of-tables.
-- At least one item is required for all kinds.
+- At least one item is required for all items-based kinds (pyramid, process, cycle). The matrix kind uses `[[quadrants]]` instead.
 - Item order in the file is rendering order.
 
 ## Forbidden fields
@@ -35,4 +35,4 @@ When a kind supports item-level emphasis, it uses this field:
 
 The engine decides visual representation. Omitting `emphasis` means default weight.
 
-> **v0.1 note:** `emphasis` is parsed and validated but not yet reflected in rendered output. Visual differentiation of emphasized items is planned for a future release.
+> **Note:** `emphasis` is parsed and validated but not yet reflected in rendered output. Visual differentiation of emphasized items is planned for v0.4.

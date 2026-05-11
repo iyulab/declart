@@ -1,0 +1,14 @@
+kind = "cycle"
+title = "PDCA Cycle"
+
+[[items]]
+label = "Plan"
+
+[[items]]
+label = "Do"
+
+[[items]]
+label = "Check"
+
+[[items]]
+label = "Act"

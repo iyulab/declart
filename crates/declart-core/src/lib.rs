@@ -1,9 +1,9 @@
 mod error;
 mod model;
-pub mod parse;
+pub(crate) mod parse;
 pub mod render;
 
 pub use error::DeclartError;
-pub use model::{DiagramKind, DiagramModel, Emphasis, Item};
+pub use model::{Diagram, Emphasis, Item, ItemsDiagram, MatrixDiagram};
 pub use parse::parse;
 pub use render::render;

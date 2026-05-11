@@ -1,0 +1,17 @@
+kind = "process"
+title = "Software Release Pipeline"
+
+[[items]]
+label = "Code Review"
+
+[[items]]
+label = "Build"
+
+[[items]]
+label = "Test"
+
+[[items]]
+label = "Deploy"
+
+[[items]]
+label = "Monitor"
