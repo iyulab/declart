@@ -10,7 +10,7 @@ impl Color {
         Self { r, g, b }
     }
 
-    pub(crate) fn to_hex(&self) -> String {
+    pub(crate) fn to_hex(self) -> String {
         format!("#{:02X}{:02X}{:02X}", self.r, self.g, self.b)
     }
 

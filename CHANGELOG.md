@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+Documentation and code quality improvements:
+
+- **`hierarchy` spec docs**: Added `id` and `effect` fields to field tables in `spec/kinds/hierarchy.md` and `docs/src/kinds/hierarchy.md`. Added org_chart-with-id example. Updated fishbone view description to reference `effect` field (with `title` fallback).
+- **LLM guide**: Updated fishbone, org chart, and Tips table to reflect `effect` field and `id`-based `parent` references.
+- **Playground**: Fishbone example now includes `effect = "High Latency"`.
+- **Code quality**: Resolved 6 clippy warnings in `declart-core` (dead code, range check, sort_by_key, self_convention).
+
 ## v0.17.0
 
 Design integrity release — naming correctness, id-based references, fishbone effect field, CLI warnings.

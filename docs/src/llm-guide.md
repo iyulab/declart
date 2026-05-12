@@ -269,7 +269,7 @@ parent = "Code"
 label = "Infrastructure"
 ```
 
-> **Structure**: Root nodes (no `parent`) become cause categories on the spine. Child nodes become sub-causes. The `title` field is rendered as the effect label at the right end of the spine.
+> **Structure**: Root nodes (no `parent`) become cause categories on the spine. Child nodes become sub-causes. The `effect` field is rendered as the spine-end effect label; if `effect` is omitted, `title` is used as fallback.
 >
 > **Limit**: 2–20 root nodes (cause categories). Recommend 8 or fewer for readability.
 
@@ -303,7 +303,7 @@ label = "BE Developer"
 parent = "Backend Lead"
 ```
 
-> **Rule**: exactly one root node (no `parent`). All `parent` values must reference an existing node `label`. Node labels must be unique. To explicitly select the view: `view = "org_chart"`.
+> **Rule**: exactly one root node (no `parent`). `parent` references another node's `id` (preferred) or `label`. For stable references that survive label renames, add `id = "stable-key"` to each node and use that in `parent`. To explicitly select the view: `view = "org_chart"`.
 
 ---
 
@@ -380,9 +380,10 @@ Performance = "★★★★★"
 | `emphasis` values | Only `"primary"` or `"secondary"` |
 | Flow views | `kind = "flow"` + `view`: `process` (default), `cycle`, `funnel` |
 | Tier views | `kind = "tier"` + `view`: `pyramid` (default and only) |
-| Hierarchy nodes | `label` must be unique; `parent` references another node's `label` |
+| Hierarchy nodes | `label` must be unique; `parent` references `id` (preferred) or `label` of another node |
+| Hierarchy `id` | Add `id = "key"` to nodes for stable `parent` references that survive label renames |
 | Hierarchy auto-select | 1 root → `org_chart`; 2+ roots → `fishbone` (or set `view` explicitly) |
-| Fishbone `title` | Rendered as the effect label (right end of spine), not a heading |
+| Fishbone `effect` | Rendered as the spine-end effect label; falls back to `title` if omitted |
 | Matrix quadrants | Always exactly 4 `[[quadrants]]` entries |
 | Timeline dates | ISO 8601: `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` |
 | Venn sets | Only 2 or 3 sets supported |

@@ -6,7 +6,7 @@ Rules that apply to every Declart declaration file.
 
 | Field | Type   | Description                          |
 |-------|--------|--------------------------------------|
-| kind  | string | One of: `sequence`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison` |
+| kind  | string | One of: `flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison` |
 
 ## Optional fields
 
@@ -18,12 +18,12 @@ Rules that apply to every Declart declaration file.
 ## Item arrays
 
 - Items are declared as `[[items]]` TOML array-of-tables.
-- At least one item is required for `sequence`. The `matrix` kind uses `[[quadrants]]`; `hierarchy` uses `[[nodes]]`.
+- At least one item is required for `flow` and `tier`. The `matrix` kind uses `[[quadrants]]`; `hierarchy` uses `[[nodes]]`; `timeline` uses `[[events]]`; `hub_spoke` uses `[[spokes]]`; `venn` uses `[[sets]]`; `comparison` uses `[[columns]]` and `[[rows]]`.
 - Item order in the file is rendering order.
 
 ## Forbidden fields
 
-Any field not listed in a kind's spec document is forbidden. Forbidden fields cause a parse error. This includes but is not limited to: `color`, `fill`, `stroke`, `font`, `size`, `x`, `y`, `width`, `height`, `style`, `class`, `id`.
+Any field not listed in a kind's spec document is forbidden. Forbidden fields cause a parse error. This includes but is not limited to: `color`, `fill`, `stroke`, `font`, `size`, `x`, `y`, `width`, `height`, `style`, `class`.
 
 ## Emphasis (shared optional item field)
 

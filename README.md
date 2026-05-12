@@ -96,16 +96,14 @@ This is the boundary that prevents kind proliferation. Layout variants, visual a
 
 Anchored on the categories PowerPoint SmartArt established, prioritizing what existing diagram-as-code tools leave uncovered.
 
-- Process — linear steps
-- Cycle — PDCA, lifecycle loops
-- Pyramid
-- Matrix 2×2
-- Hub-and-Spoke — radial relationships
-- Venn — set intersections
-- Timeline — date-anchored events
-- Fishbone / Ishikawa — cause-and-effect
-- Org Chart — hierarchical tree of nodes
-- Funnel — tapered conversion stages (marketing/sales)
+- **Flow** (`kind = "flow"`) — process steps, PDCA loops, conversion funnels; views: `process`, `cycle`, `funnel`
+- **Tier** (`kind = "tier"`) — ranked levels, priority pyramids; view: `pyramid`
+- **Hierarchy** (`kind = "hierarchy"`) — org charts, fishbone cause-and-effect; views: `org_chart`, `fishbone`
+- **Matrix** (`kind = "matrix"`) — 2×2 grids with two axes
+- **Hub-and-Spoke** (`kind = "hub_spoke"`) — radial connections from a center
+- **Venn** (`kind = "venn"`) — overlapping set intersections
+- **Timeline** (`kind = "timeline"`) — date-anchored events
+- **Comparison** (`kind = "comparison"`) — item × criteria evaluation table
 
 Additional kinds (Roadmap, Swimlane, etc.) may be considered after the core kinds stabilize.
 
@@ -149,7 +147,7 @@ Explicit boundaries that protect focus:
 | GitHub Releases binaries (Linux musl, macOS, Windows) | ✅ |
 | Interactive playground (live WASM, URL permalink, zoom/pan) | ✅ |
 | Spec site (mdBook + GitHub Actions CI) | ✅ (GitHub Pages: enable in repo Settings) |
-| LLM guide (prompt templates for all 7 kinds) | ✅ |
+| LLM guide (prompt templates for all 8 kinds) | ✅ |
 | VS Code Extension (live preview, diagnostics, Markdown code blocks) | ✅ (.vsix) |
 | mdbook-declart preprocessor (inline SVG in mdBook) | ✅ |
 
@@ -177,8 +175,8 @@ cargo build --release
 Create a declaration file:
 
 ```toml
-# hierarchy.toml
-kind = "pyramid"
+# maslow.toml
+kind = "tier"
 title = "Maslow's Hierarchy of Needs"
 
 [[items]]
@@ -200,35 +198,35 @@ label = "Physiological"
 Render to SVG:
 
 ```bash
-declart render hierarchy.toml
+declart render maslow.toml
 # writes hierarchy.svg
 ```
 
 Validate without rendering:
 
 ```bash
-declart validate hierarchy.toml
+declart validate maslow.toml
 ```
 
 Export to PNG:
 
 ```bash
-declart render hierarchy.toml --format png
+declart render maslow.toml --format png
 # writes hierarchy.png
 ```
 
 Watch and auto-rebuild on changes:
 
 ```bash
-declart watch hierarchy.toml
-# watches hierarchy.toml, rewrites hierarchy.svg on every save
+declart watch maslow.toml
+# watches maslow.toml, rewrites hierarchy.svg on every save
 # use --format png for PNG output
 ```
 
 Pipe to stdout:
 
 ```bash
-declart render hierarchy.toml --stdout > diagram.svg
+declart render maslow.toml --stdout > diagram.svg
 ```
 
 ## License

@@ -79,6 +79,7 @@ fn parse_items(raw_items: Vec<raw::RawItem>) -> Result<Vec<Item>, DeclartError> 
 }
 
 fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "flow");
     if raw.items.is_empty() { return Err(DeclartError::EmptyItems); }
     let view = match raw.view.as_deref() {
         None | Some("process") => FlowView::Process,
@@ -114,6 +115,7 @@ fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
 }
 
 fn validate_tier(raw: raw::RawTierDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "tier");
     if raw.items.is_empty() { return Err(DeclartError::EmptyItems); }
     let view = match raw.view.as_deref() {
         None | Some("pyramid") => TierView::Pyramid,
@@ -128,6 +130,7 @@ fn validate_tier(raw: raw::RawTierDiagram) -> Result<Diagram, DeclartError> {
 }
 
 fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "hierarchy");
     if raw.nodes.is_empty() { return Err(DeclartError::EmptyItems); }
 
     // Build identifier sets. Each node is identified by its id (if set) or label.
@@ -273,7 +276,7 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
 fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "venn");
     let n = raw.sets.len();
-    if n < 2 || n > 3 {
+    if !(2..=3).contains(&n) {
         return Err(DeclartError::InvalidValue {
             field: "sets".to_string(),
             value: format!("{} sets", n),
@@ -308,7 +311,7 @@ fn validate_timeline(raw: raw::RawTimelineDiagram) -> Result<Diagram, DeclartErr
         .into_iter()
         .map(|e| TimelineEvent { date: e.date, label: e.label })
         .collect();
-    events.sort_by(|a, b| normalize_date(&a.date).cmp(&normalize_date(&b.date)));
+    events.sort_by_key(|a| normalize_date(&a.date));
     Ok(Diagram::Timeline(TimelineDiagram { title: raw.title, events }))
 }
 
