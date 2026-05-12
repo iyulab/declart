@@ -164,3 +164,33 @@ pub struct RawComparisonRow {
 pub struct RawComparisonColumn {
     pub label: String,
 }
+
+/// Raw representation for `state` kind.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawStateDiagram {
+    pub kind: String,
+    pub title: Option<String>,
+    #[serde(default)]
+    pub states: Vec<RawStateNode>,
+    #[serde(default)]
+    pub transitions: Vec<RawStateTransition>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawStateNode {
+    pub label: String,
+    pub id: Option<String>,
+    pub role: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawStateTransition {
+    pub from: String,
+    pub to: String,
+    pub trigger: Option<String>,
+    #[serde(rename = "type", default)]
+    pub kind: Option<String>,
+}

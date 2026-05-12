@@ -9,6 +9,7 @@ pub(crate) mod matrix;
 pub(crate) mod org_chart;
 pub(crate) mod process;
 pub(crate) mod pyramid;
+pub(crate) mod state;
 pub(crate) mod swimlane;
 mod svg;
 pub mod theme;
@@ -31,11 +32,12 @@ pub fn render_opts(diagram: &Diagram, theme: &Theme, width: Option<u32>) -> Resu
         Diagram::Flow(d)       => flow::render_flow(d, theme),
         Diagram::Tier(d)       => flow::render_tier(d, theme),
         Diagram::Hierarchy(d)  => flow::render_hierarchy(d, theme),
-        Diagram::Matrix(d) => matrix::render(d, theme),
-        Diagram::HubSpoke(d) => hub_spoke::render(d, theme),
-        Diagram::Venn(d) => venn::render(d, theme),
-        Diagram::Timeline(d) => timeline::render(d, theme),
+        Diagram::Matrix(d)     => matrix::render(d, theme),
+        Diagram::HubSpoke(d)   => hub_spoke::render(d, theme),
+        Diagram::Venn(d)       => venn::render(d, theme),
+        Diagram::Timeline(d)   => timeline::render(d, theme),
         Diagram::Comparison(d) => comparison::render(d, theme),
+        Diagram::State(d)      => state::render(d, theme),
     };
     if let Some(w) = width {
         Ok(apply_width(svg, w))

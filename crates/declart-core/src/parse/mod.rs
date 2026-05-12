@@ -9,6 +9,7 @@ use crate::model::{
     HubSpokeDiagram, Item, MatrixDiagram,
     TimelineDiagram, TimelineEvent,
     VennDiagram, VennIntersection, VennSet,
+    StateDiagram, StateNode, StateRole, StateTransition, TransitionKind,
 };
 
 pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
@@ -27,6 +28,7 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
         "venn" => { let raw: raw::RawVennDiagram = toml::from_str(input)?; validate_venn(raw) }
         "timeline" => { let raw: raw::RawTimelineDiagram = toml::from_str(input)?; validate_timeline(raw) }
         "comparison" => { let raw: raw::RawComparisonDiagram = toml::from_str(input)?; validate_comparison(raw) }
+        "state" => { let raw: raw::RawStateDiagram = toml::from_str(input)?; validate_state(raw) }
         other => Err(DeclartError::UnknownKind(other.to_string())),
     }
 }
@@ -47,6 +49,7 @@ pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
         "venn" => { let raw: raw::RawVennDiagram = serde_json::from_str(input)?; validate_venn(raw) }
         "timeline" => { let raw: raw::RawTimelineDiagram = serde_json::from_str(input)?; validate_timeline(raw) }
         "comparison" => { let raw: raw::RawComparisonDiagram = serde_json::from_str(input)?; validate_comparison(raw) }
+        "state" => { let raw: raw::RawStateDiagram = serde_json::from_str(input)?; validate_state(raw) }
         other => Err(DeclartError::UnknownKind(other.to_string())),
     }
 }
@@ -451,9 +454,103 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
     Ok(Diagram::Comparison(ComparisonDiagram { title: raw.title, rows, columns, cells }))
 }
 
+fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "state");
+
+    if raw.states.len() < 2 {
+        return Err(DeclartError::TooFewItems { kind: "state", min: 2, got: raw.states.len() });
+    }
+
+    // Duplicate label check
+    let labels: std::collections::HashSet<&str> =
+        raw.states.iter().map(|s| s.label.as_str()).collect();
+    if labels.len() != raw.states.len() {
+        return Err(DeclartError::InvalidValue {
+            field: "label".to_string(),
+            value: "(duplicate)".to_string(),
+            hint: "Each state label must be unique; use `id` to disambiguate if labels collide".to_string(),
+        });
+    }
+
+    // Duplicate id check
+    let ids: Vec<&str> = raw.states.iter().filter_map(|s| s.id.as_deref()).collect();
+    let id_set: std::collections::HashSet<&str> = ids.iter().copied().collect();
+    if id_set.len() != ids.len() {
+        return Err(DeclartError::InvalidValue {
+            field: "id".to_string(),
+            value: "(duplicate)".to_string(),
+            hint: "Each state id must be unique within the diagram".to_string(),
+        });
+    }
+
+    // Parse roles and enforce at-most-one initial
+    let mut initial_count = 0_usize;
+    let mut states = Vec::with_capacity(raw.states.len());
+    for s in raw.states {
+        let role = match s.role.as_deref() {
+            None => None,
+            Some("initial") => { initial_count += 1; Some(StateRole::Initial) }
+            Some("terminal") => Some(StateRole::Terminal),
+            Some(other) => return Err(DeclartError::InvalidValue {
+                field: "role".to_string(),
+                value: other.to_string(),
+                hint: "Valid values: initial, terminal".to_string(),
+            }),
+        };
+        states.push(StateNode { label: s.label, id: s.id, role });
+    }
+    if initial_count > 1 {
+        return Err(DeclartError::InvalidValue {
+            field: "role".to_string(),
+            value: format!("{initial_count} initial states"),
+            hint: "At most one state may have role = \"initial\"".to_string(),
+        });
+    }
+
+    // Build reachable key set (id OR label for each state)
+    let reachable: std::collections::HashSet<&str> = states.iter().flat_map(|s| {
+        let mut keys = vec![s.label.as_str()];
+        if let Some(id) = s.id.as_deref() { keys.push(id); }
+        keys
+    }).collect();
+
+    // Parse transitions
+    let mut transitions = Vec::with_capacity(raw.transitions.len());
+    for t in raw.transitions {
+        if !reachable.contains(t.from.as_str()) {
+            return Err(DeclartError::InvalidValue {
+                field: "from".to_string(),
+                value: t.from.clone(),
+                hint: "from must reference an existing state id or label".to_string(),
+            });
+        }
+        if !reachable.contains(t.to.as_str()) {
+            return Err(DeclartError::InvalidValue {
+                field: "to".to_string(),
+                value: t.to.clone(),
+                hint: "to must reference an existing state id or label".to_string(),
+            });
+        }
+        let kind = match t.kind.as_deref() {
+            None | Some("normal") => TransitionKind::Normal,
+            Some("exception") => TransitionKind::Exception,
+            Some(other) => return Err(DeclartError::InvalidValue {
+                field: "type".to_string(),
+                value: other.to_string(),
+                hint: "Valid values: normal, exception".to_string(),
+            }),
+        };
+        transitions.push(StateTransition {
+            from: t.from, to: t.to, trigger: t.trigger, kind,
+        });
+    }
+
+    Ok(Diagram::State(StateDiagram { title: raw.title, states, transitions }))
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::model::{Diagram, FlowView, TierView, HierarchyView};
+    use crate::model::{Diagram, FlowView, TierView, HierarchyView, StateRole};
     use super::{parse, parse_auto, parse_json};
 
     // --- flow tests ---
@@ -1098,5 +1195,134 @@ label = "A"
     fn parse_rejects_unknown_kind() {
         let input = "kind = \"diagram\"\n\n[[items]]\nlabel = \"Item\"\n";
         assert!(parse(input).is_err());
+    }
+
+    // --- state tests ---
+
+    #[test]
+    fn parse_state_basic() {
+        let input = r#"
+kind = "state"
+
+[[states]]
+id = "idle"
+label = "Idle"
+role = "initial"
+
+[[states]]
+id = "done"
+label = "Done"
+role = "terminal"
+
+[[transitions]]
+from = "idle"
+to = "done"
+trigger = "finish"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::State(d) = diagram else { panic!("expected State") };
+        assert_eq!(d.states.len(), 2);
+        assert_eq!(d.transitions[0].trigger.as_deref(), Some("finish"));
+        assert!(matches!(d.states[0].role, Some(StateRole::Initial)));
+    }
+
+    #[test]
+    fn parse_state_rejects_single_state() {
+        let input = "kind = \"state\"\n\n[[states]]\nlabel = \"Only\"\n";
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_state_rejects_multiple_initial() {
+        let input = r#"
+kind = "state"
+[[states]]
+label = "A"
+role = "initial"
+[[states]]
+label = "B"
+role = "initial"
+"#;
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_state_rejects_unknown_transition_ref() {
+        let input = r#"
+kind = "state"
+[[states]]
+label = "A"
+[[states]]
+label = "B"
+[[transitions]]
+from = "A"
+to = "NONEXISTENT"
+"#;
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_state_allows_multiple_terminal() {
+        let input = r#"
+kind = "state"
+[[states]]
+label = "Done"
+role = "terminal"
+[[states]]
+label = "Cancelled"
+role = "terminal"
+"#;
+        assert!(parse(input).is_ok());
+    }
+
+    #[test]
+    fn parse_state_self_loop_valid() {
+        let input = r#"
+kind = "state"
+[[states]]
+id = "s1"
+label = "Retrying"
+[[states]]
+label = "Done"
+[[transitions]]
+from = "s1"
+to = "s1"
+trigger = "retry"
+[[transitions]]
+from = "s1"
+to = "Done"
+trigger = "success"
+"#;
+        assert!(parse(input).is_ok());
+    }
+
+    #[test]
+    fn parse_state_no_transitions_valid() {
+        let input = r#"
+kind = "state"
+[[states]]
+label = "Pending"
+[[states]]
+label = "Active"
+"#;
+        assert!(parse(input).is_ok());
+    }
+
+    #[test]
+    fn parse_state_rejects_duplicate_label() {
+        let input = r#"
+kind = "state"
+[[states]]
+label = "Ready"
+[[states]]
+label = "Ready"
+"#;
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn unknown_kind_hint_includes_state() {
+        let err = parse("kind = \"unknown\"\n").unwrap_err();
+        assert!(err.to_string().contains("state"), "hint should list 'state'");
     }
 }

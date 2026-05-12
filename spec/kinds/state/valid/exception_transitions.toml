@@ -1,0 +1,22 @@
+kind = "state"
+
+[[states]]
+id = "proc"
+label = "Processing"
+
+[[states]]
+label = "Done"
+
+[[states]]
+label = "Failed"
+
+[[transitions]]
+from = "proc"
+to = "Done"
+trigger = "success"
+
+[[transitions]]
+from = "proc"
+to = "Failed"
+trigger = "error"
+type = "exception"

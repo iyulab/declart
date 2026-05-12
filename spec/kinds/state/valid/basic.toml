@@ -1,0 +1,12 @@
+kind = "state"
+
+[[states]]
+label = "Pending"
+
+[[states]]
+label = "Done"
+
+[[transitions]]
+from = "Pending"
+to = "Done"
+trigger = "complete"

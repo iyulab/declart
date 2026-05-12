@@ -194,6 +194,53 @@ pub struct ComparisonDiagram {
     pub cells: Vec<ComparisonCell>,
 }
 
+/// Semantic lifecycle role for a state node.
+#[derive(Debug, Clone, PartialEq)]
+pub enum StateRole {
+    /// Entry point of the lifecycle — at most one per diagram.
+    Initial,
+    /// Exit point(s) of the lifecycle — multiple allowed.
+    Terminal,
+}
+
+/// Semantic type of a state transition.
+#[derive(Debug, Clone, PartialEq)]
+pub enum TransitionKind {
+    /// Normal (happy-path) transition.
+    Normal,
+    /// Error, rollback, or abnormal exit path.
+    Exception,
+}
+
+/// A state in a state diagram.
+#[derive(Debug, Clone)]
+pub struct StateNode {
+    pub label: String,
+    /// Stable identifier for `from`/`to` references; falls back to `label` if absent.
+    pub id: Option<String>,
+    pub role: Option<StateRole>,
+}
+
+/// A directed transition between two states.
+#[derive(Debug, Clone)]
+pub struct StateTransition {
+    /// `id` (preferred) or `label` of source state.
+    pub from: String,
+    /// `id` (preferred) or `label` of target state.
+    pub to: String,
+    /// Event or condition that causes this transition (optional — omit for unconditional).
+    pub trigger: Option<String>,
+    pub kind: TransitionKind,
+}
+
+/// Model for the State diagram kind.
+#[derive(Debug, Clone)]
+pub struct StateDiagram {
+    pub title: Option<String>,
+    pub states: Vec<StateNode>,
+    pub transitions: Vec<StateTransition>,
+}
+
 /// The parsed, validated representation of a diagram declaration.
 #[derive(Debug, Clone)]
 pub enum Diagram {
@@ -205,6 +252,7 @@ pub enum Diagram {
     Venn(VennDiagram),
     Timeline(TimelineDiagram),
     Comparison(ComparisonDiagram),
+    State(StateDiagram),
 }
 
 #[cfg(test)]
@@ -216,8 +264,14 @@ mod tests {
         let d = ItemsDiagram {
             title: Some("Test".to_string()),
             items: vec![
-                Item { label: "Top".to_string(), emphasis: None },
-                Item { label: "Bottom".to_string(), emphasis: Some(Emphasis::Primary) },
+                Item {
+                    label: "Top".to_string(),
+                    emphasis: None,
+                },
+                Item {
+                    label: "Bottom".to_string(),
+                    emphasis: Some(Emphasis::Primary),
+                },
             ],
         };
         assert_eq!(d.items.len(), 2);
@@ -232,7 +286,10 @@ mod tests {
             x_axis: "Effort".to_string(),
             y_axis: "Impact".to_string(),
             quadrants: (0..4)
-                .map(|i| Item { label: format!("Q{}", i + 1), emphasis: None })
+                .map(|i| Item {
+                    label: format!("Q{}", i + 1),
+                    emphasis: None,
+                })
                 .collect(),
         };
         assert_eq!(d.quadrants.len(), 4);
@@ -244,7 +301,11 @@ mod tests {
         let d = FlowDiagram {
             title: Some("PDCA".to_string()),
             view: FlowView::Cycle,
-            items: vec![FlowItem { label: "Plan".to_string(), emphasis: None, actor: None }],
+            items: vec![FlowItem {
+                label: "Plan".to_string(),
+                emphasis: None,
+                actor: None,
+            }],
         };
         assert_eq!(d.view, FlowView::Cycle);
         assert_eq!(d.items[0].label, "Plan");
@@ -252,7 +313,11 @@ mod tests {
 
     #[test]
     fn flow_item_holds_actor() {
-        let fi = FlowItem { label: "Buy".to_string(), emphasis: None, actor: Some("Customer".to_string()) };
+        let fi = FlowItem {
+            label: "Buy".to_string(),
+            emphasis: None,
+            actor: Some("Customer".to_string()),
+        };
         assert_eq!(fi.actor.as_deref(), Some("Customer"));
     }
 
@@ -262,8 +327,16 @@ mod tests {
             title: None,
             view: FlowView::Swimlane,
             items: vec![
-                FlowItem { label: "A".to_string(), emphasis: None, actor: Some("X".to_string()) },
-                FlowItem { label: "B".to_string(), emphasis: None, actor: Some("Y".to_string()) },
+                FlowItem {
+                    label: "A".to_string(),
+                    emphasis: None,
+                    actor: Some("X".to_string()),
+                },
+                FlowItem {
+                    label: "B".to_string(),
+                    emphasis: None,
+                    actor: Some("Y".to_string()),
+                },
             ],
         };
         assert_eq!(d.view, FlowView::Swimlane);
@@ -275,7 +348,10 @@ mod tests {
         let d = TierDiagram {
             title: Some("Maslow".to_string()),
             view: TierView::Pyramid,
-            items: vec![Item { label: "Top".to_string(), emphasis: None }],
+            items: vec![Item {
+                label: "Top".to_string(),
+                emphasis: None,
+            }],
         };
         assert_eq!(d.view, TierView::Pyramid);
         assert_eq!(d.items[0].label, "Top");
@@ -287,9 +363,41 @@ mod tests {
             title: Some("Org".to_string()),
             effect: None,
             view: HierarchyView::OrgChart,
-            nodes: vec![HierarchyNode { label: "CEO".to_string(), id: None, parent: None }],
+            nodes: vec![HierarchyNode {
+                label: "CEO".to_string(),
+                id: None,
+                parent: None,
+            }],
         };
         assert_eq!(d.view, HierarchyView::OrgChart);
         assert!(d.nodes[0].parent.is_none());
+    }
+
+    #[test]
+    fn state_diagram_holds_states_and_transitions() {
+        let d = StateDiagram {
+            title: Some("Order".to_string()),
+            states: vec![
+                StateNode {
+                    id: Some("idle".to_string()),
+                    label: "Idle".to_string(),
+                    role: Some(StateRole::Initial),
+                },
+                StateNode {
+                    id: None,
+                    label: "Done".to_string(),
+                    role: Some(StateRole::Terminal),
+                },
+            ],
+            transitions: vec![StateTransition {
+                from: "idle".to_string(),
+                to: "Done".to_string(),
+                trigger: Some("finish".to_string()),
+                kind: TransitionKind::Normal,
+            }],
+        };
+        assert_eq!(d.states.len(), 2);
+        assert_eq!(d.transitions[0].from, "idle");
+        assert!(matches!(d.states[0].role, Some(StateRole::Initial)));
     }
 }

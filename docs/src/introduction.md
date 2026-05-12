@@ -66,6 +66,7 @@ let svg = render(&diagram, &DEFAULT_THEME)?;
 | `hub_spoke` | — |
 | `venn` | — |
 | `comparison` | — |
+| `state` | — |
 
 ## Design Philosophy
 

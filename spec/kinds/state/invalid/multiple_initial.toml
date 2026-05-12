@@ -1,0 +1,9 @@
+kind = "state"
+
+[[states]]
+label = "Start"
+role = "initial"
+
+[[states]]
+label = "Also Start"
+role = "initial"

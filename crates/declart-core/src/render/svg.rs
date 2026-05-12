@@ -61,6 +61,26 @@ impl SvgBuilder {
         ));
     }
 
+    pub fn circle_stroked(
+        &mut self, cx: f32, cy: f32, r: f32,
+        fill: &str, stroke: &str, stroke_width: f32,
+    ) {
+        self.elements.push(format!(
+            r#"<circle cx="{:.1}" cy="{:.1}" r="{:.1}" fill="{}" stroke="{}" stroke-width="{:.1}"/>"#,
+            cx, cy, r, fill, stroke, stroke_width
+        ));
+    }
+
+    pub fn line_dashed(
+        &mut self, x1: f32, y1: f32, x2: f32, y2: f32,
+        stroke: &str, stroke_width: f32,
+    ) {
+        self.elements.push(format!(
+            r#"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="{}" stroke-width="{:.1}" stroke-dasharray="6,3"/>"#,
+            x1, y1, x2, y2, stroke, stroke_width
+        ));
+    }
+
     pub fn text(&mut self, x: f32, y: f32, content: &str, fill: &str, font_size: f32) {
         self.elements.push(format!(
             r#"<text x="{:.1}" y="{:.1}" fill="{}" font-size="{:.1}" font-family="Noto Sans, sans-serif" text-anchor="middle" dominant-baseline="middle">{}</text>"#,
@@ -164,5 +184,22 @@ mod tests {
         assert!(svg.contains("&amp;"));
         assert!(svg.contains("&lt;"));
         assert!(svg.contains("&gt;"));
+    }
+
+    #[test]
+    fn circle_stroked_has_stroke_attribute() {
+        let mut b = SvgBuilder::new(200.0, 200.0);
+        b.circle_stroked(100.0, 100.0, 30.0, "#ffffff", "#003087", 2.0);
+        let svg = b.build("#ffffff");
+        assert!(svg.contains("stroke=\"#003087\""));
+        assert!(svg.contains("stroke-width=\"2.0\""));
+    }
+
+    #[test]
+    fn line_dashed_contains_dasharray() {
+        let mut b = SvgBuilder::new(200.0, 200.0);
+        b.line_dashed(0.0, 0.0, 100.0, 100.0, "#000000", 1.5);
+        let svg = b.build("#ffffff");
+        assert!(svg.contains("stroke-dasharray"));
     }
 }

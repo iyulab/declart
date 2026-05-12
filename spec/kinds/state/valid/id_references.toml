@@ -1,0 +1,14 @@
+kind = "state"
+
+[[states]]
+id = "s1"
+label = "Step One"
+
+[[states]]
+id = "s2"
+label = "Step Two"
+
+[[transitions]]
+from = "s1"
+to = "s2"
+trigger = "next"

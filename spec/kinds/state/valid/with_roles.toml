@@ -1,0 +1,17 @@
+kind = "state"
+title = "Order Lifecycle"
+
+[[states]]
+id = "idle"
+label = "대기"
+role = "initial"
+
+[[states]]
+id = "done"
+label = "완료"
+role = "terminal"
+
+[[transitions]]
+from = "idle"
+to = "done"
+trigger = "주문 접수"

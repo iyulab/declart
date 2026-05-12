@@ -294,6 +294,8 @@
       <option value="venn">Venn — Skills Overlap</option>
       <option value="timeline">Timeline — Product Launch</option>
       <option value="comparison">Comparison — Framework Analysis</option>
+      <option value="flow_swimlane">Flow (swimlane) — 주문 처리</option>
+      <option value="state">State — 주문 처리 상태</option>
     </select>
   </label>
   <label>
@@ -560,6 +562,57 @@ label = "Launch"
 [[events]]
 date = "2024-12-01"
 label = "v2.0"
+`,
+
+  flow_swimlane: `kind = "flow"
+view = "swimlane"
+title = "주문 처리"
+
+[[items]]
+actor = "고객"
+label = "주문 요청"
+
+[[items]]
+actor = "시스템"
+label = "재고 확인"
+
+[[items]]
+actor = "결제 게이트웨이"
+label = "결제 처리"
+
+[[items]]
+actor = "시스템"
+label = "주문 확정"
+`,
+
+  state: `kind = "state"
+title = "주문 처리 상태"
+
+[[states]]
+id = "idle"
+label = "대기"
+role = "initial"
+
+[[states]]
+id = "done"
+label = "완료"
+role = "terminal"
+
+[[states]]
+id = "cancelled"
+label = "취소됨"
+role = "terminal"
+
+[[transitions]]
+from = "idle"
+to = "done"
+trigger = "결제 완료"
+
+[[transitions]]
+from = "idle"
+to = "cancelled"
+trigger = "결제 실패"
+type = "exception"
 `,
 
   comparison: `kind = "comparison"

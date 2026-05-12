@@ -1,0 +1,24 @@
+kind = "state"
+
+[[states]]
+label = "Active"
+role = "initial"
+
+[[states]]
+label = "Completed"
+role = "terminal"
+
+[[states]]
+label = "Cancelled"
+role = "terminal"
+
+[[transitions]]
+from = "Active"
+to = "Completed"
+trigger = "finish"
+
+[[transitions]]
+from = "Active"
+to = "Cancelled"
+trigger = "cancel"
+type = "exception"

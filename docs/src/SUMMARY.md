@@ -28,3 +28,4 @@
 - [Hub-and-Spoke](kinds/hub_spoke.md)
 - [Venn](kinds/venn.md)
 - [Comparison](kinds/comparison.md)
+- [State](kinds/state.md)

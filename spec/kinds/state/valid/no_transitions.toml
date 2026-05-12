@@ -1,0 +1,7 @@
+kind = "state"
+
+[[states]]
+label = "Alpha"
+
+[[states]]
+label = "Beta"

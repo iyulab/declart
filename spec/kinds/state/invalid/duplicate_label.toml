@@ -1,0 +1,7 @@
+kind = "state"
+
+[[states]]
+label = "Ready"
+
+[[states]]
+label = "Ready"

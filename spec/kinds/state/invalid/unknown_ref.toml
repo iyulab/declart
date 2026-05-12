@@ -1,0 +1,11 @@
+kind = "state"
+
+[[states]]
+label = "A"
+
+[[states]]
+label = "B"
+
+[[transitions]]
+from = "A"
+to = "NONEXISTENT"

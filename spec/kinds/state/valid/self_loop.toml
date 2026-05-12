@@ -1,0 +1,18 @@
+kind = "state"
+
+[[states]]
+id = "retry"
+label = "Retrying"
+
+[[states]]
+label = "Done"
+
+[[transitions]]
+from = "retry"
+to = "retry"
+trigger = "fail again"
+
+[[transitions]]
+from = "retry"
+to = "Done"
+trigger = "success"
