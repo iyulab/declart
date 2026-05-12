@@ -13,7 +13,7 @@ Declart is a declarative diagram engine. You write a TOML file describing the st
 cargo install declart-cli
 
 # Scaffold a starter diagram
-declart init pyramid > diagram.toml
+declart init sequence > diagram.toml
 
 # Render to SVG
 declart render diagram.toml
@@ -34,7 +34,8 @@ declart validate diagram.toml
 const declart = require('@iyulab/declart');
 
 const svg = declart.render(`
-kind = "pyramid"
+kind = "sequence"
+view = "pyramid"
 title = "Maslow's Hierarchy"
 [[items]]
 label = "Self-actualization"
@@ -55,19 +56,15 @@ let svg = render(&diagram, &DEFAULT_THEME)?;
 
 ## Supported Kinds
 
-| Kind | Use case |
-|------|----------|
-| `pyramid` | Hierarchies, Maslow, priority layers |
-| `process` | Sequential steps, workflows |
-| `cycle` | Closed loops, PDCA, lifecycles |
-| `matrix` | 2×2 prioritization, Eisenhower |
-| `hub_spoke` | Central concept with related items |
-| `venn` | Set intersections, overlapping groups |
-| `timeline` | Date-anchored events |
-| `fishbone` | Cause-and-effect, root cause analysis |
-| `org_chart` | Hierarchical trees, organizational structures |
-| `funnel` | Conversion funnels, sales pipelines |
-| `comparison` | Item-vs-criteria tables, feature matrices |
+| Kind | Views |
+|------|-------|
+| `sequence` | `process` (default), `cycle`, `funnel`, `pyramid` |
+| `hierarchy` | `org_chart` (auto), `fishbone` (auto) |
+| `timeline` | — |
+| `matrix` | — |
+| `hub_spoke` | — |
+| `venn` | — |
+| `comparison` | — |
 
 ## Design Philosophy
 

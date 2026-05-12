@@ -41,7 +41,7 @@ enum Commands {
     },
     /// Print a starter TOML declaration for a diagram kind
     Init {
-        /// Diagram kind: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone, org_chart, funnel, comparison
+        /// Diagram kind: sequence, hierarchy, timeline, matrix, hub_spoke, venn, comparison
         kind: String,
     },
     /// Watch a file and re-render on every change
@@ -95,7 +95,7 @@ fn run() -> Result<()> {
         Commands::Init { kind } => {
             let template = init_template(&kind).with_context(|| {
                 format!(
-                    "unknown kind `{}`\n  = hint: Available kinds: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone, org_chart, funnel, comparison",
+                    "unknown kind `{}`\n  = hint: Available kinds: sequence, hierarchy, timeline, matrix, hub_spoke, venn, comparison",
                     kind
                 )
             })?;
@@ -203,22 +203,8 @@ fn resolve_theme(name: &str) -> Result<Theme> {
 
 fn init_template(kind: &str) -> Option<&'static str> {
     match kind {
-        "pyramid" => Some(
-            r#"kind = "pyramid"
-title = "My Pyramid"
-
-[[items]]
-label = "Top"
-
-[[items]]
-label = "Middle"
-
-[[items]]
-label = "Bottom"
-"#,
-        ),
-        "process" => Some(
-            r#"kind = "process"
+        "sequence" => Some(
+            r#"kind = "sequence"
 title = "My Process"
 
 [[items]]
@@ -231,21 +217,20 @@ label = "Step 2"
 label = "Step 3"
 "#,
         ),
-        "cycle" => Some(
-            r#"kind = "cycle"
-title = "My Cycle"
+        "hierarchy" => Some(
+            r#"kind = "hierarchy"
+title = "My Org Chart"
 
-[[items]]
-label = "Plan"
+[[nodes]]
+label = "CEO"
 
-[[items]]
-label = "Do"
+[[nodes]]
+label = "CTO"
+parent = "CEO"
 
-[[items]]
-label = "Check"
-
-[[items]]
-label = "Act"
+[[nodes]]
+label = "CFO"
+parent = "CEO"
 "#,
         ),
         "matrix" => Some(
@@ -313,55 +298,6 @@ label = "Milestone"
 [[events]]
 date = "2024-12-31"
 label = "End"
-"#,
-        ),
-        "fishbone" => Some(
-            r#"kind = "fishbone"
-title = "My Fishbone"
-
-effect = "Effect"
-
-[[causes]]
-label = "Cause A"
-
-[[causes]]
-label = "Cause B"
-
-[[causes]]
-label = "Cause C"
-"#,
-        ),
-        "org_chart" => Some(
-            r#"kind = "org_chart"
-title = "My Org Chart"
-
-[[nodes]]
-id = "root"
-label = "CEO"
-
-[[nodes]]
-id = "left"
-label = "CTO"
-parent = "root"
-
-[[nodes]]
-id = "right"
-label = "CFO"
-parent = "root"
-"#,
-        ),
-        "funnel" => Some(
-            r#"kind = "funnel"
-title = "My Funnel"
-
-[[items]]
-label = "Stage 1"
-
-[[items]]
-label = "Stage 2"
-
-[[items]]
-label = "Stage 3"
 "#,
         ),
         "comparison" => Some(
