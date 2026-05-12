@@ -65,7 +65,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.12.0** — 11 diagram kinds, JSON input, GH Releases binaries, ESM npm package. 141 tests.
+**Current: v0.13.0** — 11 diagram kinds, simplified input (partial dates, label-as-id, row-inline cells). 146 tests.
 
 | Capability | State |
 |------------|-------|

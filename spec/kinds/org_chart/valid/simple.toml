@@ -2,15 +2,12 @@ kind = "org_chart"
 title = "Company Structure"
 
 [[nodes]]
-id = "ceo"
 label = "CEO"
 
 [[nodes]]
-id = "cto"
 label = "CTO"
-parent = "ceo"
+parent = "CEO"
 
 [[nodes]]
-id = "cfo"
 label = "CFO"
-parent = "ceo"
+parent = "CEO"

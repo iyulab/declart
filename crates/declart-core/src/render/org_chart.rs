@@ -15,12 +15,12 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
         return SvgBuilder::new(400.0, 200.0).build(&theme.background.to_hex());
     }
 
-    // Build parent→children map.
+    // Build parent→children map keyed by label.
     let children: std::collections::HashMap<&str, Vec<usize>> = {
         let mut map: std::collections::HashMap<&str, Vec<usize>> = std::collections::HashMap::new();
         for (i, node) in nodes.iter().enumerate() {
-            if let Some(parent_id) = &node.parent {
-                map.entry(parent_id.as_str()).or_default().push(i);
+            if let Some(parent_label) = &node.parent {
+                map.entry(parent_label.as_str()).or_default().push(i);
             }
         }
         map
@@ -62,8 +62,8 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
 
     // Draw connectors first (below nodes).
     for (i, node) in nodes.iter().enumerate() {
-        if let Some(parent_id) = &node.parent {
-            if let Some(parent_idx) = nodes.iter().position(|n| &n.id == parent_id) {
+        if let Some(parent_label) = &node.parent {
+            if let Some(parent_idx) = nodes.iter().position(|n| &n.label == parent_label) {
                 let px = x_positions[parent_idx] + NODE_W / 2.0;
                 let py = title_height + y_positions[parent_idx] + NODE_H;
                 let cx = x_positions[i] + NODE_W / 2.0;
@@ -132,11 +132,11 @@ fn assign_positions(
     y_positions: &mut Vec<f32>,
     next_x: &mut f32,
 ) -> f32 {
-    let node_id = nodes[idx].id.as_str();
+    let node_label = nodes[idx].label.as_str();
     let y = depth as f32 * (NODE_H + V_GAP);
     y_positions[idx] = y;
 
-    let child_indices = children.get(node_id).cloned().unwrap_or_default();
+    let child_indices = children.get(node_label).cloned().unwrap_or_default();
     if child_indices.is_empty() {
         // Leaf node: place at next_x.
         x_positions[idx] = *next_x;
@@ -168,9 +168,9 @@ mod tests {
         OrgChartDiagram {
             title: Some("Company".to_string()),
             nodes: vec![
-                OrgChartNode { id: "ceo".to_string(), label: "CEO".to_string(), parent: None },
-                OrgChartNode { id: "cto".to_string(), label: "CTO".to_string(), parent: Some("ceo".to_string()) },
-                OrgChartNode { id: "cfo".to_string(), label: "CFO".to_string(), parent: Some("ceo".to_string()) },
+                OrgChartNode { label: "CEO".to_string(), parent: None },
+                OrgChartNode { label: "CTO".to_string(), parent: Some("CEO".to_string()) },
+                OrgChartNode { label: "CFO".to_string(), parent: Some("CEO".to_string()) },
             ],
         }
     }
@@ -206,11 +206,11 @@ mod tests {
         let d = OrgChartDiagram {
             title: None,
             nodes: vec![
-                OrgChartNode { id: "root".to_string(), label: "Root".to_string(), parent: None },
-                OrgChartNode { id: "l".to_string(), label: "L".to_string(), parent: Some("root".to_string()) },
-                OrgChartNode { id: "r".to_string(), label: "R".to_string(), parent: Some("root".to_string()) },
-                OrgChartNode { id: "ll".to_string(), label: "LL".to_string(), parent: Some("l".to_string()) },
-                OrgChartNode { id: "lr".to_string(), label: "LR".to_string(), parent: Some("l".to_string()) },
+                OrgChartNode { label: "Root".to_string(), parent: None },
+                OrgChartNode { label: "L".to_string(), parent: Some("Root".to_string()) },
+                OrgChartNode { label: "R".to_string(), parent: Some("Root".to_string()) },
+                OrgChartNode { label: "LL".to_string(), parent: Some("L".to_string()) },
+                OrgChartNode { label: "LR".to_string(), parent: Some("L".to_string()) },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
@@ -225,13 +225,12 @@ mod tests {
     fn wide_tree_no_negative_x() {
         // 1 root, 6 leaf children → wide flat tree
         let mut nodes = vec![
-            OrgChartNode { id: "root".to_string(), label: "Root".to_string(), parent: None },
+            OrgChartNode { label: "Root".to_string(), parent: None },
         ];
         for i in 0..6 {
             nodes.push(OrgChartNode {
-                id: format!("c{}", i),
                 label: format!("Child {}", i),
-                parent: Some("root".to_string()),
+                parent: Some("Root".to_string()),
             });
         }
         let d = OrgChartDiagram { title: None, nodes };

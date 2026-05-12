@@ -89,13 +89,11 @@ pub struct FishboneDiagram {
     pub causes: Vec<FishboneCause>,
 }
 
-/// A single node in an org chart, identified by a unique string id.
+/// A single node in an org chart. `label` is the unique identifier; `parent` references the parent's label.
 #[derive(Debug, Clone)]
 pub struct OrgChartNode {
-    /// Unique identifier within the diagram. Referenced by `parent` on child nodes.
-    pub id: String,
     pub label: String,
-    /// `None` for the root node; references `id` of the parent node for all others.
+    /// `None` for the root node; references `label` of the parent node for all others.
     pub parent: Option<String>,
 }
 

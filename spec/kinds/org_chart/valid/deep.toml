@@ -2,30 +2,24 @@ kind = "org_chart"
 title = "Engineering Division"
 
 [[nodes]]
-id = "vp"
 label = "VP of Engineering"
 
 [[nodes]]
-id = "backend"
 label = "Backend Team"
-parent = "vp"
+parent = "VP of Engineering"
 
 [[nodes]]
-id = "frontend"
 label = "Frontend Team"
-parent = "vp"
+parent = "VP of Engineering"
 
 [[nodes]]
-id = "be1"
 label = "Alice"
-parent = "backend"
+parent = "Backend Team"
 
 [[nodes]]
-id = "be2"
 label = "Bob"
-parent = "backend"
+parent = "Backend Team"
 
 [[nodes]]
-id = "fe1"
 label = "Carol"
-parent = "frontend"
+parent = "Frontend Team"

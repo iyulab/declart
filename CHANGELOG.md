@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.13.0
+
+Input simplification — three breaking changes that reduce declaration verbosity.
+
+- **Timeline partial dates**: `date` now accepts `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. Partial forms are treated as the first day of that year/month. Existing `YYYY-MM-DD` files are unchanged.
+- **Org Chart label-as-id**: `id` field removed from `[[nodes]]`. `label` is now the unique node identifier; `parent` references the parent node's `label` directly. All existing `id = "..."` fields must be removed.
+- **Comparison row-inline cells**: `[[cells]]` array removed. Cell values are now declared inline within each `[[rows]]` entry, keyed by column label (e.g., `Performance = "★★★★"`). `[[columns]]` is still required for column ordering. Column label must not be `"label"`.
+- **146 tests**
+
 ## v0.12.0
 
 Ecosystem expansion: distribution automation, JSON input, ESM npm package, Comparison table kind.

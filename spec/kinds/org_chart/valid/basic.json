@@ -2,11 +2,11 @@
   "kind": "org_chart",
   "title": "Engineering Department",
   "nodes": [
-    { "id": "vp", "label": "VP Engineering" },
-    { "id": "fe_lead", "label": "Frontend Lead", "parent": "vp" },
-    { "id": "be_lead", "label": "Backend Lead", "parent": "vp" },
-    { "id": "fe1", "label": "Alice", "parent": "fe_lead" },
-    { "id": "fe2", "label": "Bob", "parent": "fe_lead" },
-    { "id": "be1", "label": "Carol", "parent": "be_lead" }
+    { "label": "VP Engineering" },
+    { "label": "Frontend Lead", "parent": "VP Engineering" },
+    { "label": "Backend Lead", "parent": "VP Engineering" },
+    { "label": "Alice", "parent": "Frontend Lead" },
+    { "label": "Bob", "parent": "Frontend Lead" },
+    { "label": "Carol", "parent": "Backend Lead" }
   ]
 }

@@ -1,0 +1,18 @@
+kind = "timeline"
+title = "Product History"
+
+[[events]]
+date = "2022"
+label = "Founded"
+
+[[events]]
+date = "2023-06"
+label = "Beta"
+
+[[events]]
+date = "2024-03-15"
+label = "v1.0 Launch"
+
+[[events]]
+date = "2025"
+label = "v2.0"

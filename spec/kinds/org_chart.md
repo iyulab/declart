@@ -9,19 +9,16 @@ kind = "org_chart"
 title = "Company Structure"   # optional
 
 [[nodes]]
-id = "ceo"
 label = "CEO"
 # No parent = root
 
 [[nodes]]
-id = "cto"
 label = "CTO"
-parent = "ceo"
+parent = "CEO"
 
 [[nodes]]
-id = "cfo"
 label = "CFO"
-parent = "ceo"
+parent = "CEO"
 ```
 
 ## Fields
@@ -31,15 +28,14 @@ parent = "ceo"
 | `kind` | string | ✅ | Must be `"org_chart"` |
 | `title` | string | — | Optional diagram title |
 | `[[nodes]]` | array | ✅ | One or more node entries |
-| `nodes[].id` | string | ✅ | Unique node identifier (used in `parent` references) |
-| `nodes[].label` | string | ✅ | Display text for the node |
-| `nodes[].parent` | string | — | `id` of the parent node; omit for the root node |
+| `nodes[].label` | string | ✅ | Display text for the node; must be unique within the diagram |
+| `nodes[].parent` | string | — | `label` of the parent node; omit for the root node |
 
 ## Constraints
 
 - Exactly one root node (a node with no `parent`) is required.
-- All `parent` values must reference an existing `id` in the same diagram.
-- All `id` values must be unique within the diagram.
+- All `parent` values must reference an existing `label` in the same diagram.
+- All `label` values must be unique within the diagram.
 - A node cannot reference itself as its parent.
 - At least one node is required.
 
@@ -58,31 +54,25 @@ kind = "org_chart"
 title = "Engineering Division"
 
 [[nodes]]
-id = "vp"
 label = "VP of Engineering"
 
 [[nodes]]
-id = "backend"
 label = "Backend Team"
-parent = "vp"
+parent = "VP of Engineering"
 
 [[nodes]]
-id = "frontend"
 label = "Frontend Team"
-parent = "vp"
+parent = "VP of Engineering"
 
 [[nodes]]
-id = "be1"
 label = "Alice"
-parent = "backend"
+parent = "Backend Team"
 
 [[nodes]]
-id = "be2"
 label = "Bob"
-parent = "backend"
+parent = "Backend Team"
 
 [[nodes]]
-id = "fe1"
 label = "Carol"
-parent = "frontend"
+parent = "Frontend Team"
 ```

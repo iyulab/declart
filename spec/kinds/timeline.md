@@ -12,10 +12,10 @@ A timeline diagram. Events are placed along a horizontal axis at positions propo
 
 ## Event fields
 
-| Field | Required | Type   | Description                                         |
-|-------|----------|--------|-----------------------------------------------------|
-| date  | yes      | string | Date in ISO 8601 format: `YYYY-MM-DD`               |
-| label | yes      | string | Text displayed above or below the event marker      |
+| Field | Required | Type   | Description                                                              |
+|-------|----------|--------|--------------------------------------------------------------------------|
+| date  | yes      | string | Date as `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. Partial forms are placed at the start of that year/month. |
+| label | yes      | string | Text displayed above or below the event marker                           |
 
 ## Rendering rules
 

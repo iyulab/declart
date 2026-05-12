@@ -1,6 +1,5 @@
 kind = "org_chart"
 
 [[nodes]]
-id = "a"
 label = "Self-referencing"
-parent = "a"
+parent = "Self-referencing"

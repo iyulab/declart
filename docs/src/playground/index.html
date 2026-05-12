@@ -513,33 +513,27 @@ label = "Slow queries"
 title = "Engineering Division"
 
 [[nodes]]
-id = "vp"
 label = "VP of Engineering"
 
 [[nodes]]
-id = "backend"
 label = "Backend Team"
-parent = "vp"
+parent = "VP of Engineering"
 
 [[nodes]]
-id = "frontend"
 label = "Frontend Team"
-parent = "vp"
+parent = "VP of Engineering"
 
 [[nodes]]
-id = "be1"
 label = "Alice"
-parent = "backend"
+parent = "Backend Team"
 
 [[nodes]]
-id = "be2"
 label = "Bob"
-parent = "backend"
+parent = "Backend Team"
 
 [[nodes]]
-id = "fe1"
 label = "Carol"
-parent = "frontend"
+parent = "Frontend Team"
 `,
 
   funnel: `kind = "funnel"
@@ -565,15 +559,6 @@ label = "Conversion"
   comparison: `kind = "comparison"
 title = "JavaScript Framework Comparison"
 
-[[rows]]
-label = "React"
-
-[[rows]]
-label = "Vue"
-
-[[rows]]
-label = "Svelte"
-
 [[columns]]
 label = "Performance"
 
@@ -586,65 +571,26 @@ label = "Ecosystem"
 [[columns]]
 label = "Community"
 
-[[cells]]
-row = "React"
-column = "Performance"
-value = "★★★★"
+[[rows]]
+label = "React"
+Performance = "★★★★"
+"Learning Curve" = "Moderate"
+Ecosystem = "★★★★★"
+Community = "★★★★★"
 
-[[cells]]
-row = "React"
-column = "Learning Curve"
-value = "Moderate"
+[[rows]]
+label = "Vue"
+Performance = "★★★★"
+"Learning Curve" = "Easy"
+Ecosystem = "★★★"
+Community = "★★★★"
 
-[[cells]]
-row = "React"
-column = "Ecosystem"
-value = "★★★★★"
-
-[[cells]]
-row = "React"
-column = "Community"
-value = "★★★★★"
-
-[[cells]]
-row = "Vue"
-column = "Performance"
-value = "★★★★"
-
-[[cells]]
-row = "Vue"
-column = "Learning Curve"
-value = "Easy"
-
-[[cells]]
-row = "Vue"
-column = "Ecosystem"
-value = "★★★"
-
-[[cells]]
-row = "Vue"
-column = "Community"
-value = "★★★★"
-
-[[cells]]
-row = "Svelte"
-column = "Performance"
-value = "★★★★★"
-
-[[cells]]
-row = "Svelte"
-column = "Learning Curve"
-value = "Easy"
-
-[[cells]]
-row = "Svelte"
-column = "Ecosystem"
-value = "★★"
-
-[[cells]]
-row = "Svelte"
-column = "Community"
-value = "★★★"
+[[rows]]
+label = "Svelte"
+Performance = "★★★★★"
+"Learning Curve" = "Easy"
+Ecosystem = "★★"
+Community = "★★★"
 `,
 };
 

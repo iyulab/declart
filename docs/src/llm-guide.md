@@ -206,7 +206,7 @@ date = "2024-12-01"
 label = "v2 Plan"
 ```
 
-> **Rule**: dates must be `YYYY-MM-DD`. Declart sorts events automatically.
+> **Rule**: dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. Partial forms are placed at the start of that year/month. Declart sorts events automatically.
 
 ---
 
@@ -257,31 +257,26 @@ kind = "org_chart"
 title = "Engineering Team"
 
 [[nodes]]
-id = "cto"
 label = "CTO"
 
 [[nodes]]
-id = "fe_lead"
 label = "Frontend Lead"
-parent = "cto"
+parent = "CTO"
 
 [[nodes]]
-id = "be_lead"
 label = "Backend Lead"
-parent = "cto"
+parent = "CTO"
 
 [[nodes]]
-id = "fe_dev"
 label = "FE Developer"
-parent = "fe_lead"
+parent = "Frontend Lead"
 
 [[nodes]]
-id = "be_dev"
 label = "BE Developer"
-parent = "be_lead"
+parent = "Backend Lead"
 ```
 
-> **Rule**: exactly one root node (no `parent`). All `parent` values must reference an existing `id`.
+> **Rule**: exactly one root node (no `parent`). All `parent` values must reference an existing node `label`. Node labels must be unique.
 
 ---
 
@@ -322,49 +317,28 @@ emphasis = "primary"
 kind = "comparison"
 title = "JavaScript Framework Comparison"
 
-[[rows]]
-label = "React"
-
-[[rows]]
-label = "Vue"
-
-[[rows]]
-label = "Svelte"
-
 [[columns]]
 label = "Performance"
 
 [[columns]]
-label = "Learning Curve"
-
-[[columns]]
 label = "Ecosystem"
 
-[[columns]]
-label = "Community"
+[[rows]]
+label = "React"
+Performance = "★★★★"
+Ecosystem = "★★★★★"
 
-[[cells]]
-row = "React"
-column = "Performance"
-value = "★★★★"
+[[rows]]
+label = "Vue"
+Performance = "★★★★"
+Ecosystem = "★★★"
 
-[[cells]]
-row = "React"
-column = "Ecosystem"
-value = "★★★★★"
-
-[[cells]]
-row = "Vue"
-column = "Learning Curve"
-value = "Easy"
-
-[[cells]]
-row = "Svelte"
-column = "Performance"
-value = "★★★★★"
+[[rows]]
+label = "Svelte"
+Performance = "★★★★★"
 ```
 
-> **Limits**: 1–10 rows, 1–8 columns. Cells without entries are rendered as empty.
+> **Limits**: 1–10 rows, 1–8 columns. Declare `[[columns]]` first for column order. Cell values are inline in each row, keyed by column label. Missing cells are rendered empty. Column label must not be `"label"` (reserved). Use TOML quoted keys (`"My Column" = "val"`) if a column name contains spaces.
 
 ---
 

@@ -245,11 +245,11 @@ fn validate_timeline(raw: raw::RawTimelineDiagram) -> Result<Diagram, DeclartErr
         return Err(DeclartError::TooFewItems { kind: "timeline", min: 2, got: raw.events.len() });
     }
     for event in &raw.events {
-        if !is_valid_iso_date(&event.date) {
+        if normalize_date(&event.date).is_none() {
             return Err(DeclartError::InvalidValue {
                 field: "date".to_string(),
                 value: event.date.clone(),
-                hint: "Date must be in ISO 8601 format: YYYY-MM-DD".to_string(),
+                hint: "Date must be YYYY, YYYY-MM, or YYYY-MM-DD".to_string(),
             });
         }
     }
@@ -258,21 +258,26 @@ fn validate_timeline(raw: raw::RawTimelineDiagram) -> Result<Diagram, DeclartErr
         .into_iter()
         .map(|e| TimelineEvent { date: e.date, label: e.label })
         .collect();
-    events.sort_by(|a, b| a.date.cmp(&b.date));
+    events.sort_by(|a, b| normalize_date(&a.date).cmp(&normalize_date(&b.date)));
     Ok(Diagram::Timeline(TimelineDiagram { title: raw.title, events }))
 }
 
-fn is_valid_iso_date(s: &str) -> bool {
-    let bytes = s.as_bytes();
-    if bytes.len() != 10 {
-        return false;
+/// Normalizes a partial date string to YYYY-MM-DD for sorting/computation.
+/// Accepts YYYY, YYYY-MM, or YYYY-MM-DD. Returns None for invalid input.
+pub(crate) fn normalize_date(s: &str) -> Option<String> {
+    let b = s.as_bytes();
+    match b.len() {
+        4 if b.iter().all(|c| c.is_ascii_digit()) => Some(format!("{}-01-01", s)),
+        7 if b[4] == b'-'
+            && b[..4].iter().all(|c| c.is_ascii_digit())
+            && b[5..].iter().all(|c| c.is_ascii_digit()) => Some(format!("{}-01", s)),
+        10 if b[4] == b'-'
+            && b[7] == b'-'
+            && b[..4].iter().all(|c| c.is_ascii_digit())
+            && b[5..7].iter().all(|c| c.is_ascii_digit())
+            && b[8..].iter().all(|c| c.is_ascii_digit()) => Some(s.to_string()),
+        _ => None,
     }
-    if bytes[4] != b'-' || bytes[7] != b'-' {
-        return false;
-    }
-    bytes[..4].iter().all(|b| b.is_ascii_digit())
-        && bytes[5..7].iter().all(|b| b.is_ascii_digit())
-        && bytes[8..10].iter().all(|b| b.is_ascii_digit())
 }
 
 fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
@@ -299,25 +304,25 @@ fn validate_org_chart(raw: raw::RawOrgChartDiagram) -> Result<Diagram, DeclartEr
     if raw.nodes.is_empty() {
         return Err(DeclartError::EmptyItems);
     }
-    // Validate: exactly one root (no parent), all parent references exist, no cycles.
-    let ids: std::collections::HashSet<&str> = raw.nodes.iter().map(|n| n.id.as_str()).collect();
-    if ids.len() != raw.nodes.len() {
+    // label is the unique identifier; validate uniqueness and parent references.
+    let labels: std::collections::HashSet<&str> = raw.nodes.iter().map(|n| n.label.as_str()).collect();
+    if labels.len() != raw.nodes.len() {
         return Err(DeclartError::InvalidValue {
-            field: "id".to_string(),
+            field: "label".to_string(),
             value: "(duplicate)".to_string(),
-            hint: "Each node id must be unique within the diagram".to_string(),
+            hint: "Each node label must be unique within the diagram".to_string(),
         });
     }
     for node in &raw.nodes {
         if let Some(parent) = &node.parent {
-            if !ids.contains(parent.as_str()) {
+            if !labels.contains(parent.as_str()) {
                 return Err(DeclartError::InvalidValue {
                     field: "parent".to_string(),
                     value: parent.clone(),
-                    hint: "parent must reference an existing node id".to_string(),
+                    hint: "parent must reference an existing node label".to_string(),
                 });
             }
-            if node.id == *parent {
+            if node.label == *parent {
                 return Err(DeclartError::InvalidValue {
                     field: "parent".to_string(),
                     value: parent.clone(),
@@ -342,7 +347,6 @@ fn validate_org_chart(raw: raw::RawOrgChartDiagram) -> Result<Diagram, DeclartEr
         });
     }
     let nodes = raw.nodes.into_iter().map(|n| OrgChartNode {
-        id: n.id,
         label: n.label,
         parent: n.parent,
     }).collect();
@@ -393,35 +397,46 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
         });
     }
 
-    let row_labels: std::collections::HashSet<&str> =
-        raw.rows.iter().map(|r| r.label.as_str()).collect();
-    let col_labels: std::collections::HashSet<&str> =
-        raw.columns.iter().map(|c| c.label.as_str()).collect();
-
-    for cell in &raw.cells {
-        if !row_labels.contains(cell.row.as_str()) {
+    for col in &raw.columns {
+        if col.label == "label" {
             return Err(DeclartError::InvalidValue {
-                field: "cell.row".to_string(),
-                value: cell.row.clone(),
-                hint: "cell.row must reference an existing row label".to_string(),
-            });
-        }
-        if !col_labels.contains(cell.column.as_str()) {
-            return Err(DeclartError::InvalidValue {
-                field: "cell.column".to_string(),
-                value: cell.column.clone(),
-                hint: "cell.column must reference an existing column label".to_string(),
+                field: "column label".to_string(),
+                value: "label".to_string(),
+                hint: "'label' is reserved for the row identifier and cannot be used as a column name".to_string(),
             });
         }
     }
 
-    let rows = raw.rows.into_iter().map(|r| r.label).collect();
-    let columns = raw.columns.into_iter().map(|c| c.label).collect();
-    let cells = raw.cells.into_iter().map(|c| ComparisonCell {
-        row: c.row,
-        column: c.column,
-        value: c.value,
-    }).collect();
+    let col_labels: Vec<&str> = raw.columns.iter().map(|c| c.label.as_str()).collect();
+    let col_set: std::collections::HashSet<&str> = col_labels.iter().copied().collect();
+
+    // Validate that no row uses a cell key that isn't a declared column.
+    for row in &raw.rows {
+        for key in row.cells.keys() {
+            if !col_set.contains(key.as_str()) {
+                return Err(DeclartError::InvalidValue {
+                    field: "row cell key".to_string(),
+                    value: key.clone(),
+                    hint: format!("'{}' is not a declared column label", key),
+                });
+            }
+        }
+    }
+
+    let rows: Vec<String> = raw.rows.iter().map(|r| r.label.clone()).collect();
+    let columns: Vec<String> = raw.columns.into_iter().map(|c| c.label).collect();
+
+    // Build cells from inline row data.
+    let mut cells = Vec::new();
+    for row in &raw.rows {
+        for (col_key, value) in &row.cells {
+            cells.push(ComparisonCell {
+                row: row.label.clone(),
+                column: col_key.clone(),
+                value: value.clone(),
+            });
+        }
+    }
 
     Ok(Diagram::Comparison(ComparisonDiagram { title: raw.title, rows, columns, cells }))
 }
@@ -689,8 +704,8 @@ label = "Q1"
         let input = r#"{
   "kind": "org_chart",
   "nodes": [
-    {"id": "ceo", "label": "CEO"},
-    {"id": "cto", "label": "CTO", "parent": "ceo"}
+    {"label": "CEO"},
+    {"label": "CTO", "parent": "CEO"}
   ]
 }"#;
         let diagram = parse_json(input).unwrap();
@@ -716,17 +731,89 @@ label = "Q1"
         assert!(matches!(diagram, Diagram::Pyramid(_)));
     }
 
+    // --- Timeline partial dates ---
+
+    #[test]
+    fn parse_timeline_accepts_year_only() {
+        let input = r#"
+kind = "timeline"
+
+[[events]]
+date = "2023"
+label = "Start"
+
+[[events]]
+date = "2024"
+label = "End"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Timeline(d) = diagram else { panic!("expected Timeline") };
+        assert_eq!(d.events.len(), 2);
+        assert_eq!(d.events[0].date, "2023");
+    }
+
+    #[test]
+    fn parse_timeline_accepts_year_month() {
+        let input = r#"
+kind = "timeline"
+
+[[events]]
+date = "2024-01"
+label = "Q1"
+
+[[events]]
+date = "2024-06"
+label = "Q2"
+"#;
+        let diagram = parse(input).unwrap();
+        assert!(matches!(diagram, Diagram::Timeline(_)));
+    }
+
+    #[test]
+    fn parse_timeline_mixed_formats_sort_correctly() {
+        let input = r#"
+kind = "timeline"
+
+[[events]]
+date = "2025"
+label = "Later"
+
+[[events]]
+date = "2023-06"
+label = "Middle"
+
+[[events]]
+date = "2022-01-01"
+label = "First"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Timeline(d) = diagram else { panic!() };
+        assert_eq!(d.events[0].date, "2022-01-01");
+        assert_eq!(d.events[1].date, "2023-06");
+        assert_eq!(d.events[2].date, "2025");
+    }
+
+    #[test]
+    fn parse_timeline_rejects_invalid_format() {
+        let input = r#"
+kind = "timeline"
+
+[[events]]
+date = "January 2024"
+label = "Bad"
+
+[[events]]
+date = "2024-01-01"
+label = "Good"
+"#;
+        assert!(parse(input).is_err());
+    }
+
     // --- Comparison table ---
 
     const VALID_COMPARISON: &str = r#"
 kind = "comparison"
 title = "Framework Comparison"
-
-[[rows]]
-label = "React"
-
-[[rows]]
-label = "Vue"
 
 [[columns]]
 label = "Performance"
@@ -734,15 +821,14 @@ label = "Performance"
 [[columns]]
 label = "Ecosystem"
 
-[[cells]]
-row = "React"
-column = "Performance"
-value = "★★★★"
+[[rows]]
+label = "React"
+Performance = "★★★★"
+Ecosystem = "★★★★★"
 
-[[cells]]
-row = "Vue"
-column = "Ecosystem"
-value = "★★★"
+[[rows]]
+label = "Vue"
+Ecosystem = "★★★"
 "#;
 
     #[test]
@@ -751,22 +837,18 @@ value = "★★★"
         let Diagram::Comparison(d) = diagram else { panic!("expected Comparison") };
         assert_eq!(d.rows.len(), 2);
         assert_eq!(d.columns.len(), 2);
-        assert_eq!(d.cells.len(), 2);
-        assert_eq!(d.cells[0].value, "★★★★");
+        assert_eq!(d.cells.len(), 3); // React has 2 cells, Vue has 1
     }
 
     #[test]
-    fn parse_comparison_rejects_invalid_cell_row() {
+    fn parse_comparison_rejects_unknown_column_key() {
         let input = r#"
 kind = "comparison"
-[[rows]]
-label = "A"
 [[columns]]
 label = "X"
-[[cells]]
-row = "NONEXISTENT"
-column = "X"
-value = "ok"
+[[rows]]
+label = "A"
+Y = "val"
 "#;
         assert!(parse(input).is_err());
     }
@@ -791,14 +873,29 @@ label = "X"
     }
 
     #[test]
+    fn parse_comparison_empty_cells_allowed() {
+        let input = r#"
+kind = "comparison"
+[[columns]]
+label = "Speed"
+[[rows]]
+label = "A"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Comparison(d) = diagram else { panic!() };
+        assert_eq!(d.cells.len(), 0);
+    }
+
+    #[test]
     fn parse_json_valid_comparison() {
         let input = r#"{
   "kind": "comparison",
-  "rows": [{"label": "React"}, {"label": "Vue"}],
   "columns": [{"label": "Speed"}],
-  "cells": [{"row": "React", "column": "Speed", "value": "Fast"}]
+  "rows": [{"label": "React", "Speed": "Fast"}, {"label": "Vue"}]
 }"#;
         let diagram = parse_json(input).unwrap();
-        assert!(matches!(diagram, Diagram::Comparison(_)));
+        let Diagram::Comparison(d) = diagram else { panic!() };
+        assert_eq!(d.cells.len(), 1);
+        assert_eq!(d.cells[0].value, "Fast");
     }
 }

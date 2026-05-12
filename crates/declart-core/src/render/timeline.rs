@@ -106,9 +106,15 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
     builder.build(&theme.background.to_hex())
 }
 
-/// Convert YYYY-MM-DD to a Julian Day Number for relative positioning.
+/// Convert a partial or full date string to a Julian Day Number for relative positioning.
+/// Accepts YYYY, YYYY-MM, or YYYY-MM-DD; partial forms are treated as the first day.
 fn date_to_days(date: &str) -> i32 {
-    let bytes = date.as_bytes();
+    let full = match date.len() {
+        4 => format!("{}-01-01", date),
+        7 => format!("{}-01", date),
+        _ => date.to_string(),
+    };
+    let bytes = full.as_bytes();
     if bytes.len() != 10 {
         return 0;
     }

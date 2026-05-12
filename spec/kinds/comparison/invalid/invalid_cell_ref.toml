@@ -1,12 +1,8 @@
 kind = "comparison"
 
-[[rows]]
-label = "A"
-
 [[columns]]
 label = "X"
 
-[[cells]]
-row = "NONEXISTENT"
-column = "X"
-value = "oops"
+[[rows]]
+label = "A"
+NONEXISTENT = "oops"

@@ -6,7 +6,7 @@ Rules that apply to every Declart declaration file.
 
 | Field | Type   | Description                          |
 |-------|--------|--------------------------------------|
-| kind  | string | One of: `pyramid`, `process`, `cycle`, `matrix`, `hub_spoke`, `venn`, `timeline`, `fishbone` |
+| kind  | string | One of: `pyramid`, `process`, `cycle`, `matrix`, `hub_spoke`, `venn`, `timeline`, `fishbone`, `org_chart`, `funnel`, `comparison` |
 
 ## Optional fields
 

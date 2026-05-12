@@ -109,7 +109,6 @@ pub struct RawOrgChartDiagram {
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct RawOrgChartNode {
-    pub id: String,
     pub label: String,
     pub parent: Option<String>,
 }
@@ -142,6 +141,7 @@ pub struct RawFishboneItem {
 }
 
 /// Raw representation for the comparison kind.
+/// Cells are declared inline within each row entry (no separate [[cells]] array).
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct RawComparisonDiagram {
@@ -151,27 +151,19 @@ pub struct RawComparisonDiagram {
     pub rows: Vec<RawComparisonRow>,
     #[serde(default)]
     pub columns: Vec<RawComparisonColumn>,
-    #[serde(default)]
-    pub cells: Vec<RawComparisonCell>,
 }
 
+/// A row entry in the comparison table. `label` identifies the row; all other string
+/// keys are treated as cell values keyed by column label.
 #[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
 pub struct RawComparisonRow {
     pub label: String,
+    #[serde(flatten)]
+    pub cells: std::collections::HashMap<String, String>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct RawComparisonColumn {
     pub label: String,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RawComparisonCell {
-    pub row: String,
-    pub column: String,
-    #[serde(default)]
-    pub value: String,
 }

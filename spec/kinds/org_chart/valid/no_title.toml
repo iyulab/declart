@@ -1,10 +1,8 @@
 kind = "org_chart"
 
 [[nodes]]
-id = "root"
 label = "Root"
 
 [[nodes]]
-id = "child"
 label = "Child"
-parent = "root"
+parent = "Root"
