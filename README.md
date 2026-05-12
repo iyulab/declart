@@ -133,7 +133,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.17.0** — 설계 무결성: `sequence`→`flow`, `tier` kind 신설, hierarchy `id`/`effect`, CLI 경고. 167 tests.
+**Current: v0.17.1** — 문서 정확도 개선, 코드 품질 수정. 167 tests.
 
 | Capability | State |
 |------------|-------|

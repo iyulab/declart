@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.17.1
 
 Documentation and code quality improvements:
 
