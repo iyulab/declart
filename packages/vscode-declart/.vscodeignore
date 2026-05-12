@@ -1,0 +1,13 @@
+.vscode/**
+node_modules/**
+src/**
+**/*.ts
+!dist/**
+!media/**
+media/**/*.d.ts
+media/**/.gitignore
+media/**/package.json
+esbuild.js
+build-wasm.js
+tsconfig.json
+.gitignore

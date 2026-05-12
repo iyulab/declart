@@ -28,7 +28,7 @@ A process diagram. Items are arranged as sequential steps from left to right. Us
 
 ## Example
 
-```toml
+```declart
 kind = "process"
 title = "Software Release Pipeline"
 

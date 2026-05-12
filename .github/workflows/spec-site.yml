@@ -7,6 +7,7 @@ on:
       - "spec/**"
       - "docs/**"
       - "crates/declart-wasm/**"
+      - "crates/mdbook-declart/**"
       - ".github/workflows/spec-site.yml"
   workflow_dispatch:
 
@@ -39,6 +40,9 @@ jobs:
           curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz \
             | tar -xz --directory=/usr/local/bin
 
+      - name: Build mdbook-declart preprocessor
+        run: cargo build --package mdbook-declart --release
+
       - name: Copy spec into docs/src
         run: |
           cp spec/principles.md docs/src/principles.md
@@ -54,7 +58,9 @@ jobs:
             --out-dir /tmp/wasm-pkg --release
 
       - name: Build spec site
-        run: mdbook build docs/
+        run: |
+          export PATH="$(pwd)/target/release:$PATH"
+          mdbook build docs/
 
       - name: Copy WASM into book output
         run: |

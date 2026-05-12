@@ -26,7 +26,7 @@ A pyramid diagram. Items are arranged in horizontal layers from apex (top, first
 
 ## Example
 
-```toml
+```declart
 kind = "pyramid"
 title = "Maslow's Hierarchy of Needs"
 
@@ -35,6 +35,7 @@ label = "Self-actualization"
 
 [[items]]
 label = "Esteem"
+emphasis = "primary"
 
 [[items]]
 label = "Love & Belonging"

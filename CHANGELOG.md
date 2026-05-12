@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.14.0
+
+VS Code Extension + mdbook-declart preprocessor — editor integration and Markdown ecosystem support.
+
+- **VS Code Extension** (`packages/vscode-declart`): new extension for VS Code 1.90+
+  - Side-by-side SVG preview: click ⊞ in editor title bar (or **Declart: Open Preview to the Side**)
+  - Preview follows the active Declart file automatically
+  - Live re-render as you type (no save required)
+  - Theme toolbar: default / monochrome / accessible / warm
+  - Inline diagnostics: parse errors underlined in editor with line/column info
+  - Markdown integration: ` ```declart ` code blocks render as inline SVG in VS Code Markdown Preview
+  - Install via `.vsix` (GitHub Releases); Marketplace coming after first user confirmation
+- **mdbook-declart** (`crates/mdbook-declart`): mdBook preprocessor that renders ` ```declart ` code blocks to inline SVG at build time. No JS required at read time.
+  - Spec site (`docs/`) integrated: `[preprocessor.declart]` in `book.toml`
+  - `docs/build.ps1` + `docs/build.sh` + `spec-site.yml` CI updated
+- **151 tests** (+5 mdbook-declart unit tests)
+
 ## v0.13.0
 
 Input simplification — three breaking changes that reduce declaration verbosity.

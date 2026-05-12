@@ -65,7 +65,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.13.0** — 11 diagram kinds, simplified input (partial dates, label-as-id, row-inline cells). 146 tests.
+**Current: v0.14.0** — VS Code Extension + mdbook-declart preprocessor. 151 tests.
 
 | Capability | State |
 |------------|-------|
@@ -80,6 +80,8 @@ Explicit boundaries that protect focus:
 | Interactive playground (live WASM, URL permalink, zoom/pan) | ✅ |
 | Spec site (mdBook + GitHub Actions CI) | ✅ (GitHub Pages: enable in repo Settings) |
 | LLM guide (prompt templates for all 11 kinds) | ✅ |
+| VS Code Extension (live preview, diagnostics, Markdown code blocks) | ✅ (.vsix) |
+| mdbook-declart preprocessor (inline SVG in mdBook) | ✅ |
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
 

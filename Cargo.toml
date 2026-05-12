@@ -4,5 +4,6 @@ members = [
     "crates/declart-cli",
     "crates/declart-wasm",
     "crates/declart-ffi",
+    "crates/mdbook-declart",
 ]
 resolver = "2"

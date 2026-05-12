@@ -1,0 +1,5 @@
+node_modules/
+dist/
+media/wasm/
+media/node-wasm/
+*.vsix

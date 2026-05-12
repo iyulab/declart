@@ -1,0 +1,15 @@
+[package]
+name = "mdbook-declart"
+version = "0.14.0"
+edition = "2021"
+description = "mdBook preprocessor — renders ```declart code blocks to inline SVG"
+license = "MIT"
+repository = "https://github.com/iyulab/declart"
+
+[[bin]]
+name = "mdbook-declart"
+path = "src/main.rs"
+
+[dependencies]
+declart-core = { path = "../declart-core" }
+serde_json = "1"

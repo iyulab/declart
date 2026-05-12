@@ -1,0 +1,19 @@
+figure.declart-diagram {
+  margin: 1em 0;
+  text-align: center;
+}
+
+figure.declart-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+div.declart-error {
+  padding: 8px 12px;
+  border-left: 3px solid var(--vscode-errorForeground, #f44);
+  background: var(--vscode-inputValidation-errorBackground, rgba(255,0,0,0.05));
+  font-family: monospace;
+  font-size: 0.85em;
+  color: var(--vscode-errorForeground, #f44);
+  white-space: pre-wrap;
+}

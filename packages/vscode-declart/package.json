@@ -1,0 +1,99 @@
+{
+  "name": "declart",
+  "displayName": "Declart",
+  "description": "Declarative diagram preview for Declart TOML/JSON files",
+  "version": "0.14.0",
+  "publisher": "iyulab",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iyulab/declart"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "diagram",
+    "declart",
+    "preview",
+    "toml",
+    "svg"
+  ],
+  "activationEvents": [
+    "onLanguage:toml",
+    "onLanguage:json"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "declart.previewSide",
+        "title": "Declart: Open Preview to the Side",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "declart.previewCurrent",
+        "title": "Declart: Open Preview"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "declart.previewSide",
+          "when": "declart.isDeclartFile",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "declart.previewSide",
+          "when": "declart.isDeclartFile"
+        },
+        {
+          "command": "declart.previewCurrent",
+          "when": "declart.isDeclartFile"
+        }
+      ]
+    },
+    "markdown": {
+      "markdownItPlugins": true,
+      "previewStyles": [
+        "./media/markdown.css"
+      ]
+    },
+    "configuration": {
+      "title": "Declart",
+      "properties": {
+        "declart.theme": {
+          "type": "string",
+          "default": "default",
+          "enum": [
+            "default",
+            "monochrome",
+            "accessible",
+            "warm"
+          ],
+          "description": "Diagram rendering theme"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "build:dev": "node esbuild.js --sourcemap",
+    "build:wasm": "node build-wasm.js",
+    "package": "npm run build:wasm && npm run build && vsce package --no-dependencies",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.130",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.4.0"
+  }
+}

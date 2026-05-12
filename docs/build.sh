@@ -10,7 +10,11 @@ for f in spec/kinds/*.md; do
     cp "$f" "docs/src/kinds/$(basename "$f")"
 done
 
+echo "Building mdbook-declart preprocessor..."
+cargo build --package mdbook-declart --release
+
 echo "Building WASM for playground..."
 wasm-pack build crates/declart-wasm --target web --out-dir "$(pwd)/docs/src/playground/wasm" --release
 
+export PATH="$(pwd)/target/release:$PATH"
 mdbook build docs/
