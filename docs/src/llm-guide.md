@@ -9,6 +9,23 @@ Declart's TOML format is designed for LLM generation. The structure is explicit 
 - **Explicit kind**: the `kind` field tells the parser exactly what to expect. No ambiguity.
 - **Short format**: a typical diagram is 5–20 lines of TOML.
 
+## Kind and View
+
+Declart v0.16+ uses a two-level structure:
+
+- **`kind`** — the data contract (determines which fields are valid)
+- **`view`** — the semantic intent (determines how the engine renders it)
+
+| kind | views | Notes |
+|------|-------|-------|
+| `sequence` | `process` (default), `cycle`, `funnel`, `pyramid` | `view` optional — defaults to `process` |
+| `hierarchy` | `org_chart`, `fishbone` | `view` optional — auto-selected by root count |
+| `timeline` | — | No view field |
+| `matrix` | — | No view field |
+| `hub_spoke` | — | No view field |
+| `venn` | — | No view field |
+| `comparison` | — | No view field |
+
 ## Workflow
 
 ```
@@ -25,10 +42,11 @@ If `validate` fails, paste the error message back to the LLM and ask it to fix t
 
 ### Pyramid — Hierarchies, priority layers
 
-**Prompt**: *"Generate a Declart TOML pyramid diagram showing Maslow's hierarchy of needs. Use kind = 'pyramid', include a title, and list the 5 levels as items from top (most basic) to bottom."*
+**Prompt**: *"Generate a Declart TOML diagram showing Maslow's hierarchy of needs as a pyramid. Use kind = 'sequence' and view = 'pyramid', include a title, and list the 5 levels as items from top (apex) to bottom (base)."*
 
 ```toml
-kind = "pyramid"
+kind = "sequence"
+view = "pyramid"
 title = "Maslow's Hierarchy of Needs"
 
 [[items]]
@@ -52,10 +70,10 @@ emphasis = "primary"
 
 ### Process — Sequential steps, workflows
 
-**Prompt**: *"Create a Declart TOML process diagram for a 4-step CI/CD pipeline."*
+**Prompt**: *"Create a Declart TOML diagram for a 4-step CI/CD pipeline. Use kind = 'sequence' (process view is the default)."*
 
 ```toml
-kind = "process"
+kind = "sequence"
 title = "CI/CD Pipeline"
 
 [[items]]
@@ -76,10 +94,11 @@ label = "Deploy"
 
 ### Cycle — Closed loops, PDCA, lifecycles
 
-**Prompt**: *"Generate a Declart TOML cycle diagram for the PDCA improvement cycle."*
+**Prompt**: *"Generate a Declart TOML diagram for the PDCA improvement cycle. Use kind = 'sequence' and view = 'cycle'."*
 
 ```toml
-kind = "cycle"
+kind = "sequence"
+view = "cycle"
 title = "PDCA Cycle"
 
 [[items]]
@@ -212,48 +231,54 @@ label = "v2 Plan"
 
 ### Fishbone / Ishikawa — Root cause analysis
 
-**Prompt**: *"Generate a Declart fishbone diagram where the effect is 'Slow API Response' with 4 causes and sub-items."*
+**Prompt**: *"Generate a Declart fishbone diagram where the effect is 'Slow API Response' with 4 cause categories and sub-causes. Use kind = 'hierarchy' and view = 'fishbone'. Each cause category is a root node; sub-causes have parent = the category label."*
 
 ```toml
-kind = "fishbone"
-title = "API Performance Issues"
-effect = "Slow API Response"
+kind = "hierarchy"
+view = "fishbone"
+title = "Slow API Response"
 
-[[causes]]
+[[nodes]]
 label = "Database"
 
-[[causes.items]]
+[[nodes]]
 label = "Missing indexes"
+parent = "Database"
 
-[[causes.items]]
+[[nodes]]
 label = "N+1 queries"
+parent = "Database"
 
-[[causes]]
+[[nodes]]
 label = "Network"
 
-[[causes.items]]
+[[nodes]]
 label = "High latency"
+parent = "Network"
 
-[[causes]]
+[[nodes]]
 label = "Code"
 
-[[causes.items]]
+[[nodes]]
 label = "Blocking I/O"
+parent = "Code"
 
-[[causes]]
+[[nodes]]
 label = "Infrastructure"
 ```
 
-> **Limit**: 8 causes or fewer is recommended; maximum 20.
+> **Structure**: Root nodes (no `parent`) become cause categories on the spine. Child nodes become sub-causes. The `title` field is rendered as the effect label at the right end of the spine.
+>
+> **Limit**: 2–20 root nodes (cause categories). Recommend 8 or fewer for readability.
 
 ---
 
 ### Org Chart — Hierarchical trees
 
-**Prompt**: *"Create a Declart org chart for a small engineering team with a CTO at the top."*
+**Prompt**: *"Create a Declart org chart for a small engineering team with a CTO at the top. Use kind = 'hierarchy'. With a single root node, the engine automatically renders as an org chart."*
 
 ```toml
-kind = "org_chart"
+kind = "hierarchy"
 title = "Engineering Team"
 
 [[nodes]]
@@ -276,16 +301,17 @@ label = "BE Developer"
 parent = "Backend Lead"
 ```
 
-> **Rule**: exactly one root node (no `parent`). All `parent` values must reference an existing node `label`. Node labels must be unique.
+> **Rule**: exactly one root node (no `parent`). All `parent` values must reference an existing node `label`. Node labels must be unique. To explicitly select the view: `view = "org_chart"`.
 
 ---
 
 ### Funnel — Conversion funnels, sales pipelines
 
-**Prompt**: *"Generate a Declart funnel for a 5-stage sales pipeline."*
+**Prompt**: *"Generate a Declart funnel for a 5-stage sales pipeline. Use kind = 'sequence' and view = 'funnel'."*
 
 ```toml
-kind = "funnel"
+kind = "sequence"
+view = "funnel"
 title = "Sales Pipeline"
 
 [[items]]
@@ -305,7 +331,7 @@ label = "Closed Won"
 emphasis = "primary"
 ```
 
-> **Limit**: 10 stages maximum.
+> **Limit**: 2–10 stages.
 
 ---
 
@@ -347,14 +373,17 @@ Performance = "★★★★★"
 | Rule | Detail |
 |------|--------|
 | `kind` is required | Always include it as the first field |
+| `view` is optional | Omit to use the default; include to declare intent explicitly |
 | No unknown fields | Don't add `color`, `style`, or other keys not in the spec |
 | `emphasis` values | Only `"primary"` or `"secondary"` |
-| Fishbone sub-items | Use `[[causes.items]]` with `label` only |
+| Sequence views | `kind = "sequence"` + `view`: `process` (default), `cycle`, `funnel`, `pyramid` |
+| Hierarchy nodes | `label` must be unique; `parent` references another node's `label` |
+| Hierarchy auto-select | 1 root → `org_chart`; 2+ roots → `fishbone` (or set `view` explicitly) |
+| Fishbone `title` | Rendered as the effect label (right end of spine), not a heading |
 | Matrix quadrants | Always exactly 4 `[[quadrants]]` entries |
-| Org chart IDs | Each `id` must be unique; `parent` must match an existing `id` |
-| Timeline dates | ISO 8601: `YYYY-MM-DD` only |
+| Timeline dates | ISO 8601: `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` |
 | Venn sets | Only 2 or 3 sets supported |
-| Comparison cells | `row` and `column` must match existing row/column labels |
+| Comparison cells | Column label in each row must match an existing `[[columns]]` label |
 
 ## Validating LLM Output
 

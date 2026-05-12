@@ -23,7 +23,46 @@ These are anchors. Every future design decision must be consistent with them.
 2. **Semantic over visual.** Meaning belongs in the source (`status: critical`, `emphasis: primary`). Visual mapping belongs in the engine.
 3. **Beauty is the engine's responsibility.** Users should never need design skill to produce a publishable diagram.
 4. **LLM-first.** The declaration format must be the simplest possible thing a language model can generate correctly and a human can review at a glance.
-5. **One way to describe each kind.** Avoid configurability that lets users encode the same idea in many different shapes.
+5. **One representation per diagram.** Each `kind + view` pair has exactly one valid schema. No aliases, structural variants, or flags that change interpretation. Two declarations expressing the same diagram are byte-for-byte identical except for whitespace.
+
+## Kind and View
+
+Declart organizes declarations on two axes.
+
+**Kind** is the *data contract*. It defines which fields exist, what they mean, and how they are structured. Two declarations belong to the same kind if and only if their schemas are structurally identical — same fields, same types, same constraints.
+
+**View** is the *semantic intent*. It declares how the engine should interpret and render the data within its kind. View is optional: when omitted, the engine selects the most appropriate rendering automatically.
+
+```toml
+kind = "sequence"   # data contract: ordered list of labeled items
+view = "cycle"      # intent: interpret this sequence as a repeating loop
+
+[[items]]
+label = "Plan"
+```
+
+`view = "cycle"` is a semantic declaration, not a visual instruction. It means "this sequence is intended to be understood as a closed loop." The engine decides what that looks like. View values occupy the same space as `emphasis = "primary"`: they express *meaning*, not *appearance*.
+
+### Decision rule
+
+> **New kind** when the data structure is genuinely different from all existing kinds and cannot be expressed as a view of one.
+> **New view** when the kind's existing schema is sufficient and only the rendering intent differs.
+
+This is the boundary that prevents kind proliferation. Layout variants, visual alternatives, and semantic reframings of the same data are always new views, never new kinds.
+
+### Criteria: adding a new kind
+
+1. The data structure is structurally distinct from all existing kinds.
+2. The difference cannot be bridged by a view of an existing kind.
+3. Multiple concrete use cases justify the new schema.
+
+### Criteria: adding a new view
+
+1. The view name expresses semantic intent, not visual description (`"cycle"`, not `"circular"`).
+2. The kind's existing schema is sufficient — no new fields required.
+3. The engine produces a meaningfully distinct rendering.
+
+---
 
 ## Scope
 
@@ -70,11 +109,11 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.15.1** — remark-declart + rehype-declart + fishbone fix. 151 tests.
+**Current: v0.16.0** — kind+view 2단계 아키텍처 (11 kinds → 7 kinds + view layer). 152 tests.
 
 | Capability | State |
 |------------|-------|
-| 11 diagram kinds (pyramid → comparison) | ✅ |
+| 7 diagram kinds (`sequence`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`) + view layer | ✅ |
 | 4 built-in themes + user-defined TOML themes | ✅ |
 | TOML + JSON input (`parse_auto`) | ✅ |
 | CLI (`render`, `validate`, `init`, `watch`, `--format png`) | ✅ |
@@ -84,7 +123,7 @@ Explicit boundaries that protect focus:
 | GitHub Releases binaries (Linux musl, macOS, Windows) | ✅ |
 | Interactive playground (live WASM, URL permalink, zoom/pan) | ✅ |
 | Spec site (mdBook + GitHub Actions CI) | ✅ (GitHub Pages: enable in repo Settings) |
-| LLM guide (prompt templates for all 11 kinds) | ✅ |
+| LLM guide (prompt templates for all 7 kinds) | ✅ |
 | VS Code Extension (live preview, diagnostics, Markdown code blocks) | ✅ (.vsix) |
 | mdbook-declart preprocessor (inline SVG in mdBook) | ✅ |
 

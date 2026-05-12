@@ -30,7 +30,7 @@ A hierarchy diagram represents a tree of labeled nodes connected by parent-child
 ## View-specific constraints
 
 **org_chart:** exactly one root node required.  
-**fishbone:** 2–20 root nodes (cause categories); `title` is rendered as the effect label at the right end of the spine.
+**fishbone:** 2–20 root nodes (cause categories); `title` is rendered as the effect label at the right end of the spine. Recommend 8 or fewer root nodes — 9+ cause categories on the same side of the spine may overlap.
 
 ## Example — org_chart view (auto-selected)
 

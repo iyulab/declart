@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.16.0
+
+kind+view 2단계 아키텍처 — 11 kinds → 7 kinds + view layer.
+
+- **kind+view architecture**: `kind` (data contract) + `view` (semantic declaration) 2-layer design. Kind determines field structure; view declares meaning, engine decides visuals.
+- **11 → 7 kinds**: `sequence` absorbs process/cycle/funnel/pyramid views; `hierarchy` absorbs org_chart/fishbone views. Remaining 5 kinds unchanged.
+- **`view` field**: optional semantic declaration. Omit to let the engine auto-select (sequence → `process`; hierarchy → `org_chart` when root=1, `fishbone` when root≥2).
+- **`declart init <kind>`**: updated templates use new kind names.
+- **Spec suite**: rewritten for new kind+view structure (152 tests).
+- **Downstream crates**: declart-wasm, declart-ffi, mdbook-declart, declart-cli — all updated.
+- **Spec docs**: sequence.md + hierarchy.md added; old kind-specific docs removed.
+
 ## v0.15.1
 
 Patch: fishbone sub-item overlap fix + npm publish CI improvements.

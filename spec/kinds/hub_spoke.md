@@ -9,7 +9,7 @@ A hub-and-spoke diagram. A central node radiates connections to surrounding spok
 | kind     | yes      | `"hub_spoke"`  | Must be exactly `"hub_spoke"`        |
 | title    | no       | string         | Title rendered above the diagram     |
 | center   | yes      | string         | Label for the central hub node       |
-| spokes   | yes      | array of Spoke | At least one spoke required          |
+| spokes   | yes      | array of Spoke | At least two spokes required         |
 
 ## Spoke fields
 

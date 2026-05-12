@@ -1,0 +1,12 @@
+kind = "hierarchy"
+
+[[nodes]]
+label = "Root"
+
+[[nodes]]
+label = "Child"
+parent = "Root"
+
+[[nodes]]
+label = "Child"
+parent = "Root"
