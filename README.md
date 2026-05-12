@@ -5,15 +5,24 @@
 [![Crates.io](https://img.shields.io/crates/v/declart-core)](https://crates.io/crates/declart-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> Declare what to show. The engine decides how it looks.
+> Prose diagrams for written content. Declare what to show — the engine decides how it looks.
 
-Declart is a declarative diagram library for **business and conceptual visuals** — the kind found in PowerPoint SmartArt, consulting decks, and strategy documents. You describe *what data belongs to which kind of diagram*. The engine handles layout, typography, spacing, and styling.
+Declart is a **prose diagram** library: diagrams that belong in blog posts, reports, documentation, and slide decks — not in codebases. You describe the structure. The engine handles layout, typography, spacing, and styling.
 
-## Why
+## Why Declart
 
-Existing diagram-as-code tools — Mermaid, D2, PlantUML, Graphviz — excel at **engineering diagrams**: flowcharts, sequence diagrams, ER diagrams, state machines. They are weak or absent for **business and conceptual diagrams** such as pyramids, 2×2 matrices, fishbone, PDCA cycles, hub-and-spoke, Venn, and timelines.
+**Mermaid for engineers. Declart for writers.**
 
-These diagrams remain trapped inside binary PowerPoint files (SmartArt), unreachable by Git, code review, automation, and LLM-driven workflows. Declart fills that gap.
+If you need technical diagrams — ERD, sequence, class diagrams, state machines — use Mermaid. It handles those better.
+
+Declart solves a different problem: the diagram you sketch on a whiteboard to explain an idea in a blog post, report, or slide deck. The kind that should take seconds to write and look consistent without any design decisions.
+
+Today, that kind of diagram is stuck in two places:
+
+- **PowerPoint SmartArt** — binary files, unreachable by Git, automation, and LLM workflows
+- **Design tools (Canva, Figma)** — require design skill, break reproducibility
+
+Declart makes prose diagrams reproducible, version-controlled, and LLM-generatable. We deliberately stop where comprehension stops: no edge labels, no arbitrary graphs, no pixel control. Complexity that exceeds a reader's comprehension is out of scope by design.
 
 ## Principles
 
@@ -100,8 +109,8 @@ Additional kinds (Roadmap, Swimlane, etc.) may be considered after the core kind
 
 Explicit boundaries that protect focus:
 
-- **Not a free-form drawing tool.** Declart does not compete with Mermaid, D2, PlantUML, or Graphviz for arbitrary node-edge graphs.
-- **Not for engineering diagrams.** Flowcharts, sequence diagrams, ER diagrams, and state machines are well-served elsewhere and are not on the roadmap.
+- **Not for engineering diagrams.** Flowcharts, sequence diagrams, ER diagrams, state machines — use Mermaid, D2, or PlantUML. Declart is for prose, not code.
+- **Not a free-form drawing tool.** No arbitrary node-edge graphs. Declart renders declared structure, not drawn shapes.
 - **No pixel-level control.** No positions, no per-element colors, no font overrides in source.
 - **Not interactive.** Declart produces static visuals. Animation and interactivity are out of scope.
 - **No WYSIWYG editing.** Declart is source-first. Visual editors are not part of the project.
