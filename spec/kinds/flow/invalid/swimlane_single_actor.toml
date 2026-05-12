@@ -1,0 +1,10 @@
+kind = "flow"
+view = "swimlane"
+
+[[items]]
+actor = "A"
+label = "Step 1"
+
+[[items]]
+actor = "A"
+label = "Step 2"

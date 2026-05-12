@@ -1,0 +1,14 @@
+kind = "flow"
+view = "swimlane"
+
+[[items]]
+actor = "A"
+label = "Start"
+
+[[items]]
+actor = "B"
+label = "Process"
+
+[[items]]
+actor = "A"
+label = "Confirm"

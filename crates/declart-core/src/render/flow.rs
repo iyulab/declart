@@ -3,14 +3,22 @@ use crate::model::{
     Item, ItemsDiagram, OrgChartDiagram, OrgChartNode,
     FlowDiagram, FlowView, TierDiagram,
 };
-use super::{cycle, fishbone, funnel, org_chart, process, pyramid, theme::Theme};
+use super::{cycle, fishbone, funnel, org_chart, process, pyramid, swimlane, theme::Theme};
 
 pub(crate) fn render_flow(d: &FlowDiagram, theme: &Theme) -> String {
-    let items_data = ItemsDiagram { title: d.title.clone(), items: d.items.clone() };
+    if d.view == FlowView::Swimlane {
+        return swimlane::render(d, theme);
+    }
+    let items: Vec<Item> = d.items.iter().map(|fi| Item {
+        label: fi.label.clone(),
+        emphasis: fi.emphasis.clone(),
+    }).collect();
+    let items_data = ItemsDiagram { title: d.title.clone(), items };
     match d.view {
-        FlowView::Process => process::render(&items_data, theme),
-        FlowView::Cycle   => cycle::render(&items_data, theme),
-        FlowView::Funnel  => funnel::render(&items_data, theme),
+        FlowView::Process  => process::render(&items_data, theme),
+        FlowView::Cycle    => cycle::render(&items_data, theme),
+        FlowView::Funnel   => funnel::render(&items_data, theme),
+        FlowView::Swimlane => unreachable!(),
     }
 }
 

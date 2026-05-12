@@ -9,6 +9,7 @@ pub(crate) mod matrix;
 pub(crate) mod org_chart;
 pub(crate) mod process;
 pub(crate) mod pyramid;
+pub(crate) mod swimlane;
 mod svg;
 pub mod theme;
 pub(crate) mod timeline;

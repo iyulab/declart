@@ -3,7 +3,7 @@ mod raw;
 use crate::error::DeclartError;
 use crate::model::{
     ComparisonCell, ComparisonDiagram, Diagram, Emphasis,
-    FlowDiagram, FlowView,
+    FlowDiagram, FlowItem, FlowView,
     TierDiagram, TierView,
     HierarchyDiagram, HierarchyNode, HierarchyView,
     HubSpokeDiagram, Item, MatrixDiagram,
@@ -78,13 +78,21 @@ fn parse_items(raw_items: Vec<raw::RawItem>) -> Result<Vec<Item>, DeclartError> 
     }).collect()
 }
 
+fn parse_flow_items(raw_items: Vec<raw::RawFlowItem>) -> Result<Vec<FlowItem>, DeclartError> {
+    raw_items.into_iter().map(|item| {
+        let emphasis = parse_emphasis(item.emphasis.as_deref())?;
+        Ok(FlowItem { label: item.label, emphasis, actor: item.actor })
+    }).collect()
+}
+
 fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "flow");
     if raw.items.is_empty() { return Err(DeclartError::EmptyItems); }
     let view = match raw.view.as_deref() {
         None | Some("process") => FlowView::Process,
-        Some("cycle") => FlowView::Cycle,
-        Some("funnel") => FlowView::Funnel,
+        Some("cycle")     => FlowView::Cycle,
+        Some("funnel")    => FlowView::Funnel,
+        Some("swimlane")  => FlowView::Swimlane,
         Some("pyramid") => return Err(DeclartError::InvalidValue {
             field: "view".to_string(),
             value: "pyramid".to_string(),
@@ -93,7 +101,7 @@ fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
         Some(other) => return Err(DeclartError::InvalidValue {
             field: "view".to_string(),
             value: other.to_string(),
-            hint: "Valid view values for flow: process, cycle, funnel".to_string(),
+            hint: "Valid view values for flow: process, cycle, funnel, swimlane".to_string(),
         }),
     };
     let n = raw.items.len();
@@ -108,9 +116,31 @@ fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
                 value: format!("{n} items"),
                 hint: "Funnel view supports at most 10 stages.".to_string(),
             }),
+        FlowView::Swimlane => {
+            // Every item must have a non-empty actor
+            for item in &raw.items {
+                if item.actor.as_ref().map(|a| a.is_empty()).unwrap_or(true) {
+                    return Err(DeclartError::InvalidValue {
+                        field: "actor".to_string(),
+                        value: "(missing)".to_string(),
+                        hint: "Every item must have a non-empty `actor` field when view = \"swimlane\"".to_string(),
+                    });
+                }
+            }
+            // Must have at least 2 distinct actors
+            let distinct: std::collections::HashSet<&str> =
+                raw.items.iter().map(|i| i.actor.as_deref().unwrap_or("")).collect();
+            if distinct.len() < 2 {
+                return Err(DeclartError::InvalidValue {
+                    field: "actor".to_string(),
+                    value: format!("{} distinct actor(s)", distinct.len()),
+                    hint: "Swimlane view requires at least 2 distinct actor values".to_string(),
+                });
+            }
+        }
         _ => {}
     }
-    let items = parse_items(raw.items)?;
+    let items = parse_flow_items(raw.items)?;
     Ok(Diagram::Flow(FlowDiagram { title: raw.title, view, items }))
 }
 
@@ -514,6 +544,63 @@ mod tests {
             let input = format!("kind = \"{kind}\"\n\n[[items]]\nlabel = \"A\"\n");
             assert!(parse(&input).is_err(), "kind '{kind}' should be rejected");
         }
+    }
+
+    #[test]
+    fn parse_flow_swimlane_basic() {
+        let input = r#"
+kind = "flow"
+view = "swimlane"
+
+[[items]]
+actor = "A"
+label = "Step 1"
+
+[[items]]
+actor = "B"
+label = "Step 2"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Flow(d) = diagram else { panic!("expected Flow") };
+        assert_eq!(d.view, FlowView::Swimlane);
+        assert_eq!(d.items[0].actor.as_deref(), Some("A"));
+        assert_eq!(d.items[1].actor.as_deref(), Some("B"));
+    }
+
+    #[test]
+    fn parse_flow_swimlane_rejects_missing_actor() {
+        let input = r#"
+kind = "flow"
+view = "swimlane"
+[[items]]
+actor = "A"
+label = "First"
+[[items]]
+label = "No actor"
+"#;
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_flow_swimlane_rejects_single_actor() {
+        let input = r#"
+kind = "flow"
+view = "swimlane"
+[[items]]
+actor = "A"
+label = "Step 1"
+[[items]]
+actor = "A"
+label = "Step 2"
+"#;
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_flow_swimlane_hint_in_valid_view_error() {
+        let input = "kind = \"flow\"\nview = \"unknown\"\n\n[[items]]\nlabel = \"A\"\n";
+        let err = parse(input).unwrap_err();
+        assert!(err.to_string().contains("swimlane"), "error hint should list swimlane");
     }
 
     // --- hierarchy tests ---

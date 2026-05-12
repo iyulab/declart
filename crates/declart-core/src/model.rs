@@ -14,6 +14,14 @@ pub struct Item {
     pub emphasis: Option<Emphasis>,
 }
 
+/// A labeled item in a flow diagram. `actor` is only used by the `swimlane` view.
+#[derive(Debug, Clone)]
+pub struct FlowItem {
+    pub label: String,
+    pub emphasis: Option<Emphasis>,
+    pub actor: Option<String>,
+}
+
 /// Model for diagram kinds that use a flat list of items (kept for internal compatibility).
 #[derive(Debug, Clone)]
 pub struct ItemsDiagram {
@@ -27,14 +35,15 @@ pub enum FlowView {
     Process,
     Cycle,
     Funnel,
+    Swimlane,
 }
 
-/// Model for Flow diagrams (process / cycle / funnel views).
+/// Model for Flow diagrams (process / cycle / funnel / swimlane views).
 #[derive(Debug, Clone)]
 pub struct FlowDiagram {
     pub title: Option<String>,
     pub view: FlowView,
-    pub items: Vec<Item>,
+    pub items: Vec<FlowItem>,
 }
 
 /// View variant for a Tier diagram.
@@ -235,10 +244,30 @@ mod tests {
         let d = FlowDiagram {
             title: Some("PDCA".to_string()),
             view: FlowView::Cycle,
-            items: vec![Item { label: "Plan".to_string(), emphasis: None }],
+            items: vec![FlowItem { label: "Plan".to_string(), emphasis: None, actor: None }],
         };
         assert_eq!(d.view, FlowView::Cycle);
         assert_eq!(d.items[0].label, "Plan");
+    }
+
+    #[test]
+    fn flow_item_holds_actor() {
+        let fi = FlowItem { label: "Buy".to_string(), emphasis: None, actor: Some("Customer".to_string()) };
+        assert_eq!(fi.actor.as_deref(), Some("Customer"));
+    }
+
+    #[test]
+    fn flow_diagram_holds_swimlane_view() {
+        let d = FlowDiagram {
+            title: None,
+            view: FlowView::Swimlane,
+            items: vec![
+                FlowItem { label: "A".to_string(), emphasis: None, actor: Some("X".to_string()) },
+                FlowItem { label: "B".to_string(), emphasis: None, actor: Some("Y".to_string()) },
+            ],
+        };
+        assert_eq!(d.view, FlowView::Swimlane);
+        assert_eq!(d.items[0].actor.as_deref(), Some("X"));
     }
 
     #[test]

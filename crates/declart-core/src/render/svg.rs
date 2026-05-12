@@ -35,6 +35,18 @@ impl SvgBuilder {
         ));
     }
 
+    #[allow(clippy::too_many_arguments)]
+    pub fn rect_rounded(
+        &mut self,
+        x: f32, y: f32, width: f32, height: f32, rx: u32,
+        fill: &str, stroke: &str, stroke_width: f32,
+    ) {
+        self.elements.push(format!(
+            r#"<rect x="{:.1}" y="{:.1}" width="{:.1}" height="{:.1}" rx="{}" fill="{}" stroke="{}" stroke-width="{:.1}"/>"#,
+            x, y, width, height, rx, fill, stroke, stroke_width
+        ));
+    }
+
     pub fn circle(&mut self, cx: f32, cy: f32, r: f32, fill: &str, fill_opacity: f32) {
         self.elements.push(format!(
             r#"<circle cx="{:.1}" cy="{:.1}" r="{:.1}" fill="{}" fill-opacity="{:.2}"/>"#,
@@ -132,6 +144,16 @@ mod tests {
         let svg = builder.build("#ffffff");
         assert!(svg.contains("<polygon"));
         assert!(svg.contains("10.0,10.0"));
+    }
+
+    #[test]
+    fn rect_rounded_produces_rect_element() {
+        let mut builder = SvgBuilder::new(300.0, 200.0);
+        builder.rect_rounded(10.0, 20.0, 100.0, 50.0, 8, "#336699", "none", 0.0);
+        let svg = builder.build("#ffffff");
+        assert!(svg.contains("<rect"), "should contain a <rect element");
+        assert!(svg.contains("rx=\"8\""), "should have rx attribute");
+        assert!(svg.contains("fill=\"#336699\""));
     }
 
     #[test]

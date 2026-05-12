@@ -6,6 +6,15 @@ pub struct KindProbe {
     pub kind: String,
 }
 
+/// Raw representation of a flow diagram item. Includes `actor` for the swimlane view.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawFlowItem {
+    pub label: String,
+    pub emphasis: Option<String>,
+    pub actor: Option<String>,
+}
+
 /// Raw representation for `flow` kind.
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
@@ -14,7 +23,7 @@ pub struct RawFlowDiagram {
     pub view: Option<String>,
     pub title: Option<String>,
     #[serde(default)]
-    pub items: Vec<RawItem>,
+    pub items: Vec<RawFlowItem>,
 }
 
 /// Raw representation for `tier` kind.

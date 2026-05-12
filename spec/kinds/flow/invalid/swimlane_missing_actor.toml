@@ -1,0 +1,9 @@
+kind = "flow"
+view = "swimlane"
+
+[[items]]
+actor = "A"
+label = "First"
+
+[[items]]
+label = "No actor here"
