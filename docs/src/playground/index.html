@@ -789,15 +789,7 @@ downloadBtn.addEventListener('click', () => {
 });
 
 exampleSel.addEventListener('change', () => {
-  const example = EXAMPLES[exampleSel.value] ?? '';
-  if (inputEl.value !== example && inputEl.value.trim() !== '') {
-    if (!confirm('Replace your current TOML with this example?')) {
-      // Revert selector to the previously displayed example
-      exampleSel.value = Object.keys(EXAMPLES).find(k => EXAMPLES[k] === inputEl.value) ?? exampleSel.value;
-      return;
-    }
-  }
-  inputEl.value = example;
+  inputEl.value = EXAMPLES[exampleSel.value] ?? '';
   clearDraft();
   update();
 });
