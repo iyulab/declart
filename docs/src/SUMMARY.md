@@ -30,3 +30,4 @@
 - [Fishbone](kinds/fishbone.md)
 - [Org Chart](kinds/org_chart.md)
 - [Funnel](kinds/funnel.md)
+- [Comparison](kinds/comparison.md)

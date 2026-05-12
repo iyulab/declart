@@ -1,0 +1,12 @@
+{
+  "kind": "matrix",
+  "title": "Eisenhower Matrix",
+  "x_axis": "Importance",
+  "y_axis": "Urgency",
+  "quadrants": [
+    { "label": "Do First", "position": "top-left" },
+    { "label": "Schedule", "position": "top-right" },
+    { "label": "Delegate", "position": "bottom-left" },
+    { "label": "Eliminate", "position": "bottom-right" }
+  ]
+}

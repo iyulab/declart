@@ -140,3 +140,38 @@ pub struct RawFishboneCause {
 pub struct RawFishboneItem {
     pub label: String,
 }
+
+/// Raw representation for the comparison kind.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawComparisonDiagram {
+    pub kind: String,
+    pub title: Option<String>,
+    #[serde(default)]
+    pub rows: Vec<RawComparisonRow>,
+    #[serde(default)]
+    pub columns: Vec<RawComparisonColumn>,
+    #[serde(default)]
+    pub cells: Vec<RawComparisonCell>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawComparisonRow {
+    pub label: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawComparisonColumn {
+    pub label: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawComparisonCell {
+    pub row: String,
+    pub column: String,
+    #[serde(default)]
+    pub value: String,
+}

@@ -1,0 +1,31 @@
+kind = "comparison"
+
+[[rows]]
+label = "A"
+
+[[columns]]
+label = "C1"
+
+[[columns]]
+label = "C2"
+
+[[columns]]
+label = "C3"
+
+[[columns]]
+label = "C4"
+
+[[columns]]
+label = "C5"
+
+[[columns]]
+label = "C6"
+
+[[columns]]
+label = "C7"
+
+[[columns]]
+label = "C8"
+
+[[columns]]
+label = "C9"

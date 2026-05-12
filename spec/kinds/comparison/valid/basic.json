@@ -1,0 +1,20 @@
+{
+  "kind": "comparison",
+  "title": "Cloud Provider Comparison",
+  "rows": [
+    { "label": "AWS" },
+    { "label": "Azure" },
+    { "label": "GCP" }
+  ],
+  "columns": [
+    { "label": "Compute" },
+    { "label": "Storage" },
+    { "label": "AI/ML" }
+  ],
+  "cells": [
+    { "row": "AWS", "column": "Compute", "value": "EC2" },
+    { "row": "AWS", "column": "Storage", "value": "S3" },
+    { "row": "Azure", "column": "Compute", "value": "VMs" },
+    { "row": "GCP", "column": "AI/ML", "value": "Vertex AI" }
+  ]
+}

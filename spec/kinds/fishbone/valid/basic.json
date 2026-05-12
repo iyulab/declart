@@ -1,0 +1,28 @@
+{
+  "kind": "fishbone",
+  "title": "Website Performance Issues",
+  "effect": "Slow Page Load",
+  "causes": [
+    {
+      "label": "Server",
+      "items": [
+        { "label": "Underpowered CPU" },
+        { "label": "Low memory" }
+      ]
+    },
+    {
+      "label": "Network",
+      "items": [
+        { "label": "High latency" }
+      ]
+    },
+    {
+      "label": "Frontend",
+      "items": [
+        { "label": "Large images" },
+        { "label": "Blocking scripts" }
+      ]
+    },
+    { "label": "Database", "items": [] }
+  ]
+}

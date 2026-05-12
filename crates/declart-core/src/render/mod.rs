@@ -1,3 +1,4 @@
+pub(crate) mod comparison;
 pub(crate) mod cycle;
 pub(crate) mod fishbone;
 pub(crate) mod font;
@@ -35,6 +36,7 @@ pub fn render_opts(diagram: &Diagram, theme: &Theme, width: Option<u32>) -> Resu
         Diagram::Fishbone(d) => fishbone::render(d, theme),
         Diagram::OrgChart(d) => org_chart::render(d, theme),
         Diagram::Funnel(d) => funnel::render(d, theme),
+        Diagram::Comparison(d) => comparison::render(d, theme),
     };
     if let Some(w) = width {
         Ok(apply_width(svg, w))

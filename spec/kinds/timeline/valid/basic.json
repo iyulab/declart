@@ -1,0 +1,10 @@
+{
+  "kind": "timeline",
+  "title": "Product Launch History",
+  "events": [
+    { "date": "2024-01-15", "label": "Beta Launch" },
+    { "date": "2024-04-01", "label": "Public Release" },
+    { "date": "2024-07-20", "label": "v2.0 Release" },
+    { "date": "2024-11-30", "label": "Enterprise Edition" }
+  ]
+}

@@ -1,7 +1,7 @@
 mod raw;
 
 use crate::error::DeclartError;
-use crate::model::{Diagram, Emphasis, FishboneCause, FishboneDiagram, HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram, OrgChartDiagram, OrgChartNode, TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet};
+use crate::model::{ComparisonCell, ComparisonDiagram, Diagram, Emphasis, FishboneCause, FishboneDiagram, HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram, OrgChartDiagram, OrgChartNode, TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet};
 
 /// Parses a TOML declaration string into a validated [`Diagram`].
 ///
@@ -39,7 +39,66 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
             let raw: raw::RawOrgChartDiagram = toml::from_str(input)?;
             validate_org_chart(raw)
         }
+        "comparison" => {
+            let raw: raw::RawComparisonDiagram = toml::from_str(input)?;
+            validate_comparison(raw)
+        }
         other => Err(DeclartError::UnknownKind(other.to_string())),
+    }
+}
+
+/// Parses a JSON declaration string into a validated [`Diagram`].
+///
+/// The JSON structure mirrors the TOML format: `"kind"` is required, and array fields
+/// use JSON arrays (e.g., `"items": [...]` instead of `[[items]]` in TOML).
+pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
+    let probe: raw::KindProbe = serde_json::from_str(input)?;
+
+    match probe.kind.as_str() {
+        "pyramid" | "process" | "cycle" | "funnel" => {
+            let raw: raw::RawItemsDiagram = serde_json::from_str(input)?;
+            validate_items(raw)
+        }
+        "matrix" => {
+            let raw: raw::RawMatrixDiagram = serde_json::from_str(input)?;
+            validate_matrix(raw)
+        }
+        "hub_spoke" => {
+            let raw: raw::RawHubSpokeDiagram = serde_json::from_str(input)?;
+            validate_hub_spoke(raw)
+        }
+        "venn" => {
+            let raw: raw::RawVennDiagram = serde_json::from_str(input)?;
+            validate_venn(raw)
+        }
+        "timeline" => {
+            let raw: raw::RawTimelineDiagram = serde_json::from_str(input)?;
+            validate_timeline(raw)
+        }
+        "fishbone" => {
+            let raw: raw::RawFishboneDiagram = serde_json::from_str(input)?;
+            validate_fishbone(raw)
+        }
+        "org_chart" => {
+            let raw: raw::RawOrgChartDiagram = serde_json::from_str(input)?;
+            validate_org_chart(raw)
+        }
+        "comparison" => {
+            let raw: raw::RawComparisonDiagram = serde_json::from_str(input)?;
+            validate_comparison(raw)
+        }
+        other => Err(DeclartError::UnknownKind(other.to_string())),
+    }
+}
+
+/// Auto-detects input format and parses into a validated [`Diagram`].
+///
+/// If the trimmed input starts with `{`, JSON parsing is used; otherwise TOML.
+pub fn parse_auto(input: &str) -> Result<Diagram, DeclartError> {
+    if input.trim_start().starts_with('{') {
+        parse_json(input)
+    } else {
+        parse(input)
     }
 }
 
@@ -303,10 +362,74 @@ fn validate_hub_spoke(raw: raw::RawHubSpokeDiagram) -> Result<Diagram, DeclartEr
     }))
 }
 
+fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "comparison");
+    if raw.rows.is_empty() {
+        return Err(DeclartError::InvalidValue {
+            field: "rows".to_string(),
+            value: "0 rows".to_string(),
+            hint: "Comparison tables require at least 1 row".to_string(),
+        });
+    }
+    if raw.columns.is_empty() {
+        return Err(DeclartError::InvalidValue {
+            field: "columns".to_string(),
+            value: "0 columns".to_string(),
+            hint: "Comparison tables require at least 1 column".to_string(),
+        });
+    }
+    if raw.rows.len() > 10 {
+        return Err(DeclartError::InvalidValue {
+            field: "rows".to_string(),
+            value: format!("{} rows", raw.rows.len()),
+            hint: "Comparison tables support at most 10 rows for legibility".to_string(),
+        });
+    }
+    if raw.columns.len() > 8 {
+        return Err(DeclartError::InvalidValue {
+            field: "columns".to_string(),
+            value: format!("{} columns", raw.columns.len()),
+            hint: "Comparison tables support at most 8 columns for legibility".to_string(),
+        });
+    }
+
+    let row_labels: std::collections::HashSet<&str> =
+        raw.rows.iter().map(|r| r.label.as_str()).collect();
+    let col_labels: std::collections::HashSet<&str> =
+        raw.columns.iter().map(|c| c.label.as_str()).collect();
+
+    for cell in &raw.cells {
+        if !row_labels.contains(cell.row.as_str()) {
+            return Err(DeclartError::InvalidValue {
+                field: "cell.row".to_string(),
+                value: cell.row.clone(),
+                hint: "cell.row must reference an existing row label".to_string(),
+            });
+        }
+        if !col_labels.contains(cell.column.as_str()) {
+            return Err(DeclartError::InvalidValue {
+                field: "cell.column".to_string(),
+                value: cell.column.clone(),
+                hint: "cell.column must reference an existing column label".to_string(),
+            });
+        }
+    }
+
+    let rows = raw.rows.into_iter().map(|r| r.label).collect();
+    let columns = raw.columns.into_iter().map(|c| c.label).collect();
+    let cells = raw.cells.into_iter().map(|c| ComparisonCell {
+        row: c.row,
+        column: c.column,
+        value: c.value,
+    }).collect();
+
+    Ok(Diagram::Comparison(ComparisonDiagram { title: raw.title, rows, columns, cells }))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::model::{Diagram, Emphasis};
-    use super::parse;
+    use super::{parse, parse_auto, parse_json};
 
     const VALID_PYRAMID: &str = r#"
 kind = "pyramid"
@@ -519,5 +642,163 @@ label = "Q1"
             input.push_str(&format!("[[items]]\nlabel = \"Stage {}\"\n", i));
         }
         assert!(parse(&input).is_ok(), "10 funnel stages should be accepted");
+    }
+
+    // --- JSON parsing ---
+
+    const VALID_PYRAMID_JSON: &str = r#"{
+  "kind": "pyramid",
+  "title": "Maslow",
+  "items": [
+    { "label": "Self-Actualization" },
+    { "label": "Esteem", "emphasis": "primary" }
+  ]
+}"#;
+
+    #[test]
+    fn parse_json_valid_pyramid() {
+        let diagram = parse_json(VALID_PYRAMID_JSON).unwrap();
+        let Diagram::Pyramid(d) = diagram else { panic!("expected Pyramid") };
+        assert_eq!(d.title, Some("Maslow".to_string()));
+        assert_eq!(d.items.len(), 2);
+        assert_eq!(d.items[0].label, "Self-Actualization");
+        assert_eq!(d.items[1].emphasis, Some(Emphasis::Primary));
+    }
+
+    #[test]
+    fn parse_json_rejects_unknown_kind() {
+        let input = r#"{"kind": "foobar", "items": []}"#;
+        assert!(parse_json(input).is_err());
+    }
+
+    #[test]
+    fn parse_json_rejects_forbidden_field() {
+        let input = r#"{"kind": "pyramid", "items": [{"label": "A", "color": "red"}]}"#;
+        assert!(parse_json(input).is_err());
+    }
+
+    #[test]
+    fn parse_json_valid_process() {
+        let input = r#"{"kind": "process", "items": [{"label": "Plan"}, {"label": "Do"}]}"#;
+        let diagram = parse_json(input).unwrap();
+        assert!(matches!(diagram, Diagram::Process(_)));
+    }
+
+    #[test]
+    fn parse_json_valid_org_chart() {
+        let input = r#"{
+  "kind": "org_chart",
+  "nodes": [
+    {"id": "ceo", "label": "CEO"},
+    {"id": "cto", "label": "CTO", "parent": "ceo"}
+  ]
+}"#;
+        let diagram = parse_json(input).unwrap();
+        assert!(matches!(diagram, Diagram::OrgChart(_)));
+    }
+
+    #[test]
+    fn parse_auto_dispatches_json() {
+        let diagram = parse_auto(VALID_PYRAMID_JSON).unwrap();
+        assert!(matches!(diagram, Diagram::Pyramid(_)));
+    }
+
+    #[test]
+    fn parse_auto_dispatches_toml() {
+        let diagram = parse_auto(VALID_PYRAMID).unwrap();
+        assert!(matches!(diagram, Diagram::Pyramid(_)));
+    }
+
+    #[test]
+    fn parse_auto_json_with_leading_whitespace() {
+        let input = format!("  \n{}", VALID_PYRAMID_JSON);
+        let diagram = parse_auto(&input).unwrap();
+        assert!(matches!(diagram, Diagram::Pyramid(_)));
+    }
+
+    // --- Comparison table ---
+
+    const VALID_COMPARISON: &str = r#"
+kind = "comparison"
+title = "Framework Comparison"
+
+[[rows]]
+label = "React"
+
+[[rows]]
+label = "Vue"
+
+[[columns]]
+label = "Performance"
+
+[[columns]]
+label = "Ecosystem"
+
+[[cells]]
+row = "React"
+column = "Performance"
+value = "★★★★"
+
+[[cells]]
+row = "Vue"
+column = "Ecosystem"
+value = "★★★"
+"#;
+
+    #[test]
+    fn parse_valid_comparison() {
+        let diagram = parse(VALID_COMPARISON).unwrap();
+        let Diagram::Comparison(d) = diagram else { panic!("expected Comparison") };
+        assert_eq!(d.rows.len(), 2);
+        assert_eq!(d.columns.len(), 2);
+        assert_eq!(d.cells.len(), 2);
+        assert_eq!(d.cells[0].value, "★★★★");
+    }
+
+    #[test]
+    fn parse_comparison_rejects_invalid_cell_row() {
+        let input = r#"
+kind = "comparison"
+[[rows]]
+label = "A"
+[[columns]]
+label = "X"
+[[cells]]
+row = "NONEXISTENT"
+column = "X"
+value = "ok"
+"#;
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_comparison_rejects_empty_rows() {
+        let input = r#"
+kind = "comparison"
+[[columns]]
+label = "X"
+"#;
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_comparison_rejects_too_many_columns() {
+        let mut input = "kind = \"comparison\"\n[[rows]]\nlabel = \"A\"\n".to_string();
+        for i in 0..9 {
+            input.push_str(&format!("[[columns]]\nlabel = \"Col{}\"\n", i));
+        }
+        assert!(parse(&input).is_err());
+    }
+
+    #[test]
+    fn parse_json_valid_comparison() {
+        let input = r#"{
+  "kind": "comparison",
+  "rows": [{"label": "React"}, {"label": "Vue"}],
+  "columns": [{"label": "Speed"}],
+  "cells": [{"row": "React", "column": "Speed", "value": "Fast"}]
+}"#;
+        let diagram = parse_json(input).unwrap();
+        assert!(matches!(diagram, Diagram::Comparison(_)));
     }
 }

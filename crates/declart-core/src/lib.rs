@@ -4,7 +4,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! declart-core = "0.10"
+//! declart-core = "0.12"
 //! ```
 //!
 //! ```rust,no_run
@@ -34,9 +34,9 @@ pub mod render;
 
 pub use error::DeclartError;
 pub use model::{
-    Diagram, Emphasis, FishboneCause, FishboneDiagram, HubSpokeDiagram, Item, ItemsDiagram,
-    MatrixDiagram, OrgChartDiagram, OrgChartNode, TimelineDiagram, TimelineEvent, VennDiagram,
-    VennIntersection, VennSet,
+    ComparisonCell, ComparisonDiagram, Diagram, Emphasis, FishboneCause, FishboneDiagram,
+    HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram, OrgChartDiagram, OrgChartNode,
+    TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet,
 };
-pub use parse::parse;
+pub use parse::{parse, parse_auto, parse_json};
 pub use render::{render, render_opts, ACCESSIBLE_THEME, WARM_THEME};

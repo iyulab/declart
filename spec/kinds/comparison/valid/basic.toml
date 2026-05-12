@@ -1,0 +1,34 @@
+kind = "comparison"
+title = "JavaScript Framework Comparison"
+
+[[rows]]
+label = "React"
+
+[[rows]]
+label = "Vue"
+
+[[columns]]
+label = "Performance"
+
+[[columns]]
+label = "Ecosystem"
+
+[[cells]]
+row = "React"
+column = "Performance"
+value = "★★★★"
+
+[[cells]]
+row = "React"
+column = "Ecosystem"
+value = "★★★★★"
+
+[[cells]]
+row = "Vue"
+column = "Performance"
+value = "★★★★"
+
+[[cells]]
+row = "Vue"
+column = "Ecosystem"
+value = "★★★"

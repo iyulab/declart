@@ -24,6 +24,9 @@ pub enum DeclartError {
     #[error(transparent)]
     Parse(#[from] toml::de::Error),
 
+    #[error(transparent)]
+    ParseJson(#[from] serde_json::Error),
+
     #[error("invalid theme: {0}")]
     InvalidTheme(String),
 

@@ -65,19 +65,21 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.11.0** — 10 diagram kinds, 4+custom themes, CLI/WASM/FFI/Node.js, interactive playground, LLM guide. 123 tests.
+**Current: v0.12.0** — 11 diagram kinds, JSON input, GH Releases binaries, ESM npm package. 141 tests.
 
 | Capability | State |
 |------------|-------|
-| 10 diagram kinds (pyramid → funnel) | ✅ |
+| 11 diagram kinds (pyramid → comparison) | ✅ |
 | 4 built-in themes + user-defined TOML themes | ✅ |
+| TOML + JSON input (`parse_auto`) | ✅ |
 | CLI (`render`, `validate`, `init`, `watch`, `--format png`) | ✅ |
-| WASM bindings (`declart-wasm`) | ✅ |
+| WASM bindings (`render`, `render_json`, `render_with_theme_toml`) | ✅ |
 | C ABI (`declart-ffi` + `declart.h`) | ✅ |
-| Node.js package (`@iyulab/declart`) | ✅ |
+| Node.js package (`@iyulab/declart`, CJS + ESM) | ✅ |
+| GitHub Releases binaries (Linux musl, macOS, Windows) | ✅ |
 | Interactive playground (live WASM, URL permalink, zoom/pan) | ✅ |
 | Spec site (mdBook + GitHub Actions CI) | ✅ (GitHub Pages: enable in repo Settings) |
-| LLM guide (prompt templates for all 10 kinds) | ✅ |
+| LLM guide (prompt templates for all 11 kinds) | ✅ |
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
 

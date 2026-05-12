@@ -314,6 +314,60 @@ emphasis = "primary"
 
 ---
 
+### Comparison — Feature matrices, trade-off tables
+
+**Prompt**: *"Generate a Declart comparison table for three JavaScript frameworks across four criteria."*
+
+```toml
+kind = "comparison"
+title = "JavaScript Framework Comparison"
+
+[[rows]]
+label = "React"
+
+[[rows]]
+label = "Vue"
+
+[[rows]]
+label = "Svelte"
+
+[[columns]]
+label = "Performance"
+
+[[columns]]
+label = "Learning Curve"
+
+[[columns]]
+label = "Ecosystem"
+
+[[columns]]
+label = "Community"
+
+[[cells]]
+row = "React"
+column = "Performance"
+value = "★★★★"
+
+[[cells]]
+row = "React"
+column = "Ecosystem"
+value = "★★★★★"
+
+[[cells]]
+row = "Vue"
+column = "Learning Curve"
+value = "Easy"
+
+[[cells]]
+row = "Svelte"
+column = "Performance"
+value = "★★★★★"
+```
+
+> **Limits**: 1–10 rows, 1–8 columns. Cells without entries are rendered as empty.
+
+---
+
 ## Tips for LLMs
 
 | Rule | Detail |
@@ -326,6 +380,7 @@ emphasis = "primary"
 | Org chart IDs | Each `id` must be unique; `parent` must match an existing `id` |
 | Timeline dates | ISO 8601: `YYYY-MM-DD` only |
 | Venn sets | Only 2 or 3 sets supported |
+| Comparison cells | `row` and `column` must match existing row/column labels |
 
 ## Validating LLM Output
 

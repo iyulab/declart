@@ -1,0 +1,11 @@
+{
+  "kind": "funnel",
+  "title": "Sales Pipeline",
+  "items": [
+    { "label": "Awareness" },
+    { "label": "Interest" },
+    { "label": "Consideration", "emphasis": "primary" },
+    { "label": "Intent" },
+    { "label": "Purchase" }
+  ]
+}

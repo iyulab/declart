@@ -1,0 +1,10 @@
+{
+  "kind": "process",
+  "title": "Software Release Pipeline",
+  "items": [
+    { "label": "Plan" },
+    { "label": "Develop" },
+    { "label": "Test", "emphasis": "primary" },
+    { "label": "Deploy" }
+  ]
+}

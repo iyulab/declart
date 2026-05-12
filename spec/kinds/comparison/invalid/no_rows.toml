@@ -1,0 +1,4 @@
+kind = "comparison"
+
+[[columns]]
+label = "X"

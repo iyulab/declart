@@ -1,32 +1,48 @@
 use declart_core::render::Theme;
 use wasm_bindgen::prelude::*;
 
-/// Renders a TOML diagram declaration to SVG.
+/// Renders a TOML or JSON diagram declaration to SVG.
 ///
-/// - `input`: TOML declaration string
+/// - `input`: TOML or JSON declaration string (auto-detected by leading `{`)
 /// - `theme`: `"default"`, `"monochrome"`, `"accessible"`, or `"warm"` (unknown values fall back to `"default"`)
 /// - `width`: optional canvas width in pixels (height scales proportionally)
 ///
 /// Returns the SVG string on success, or a `JsError` with a descriptive message on failure.
 #[wasm_bindgen]
 pub fn render(input: &str, theme: &str, width: Option<u32>) -> Result<String, JsError> {
-    let diagram = declart_core::parse(input)
+    let diagram = declart_core::parse_auto(input)
         .map_err(|e| JsError::new(&e.to_string()))?;
     let t = Theme::by_name(theme);
     declart_core::render_opts(&diagram, t, width)
         .map_err(|e| JsError::new(&e.to_string()))
 }
 
-/// Renders a TOML diagram declaration with a custom theme defined as a TOML string.
+/// Renders a JSON diagram declaration to SVG with a named theme.
 ///
-/// - `input`: TOML declaration string
+/// - `input`: JSON declaration string
+/// - `theme`: `"default"`, `"monochrome"`, `"accessible"`, or `"warm"`
+/// - `width`: optional canvas width in pixels
+///
+/// Returns the SVG string on success, or a `JsError` on failure.
+#[wasm_bindgen]
+pub fn render_json(input: &str, theme: &str, width: Option<u32>) -> Result<String, JsError> {
+    let diagram = declart_core::parse_json(input)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    let t = Theme::by_name(theme);
+    declart_core::render_opts(&diagram, t, width)
+        .map_err(|e| JsError::new(&e.to_string()))
+}
+
+/// Renders a TOML or JSON diagram declaration with a custom theme defined as a TOML string.
+///
+/// - `input`: TOML or JSON declaration string (auto-detected)
 /// - `theme_toml`: TOML theme string (see [`Theme::from_toml`])
 /// - `width`: optional canvas width in pixels
 ///
 /// Returns the SVG string on success, or a `JsError` on parse/validation failure.
 #[wasm_bindgen]
 pub fn render_with_theme_toml(input: &str, theme_toml: &str, width: Option<u32>) -> Result<String, JsError> {
-    let diagram = declart_core::parse(input)
+    let diagram = declart_core::parse_auto(input)
         .map_err(|e| JsError::new(&e.to_string()))?;
     let theme = Theme::from_toml(theme_toml)
         .map_err(|e| JsError::new(&e.to_string()))?;
@@ -34,12 +50,12 @@ pub fn render_with_theme_toml(input: &str, theme_toml: &str, width: Option<u32>)
         .map_err(|e| JsError::new(&e.to_string()))
 }
 
-/// Validates a TOML diagram declaration without rendering.
+/// Validates a TOML or JSON diagram declaration without rendering.
 ///
 /// Returns `Ok(())` if valid, or a `JsError` with the parse/validation error message.
 #[wasm_bindgen]
 pub fn validate(input: &str) -> Result<(), JsError> {
-    declart_core::parse(input)
+    declart_core::parse_auto(input)
         .map(|_| ())
         .map_err(|e| JsError::new(&e.to_string()))
 }
@@ -53,7 +69,7 @@ pub fn themes() -> String {
 /// Returns a comma-separated list of supported diagram kind names.
 #[wasm_bindgen]
 pub fn kinds() -> String {
-    "pyramid,process,cycle,matrix,hub_spoke,venn,timeline,fishbone,org_chart,funnel".to_string()
+    "pyramid,process,cycle,matrix,hub_spoke,venn,timeline,fishbone,org_chart,funnel,comparison".to_string()
 }
 
 #[cfg(test)]
@@ -154,5 +170,26 @@ title      = "#003087"
         assert!(k.contains("fishbone"));
         assert!(k.contains("org_chart"));
         assert!(k.contains("funnel"));
+    }
+
+    #[test]
+    fn render_json_valid_pyramid() {
+        let input = r#"{"kind":"pyramid","items":[{"label":"Top"},{"label":"Bottom"}]}"#;
+        let svg = render_json(input, "default", None).unwrap();
+        assert!(svg.contains("<svg"));
+        assert!(svg.contains("Top"));
+    }
+
+    #[test]
+    fn render_json_rejects_invalid() {
+        let result = declart_core::parse_json(r#"{"kind":"unknown_kind"}"#);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn render_auto_detects_json() {
+        let json = r#"{"kind":"pyramid","items":[{"label":"A"},{"label":"B"}]}"#;
+        let svg = render(json, "default", None).unwrap();
+        assert!(svg.contains("<svg"));
     }
 }

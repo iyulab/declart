@@ -1,0 +1,15 @@
+{
+  "kind": "venn",
+  "title": "Full-Stack Developer Skills",
+  "sets": [
+    { "label": "Frontend" },
+    { "label": "Backend" },
+    { "label": "DevOps" }
+  ],
+  "intersections": [
+    { "sets": ["Frontend", "Backend"], "label": "APIs" },
+    { "sets": ["Backend", "DevOps"], "label": "Infra" },
+    { "sets": ["Frontend", "DevOps"], "label": "CI/CD" },
+    { "sets": ["Frontend", "Backend", "DevOps"], "label": "Full-Stack" }
+  ]
+}

@@ -106,6 +106,29 @@ pub struct OrgChartDiagram {
     pub nodes: Vec<OrgChartNode>,
 }
 
+/// A single cell in a comparison table.
+#[derive(Debug, Clone)]
+pub struct ComparisonCell {
+    /// Label of the row this cell belongs to.
+    pub row: String,
+    /// Label of the column this cell belongs to.
+    pub column: String,
+    /// Display value for this cell. Empty string if omitted.
+    pub value: String,
+}
+
+/// Model for the Comparison table kind — rows × columns with optional cell values.
+#[derive(Debug, Clone)]
+pub struct ComparisonDiagram {
+    pub title: Option<String>,
+    /// Row labels (items being compared).
+    pub rows: Vec<String>,
+    /// Column labels (criteria / attributes).
+    pub columns: Vec<String>,
+    /// Cell values. Missing (row, column) combinations are treated as empty.
+    pub cells: Vec<ComparisonCell>,
+}
+
 /// The parsed, validated representation of a diagram declaration.
 #[derive(Debug, Clone)]
 pub enum Diagram {
@@ -119,6 +142,7 @@ pub enum Diagram {
     Fishbone(FishboneDiagram),
     OrgChart(OrgChartDiagram),
     Funnel(ItemsDiagram),
+    Comparison(ComparisonDiagram),
 }
 
 #[cfg(test)]

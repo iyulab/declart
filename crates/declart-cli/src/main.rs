@@ -16,7 +16,7 @@ struct Cli {
 enum Commands {
     /// Render a diagram declaration to SVG or PNG
     Render {
-        /// Input TOML file
+        /// Input TOML or JSON file
         input: PathBuf,
         /// Output file [default: input with format extension]
         #[arg(short, long)]
@@ -36,17 +36,17 @@ enum Commands {
     },
     /// Validate a diagram declaration without rendering
     Validate {
-        /// Input TOML file
+        /// Input TOML or JSON file
         input: PathBuf,
     },
     /// Print a starter TOML declaration for a diagram kind
     Init {
-        /// Diagram kind: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone, org_chart, funnel
+        /// Diagram kind: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone, org_chart, funnel, comparison
         kind: String,
     },
     /// Watch a file and re-render on every change
     Watch {
-        /// Input TOML file
+        /// Input TOML or JSON file
         input: PathBuf,
         /// Output file [default: input with format extension]
         #[arg(short, long)]
@@ -89,13 +89,13 @@ fn run() -> Result<()> {
         Commands::Validate { input } => {
             let content = fs::read_to_string(&input)
                 .with_context(|| format!("failed to read {}", input.display()))?;
-            declart_core::parse(&content)
+            declart_core::parse_auto(&content)
                 .with_context(|| format!("invalid declaration: {}", input.display()))?;
         }
         Commands::Init { kind } => {
             let template = init_template(&kind).with_context(|| {
                 format!(
-                    "unknown kind `{}`\n  = hint: Available kinds: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone, org_chart, funnel",
+                    "unknown kind `{}`\n  = hint: Available kinds: pyramid, process, cycle, matrix, hub_spoke, venn, timeline, fishbone, org_chart, funnel, comparison",
                     kind
                 )
             })?;
@@ -159,7 +159,7 @@ fn run() -> Result<()> {
 fn render_bytes(input: &Path, theme: &Theme, width: Option<u32>, format: &str) -> Result<Vec<u8>> {
     let content = fs::read_to_string(input)
         .with_context(|| format!("failed to read {}", input.display()))?;
-    let model = declart_core::parse(&content)
+    let model = declart_core::parse_auto(&content)
         .with_context(|| format!("invalid declaration: {}", input.display()))?;
     let svg = declart_core::render_opts(&model, theme, width)?;
     match format {
@@ -362,6 +362,43 @@ label = "Stage 2"
 
 [[items]]
 label = "Stage 3"
+"#,
+        ),
+        "comparison" => Some(
+            r#"kind = "comparison"
+title = "My Comparison"
+
+[[rows]]
+label = "Option A"
+
+[[rows]]
+label = "Option B"
+
+[[columns]]
+label = "Criterion 1"
+
+[[columns]]
+label = "Criterion 2"
+
+[[cells]]
+row = "Option A"
+column = "Criterion 1"
+value = "★★★"
+
+[[cells]]
+row = "Option A"
+column = "Criterion 2"
+value = "★★"
+
+[[cells]]
+row = "Option B"
+column = "Criterion 1"
+value = "★★"
+
+[[cells]]
+row = "Option B"
+column = "Criterion 2"
+value = "★★★★"
 "#,
         ),
         _ => None,

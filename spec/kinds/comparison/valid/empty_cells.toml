@@ -1,0 +1,14 @@
+kind = "comparison"
+title = "Sparse Table"
+
+[[rows]]
+label = "A"
+
+[[rows]]
+label = "B"
+
+[[columns]]
+label = "X"
+
+[[columns]]
+label = "Y"

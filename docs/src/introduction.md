@@ -67,6 +67,7 @@ let svg = render(&diagram, &DEFAULT_THEME)?;
 | `fishbone` | Cause-and-effect, root cause analysis |
 | `org_chart` | Hierarchical trees, organizational structures |
 | `funnel` | Conversion funnels, sales pipelines |
+| `comparison` | Item-vs-criteria tables, feature matrices |
 
 ## Design Philosophy
 

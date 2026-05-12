@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.12.0
+
+Ecosystem expansion: distribution automation, JSON input, ESM npm package, Comparison table kind.
+
+- **GitHub Releases** (`release.yml`): cross-platform binaries for Linux musl, macOS (x86_64 + arm64), Windows — tag a `v*` release to trigger
+- **install.sh / install.ps1**: one-line install scripts for each platform
+- **cargo-binstall**: `[package.metadata.binstall]` manifest for `cargo binstall declart`
+- **JSON input** (`parse_json`, `parse_auto`): accepts JSON equivalents of all TOML declarations; CLI and WASM auto-detect format
+- **WASM `render_json()`**: explicit JSON rendering entry point
+- **`@iyulab/declart` ESM**: `exports.import` → `index.mjs`; `renderJson`, `renderWithThemeToml` exposed
+- **Comparison table kind** (`kind = "comparison"`): rows × columns grid with optional cell values; 1–10 rows, 1–8 columns
+- **Spec JSON examples**: `valid/basic.json` for all 11 kinds
+- **141 tests**
+
 ## v0.11.0
 
 Visualization quality hardening (Phase 11-A/B) + LLM-friendly documentation.

@@ -1,7 +1,16 @@
 [package]
 name = "declart-cli"
-version = "0.11.0"
+version = "0.12.0"
 edition = "2021"
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/declart-v{ version }-{ target }.tar.gz"
+bin-dir = "declart{ binary-ext }"
+pkg-fmt = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/declart-v{ version }-{ target }.zip"
+pkg-fmt = "zip"
 
 [[bin]]
 name = "declart"

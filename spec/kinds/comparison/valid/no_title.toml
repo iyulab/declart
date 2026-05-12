@@ -1,0 +1,23 @@
+kind = "comparison"
+
+[[rows]]
+label = "Plan A"
+
+[[rows]]
+label = "Plan B"
+
+[[columns]]
+label = "Cost"
+
+[[columns]]
+label = "Risk"
+
+[[cells]]
+row = "Plan A"
+column = "Cost"
+value = "Low"
+
+[[cells]]
+row = "Plan B"
+column = "Risk"
+value = "High"

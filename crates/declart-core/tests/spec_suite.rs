@@ -11,16 +11,20 @@ fn assert_valid_examples(kind: &str) {
     let entries: Vec<_> = fs::read_dir(&dir)
         .unwrap_or_else(|_| panic!("spec dir not found: {}", dir.display()))
         .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension() == Some(OsStr::new("toml")))
+        .filter(|e| {
+            let p = e.path();
+            let ext = p.extension().and_then(|s| s.to_str()).unwrap_or("");
+            ext == "toml" || ext == "json"
+        })
         .collect();
 
-    assert!(!entries.is_empty(), "no valid TOML examples found in {}", dir.display());
+    assert!(!entries.is_empty(), "no valid examples found in {}", dir.display());
 
     for entry in entries {
         let path = entry.path();
         let content = fs::read_to_string(&path)
             .unwrap_or_else(|_| panic!("failed to read {}", path.display()));
-        let result = declart_core::parse(&content);
+        let result = declart_core::parse_auto(&content);
         assert!(
             result.is_ok(),
             "Expected {:?} to be valid, got error:\n  {}",
@@ -151,6 +155,16 @@ fn funnel_valid_examples_parse_successfully() {
 #[test]
 fn funnel_invalid_examples_fail_to_parse() {
     assert_invalid_examples("funnel");
+}
+
+#[test]
+fn comparison_valid_examples_parse_successfully() {
+    assert_valid_examples("comparison");
+}
+
+#[test]
+fn comparison_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("comparison");
 }
 
 fn assert_valid_themes() {
