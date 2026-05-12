@@ -65,52 +65,21 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-v0.11.0 — Visualization quality hardening (Phase 11-A/B): Fishbone max 20 causes validation, Funnel max 10 stages, Timeline dynamic label-available width (density-aware), Matrix axis label scale/truncation, LLM-friendly documentation (llm-guide.md, 10 kinds × prompt templates).
+**Current: v0.11.0** — 10 diagram kinds, 4+custom themes, CLI/WASM/FFI/Node.js, interactive playground, LLM guide. 123 tests.
 
-v0.10.0 — User-defined TOML themes (`Theme::from_toml`, `--theme file.toml`, `render_with_theme_toml` WASM), truncate_text full integration (all 10 renderers), `is_dark()` WCAG threshold improvement, Org Chart layout fix (asymmetric subtree centering), spec/themes/ suite.
+| Capability | State |
+|------------|-------|
+| 10 diagram kinds (pyramid → funnel) | ✅ |
+| 4 built-in themes + user-defined TOML themes | ✅ |
+| CLI (`render`, `validate`, `init`, `watch`, `--format png`) | ✅ |
+| WASM bindings (`declart-wasm`) | ✅ |
+| C ABI (`declart-ffi` + `declart.h`) | ✅ |
+| Node.js package (`@iyulab/declart`) | ✅ |
+| Interactive playground (live WASM, URL permalink, zoom/pan) | ✅ |
+| Spec site (mdBook + GitHub Actions CI) | ✅ (GitHub Pages: enable in repo Settings) |
+| LLM guide (prompt templates for all 10 kinds) | ✅ |
 
-v0.9.0 — Org Chart kind (hierarchical tree), Funnel kind (tapered stages), accessible/warm themes (Okabe-Ito + terracotta), truncate_text() helper (ellipsis for long labels), Hub-Spoke min-2 spokes validation, Phase 8-C research (theme system design + expressiveness levers).
-
-v0.8.0 — Fishbone standard visuals (arrowhead + diagonal sub-items), Matrix quadrant position field, Playground Header/Footer branding, URL permalink, Preview zoom/pan, label_size_min accessibility improvement, Timeline dynamic canvas width.
-
-| Area | Status |
-|------|--------|
-| All 8 original diagram kinds | ✅ v0.3 |
-| Emphasis rendering, `init`, themes, width, error locations | ✅ v0.4 |
-| `declart-core` public API (doc comments, `Theme::by_name`) | ✅ v0.5 |
-| WASM bindings (`declart-wasm`) | ✅ v0.5 |
-| C ABI (`declart-ffi` + `declart.h`) | ✅ v0.5 |
-| Node.js npm package (`@iyulab/declart`) | ✅ v0.5 |
-| Spec site (mdBook skeleton + CI) | ✅ v0.5 (GitHub Pages not yet enabled) |
-| Interactive playground (WASM, all 8 kinds, live render) | ✅ v0.5.1 |
-| PNG export (`--format png`) | ✅ v0.6 |
-| Watch mode (`declart watch`) | ✅ v0.6 |
-| Hub-Spoke / Cycle connector rendering fix | ✅ v0.7 |
-| Pyramid apex label (leader line) | ✅ v0.7 |
-| Matrix axis direction (Low/High) | ✅ v0.7 |
-| Playground v2 (draft, export, error UX, resize) | ✅ v0.7 |
-| Fishbone fish head (arrowhead) + diagonal sub-items | ✅ v0.8 |
-| Matrix quadrant `position` field (explicit cell mapping) | ✅ v0.8 |
-| Playground URL permalink (base64 `?d=` sharing) | ✅ v0.8 |
-| Playground Header/Footer branding (GitHub, Docs, license) | ✅ v0.8 |
-| Playground Preview zoom/pan (wheel + drag + fit) | ✅ v0.8 |
-| Timeline dynamic canvas width (n × 55px minimum spacing) | ✅ v0.8 |
-| accessible theme (Okabe-Ito Blue palette, color-blind safe) | ✅ v0.9 |
-| warm theme (terracotta gradient for consulting decks) | ✅ v0.9 |
-| `truncate_text()` helper (ellipsis for over-width labels in Process) | ✅ v0.9 |
-| Hub-Spoke min 2 spokes validation | ✅ v0.9 |
-| Org Chart kind (hierarchical tree, flat TOML + parent refs) | ✅ v0.9 |
-| Funnel kind (tapered stages, marketing/sales pipelines) | ✅ v0.9 |
-| `truncate_text()` full integration (all 10 renderers) | ✅ v0.10 |
-| `is_dark()` WCAG AA threshold improvement (140→128) | ✅ v0.10 |
-| User-defined TOML themes (`--theme file.toml`, `Theme::from_toml`) | ✅ v0.10 |
-| Playground Custom theme TOML editor | ✅ v0.10 |
-| Org Chart layout fix (asymmetric tree centering) | ✅ v0.10 |
-| Fishbone max causes validation (>20 rejected, ≤8 recommended) | ✅ v0.11 |
-| Funnel max stages validation (>10 rejected) | ✅ v0.11 |
-| Timeline density-aware label available width | ✅ v0.11 |
-| Matrix axis label scale + truncation | ✅ v0.11 |
-| LLM guide (docs/llm-guide.md, 10 kinds × prompt templates) | ✅ v0.11 |
+See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 
