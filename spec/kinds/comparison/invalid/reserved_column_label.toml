@@ -1,0 +1,7 @@
+kind = "comparison"
+
+[[columns]]
+label = "label"
+
+[[rows]]
+label = "Row 1"

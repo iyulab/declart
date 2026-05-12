@@ -1,0 +1,16 @@
+kind = "hierarchy"
+title = "Delivery Issues"
+
+[[nodes]]
+label = "People"
+
+[[nodes]]
+label = "Understaffed"
+parent = "People"
+
+[[nodes]]
+label = "Process"
+
+[[nodes]]
+label = "Manual steps"
+parent = "Process"
