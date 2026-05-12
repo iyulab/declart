@@ -43,14 +43,31 @@ Declart organizes declarations on two axes.
 **View** is the *semantic intent*. It declares how the engine should interpret and render the data within its kind. View is optional: when omitted, the engine selects the most appropriate rendering automatically.
 
 ```toml
-kind = "sequence"   # data contract: ordered list of labeled items
-view = "cycle"      # intent: interpret this sequence as a repeating loop
+kind = "flow"     # data contract: items that pass through stages
+view = "cycle"    # intent: interpret this flow as a repeating loop
 
 [[items]]
 label = "Plan"
 ```
 
-`view = "cycle"` is a semantic declaration, not a visual instruction. It means "this sequence is intended to be understood as a closed loop." The engine decides what that looks like. View values occupy the same space as `emphasis = "primary"`: they express *meaning*, not *appearance*.
+`view = "cycle"` is a semantic declaration, not a visual instruction. It means "this flow is intended to be understood as a closed loop." The engine decides what that looks like. View values occupy the same space as `emphasis = "primary"`: they express *meaning*, not *appearance*.
+
+### Naming principle
+
+> **Kind names describe the relationship between items — not their visual form.**
+
+The test: *"What is the relationship between these items?"* If the answer changes, the kind changes. If only the visual changes, the view changes.
+
+| Kind | Relationship | Decision question |
+|------|-------------|-------------------|
+| `flow` | Sequential stages | Do items pass through stages? |
+| `tier` | Ranked levels | Are items ranked by importance or abstraction? |
+| `hierarchy` | Parent-child tree | Do items have explicit parent references? |
+| `timeline` | Temporal position | Do items have dates? |
+| `matrix` | Two-axis position | Are items placed in a 2×2 grid? |
+| `hub_spoke` | Radial connection | Do items radiate from a center? |
+| `venn` | Set intersection | Are items overlapping groups? |
+| `comparison` | Criteria evaluation | Are items evaluated against columns? |
 
 ### Decision rule
 
