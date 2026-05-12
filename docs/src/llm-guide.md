@@ -2,6 +2,8 @@
 
 Declart's TOML format is designed for LLM generation. The structure is explicit and validated — an LLM can produce a well-formed diagram in one shot, and `declart validate` catches any mistakes before rendering.
 
+<button onclick="(async()=>{const b=this;try{b.textContent='⏳ 로딩 중...';const r=await fetch('https://raw.githubusercontent.com/iyulab/declart/main/docs/src/llm-guide.md');const t=await r.text();await navigator.clipboard.writeText(t);b.textContent='✅ 복사 완료!';}catch(e){b.textContent='❌ 실패: '+e.message;}setTimeout(()=>b.textContent='📋 이 가이드 전체 마크다운 복사',3000);})()" style="margin:0.5em 0 1.5em;padding:6px 14px;cursor:pointer;border-radius:4px;border:1px solid currentColor;background:transparent;font-size:0.9em;opacity:0.85">📋 이 가이드 전체 마크다운 복사</button>
+
 ## Why Declart works well with LLMs
 
 - **No layout decisions**: the LLM only writes content (labels, structure). The engine handles all visual choices.
