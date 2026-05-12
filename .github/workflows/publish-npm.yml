@@ -43,8 +43,7 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build WASM (nodejs target)
-        run: wasm-pack build crates/declart-wasm --target nodejs --out-dir ../../packages/declart-node/wasm
-        working-directory: crates/declart-wasm
+        run: wasm-pack build crates/declart-wasm --target nodejs --out-dir packages/declart-node/wasm
 
       - name: Extract version from tag
         id: version
