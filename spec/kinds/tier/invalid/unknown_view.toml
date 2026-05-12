@@ -1,0 +1,5 @@
+kind = "tier"
+view = "cycle"
+
+[[items]]
+label = "A"

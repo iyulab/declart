@@ -2,8 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import plugin from './index.js';
 
-const PYRAMID_TEXT = `kind = "sequence"
-view = "pyramid"
+const PYRAMID_TEXT = `kind = "tier"
 title = "Test"
 
 [[items]]

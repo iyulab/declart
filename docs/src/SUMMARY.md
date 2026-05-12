@@ -20,7 +20,8 @@
 
 # Diagram Kinds
 
-- [Sequence](kinds/sequence.md)
+- [Flow](kinds/flow.md)
+- [Tier](kinds/tier.md)
 - [Hierarchy](kinds/hierarchy.md)
 - [Timeline](kinds/timeline.md)
 - [Matrix](kinds/matrix.md)

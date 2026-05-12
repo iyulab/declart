@@ -135,11 +135,11 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.16.0** — kind+view 2단계 아키텍처 (11 kinds → 7 kinds + view layer). 152 tests.
+**Current: v0.17.0** — 설계 무결성: `sequence`→`flow`, `tier` kind 신설, hierarchy `id`/`effect`, CLI 경고. 167 tests.
 
 | Capability | State |
 |------------|-------|
-| 7 diagram kinds (`sequence`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`) + view layer | ✅ |
+| 8 diagram kinds (`flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`) + view layer | ✅ |
 | 4 built-in themes + user-defined TOML themes | ✅ |
 | TOML + JSON input (`parse_auto`) | ✅ |
 | CLI (`render`, `validate`, `init`, `watch`, `--format png`) | ✅ |

@@ -1,0 +1,9 @@
+kind = "hierarchy"
+
+[[nodes]]
+id = "same"
+label = "Node A"
+
+[[nodes]]
+id = "same"
+label = "Node B"

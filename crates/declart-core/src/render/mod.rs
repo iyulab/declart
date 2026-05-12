@@ -1,6 +1,7 @@
 pub(crate) mod comparison;
 pub(crate) mod cycle;
 pub(crate) mod fishbone;
+pub(crate) mod flow;
 pub(crate) mod font;
 pub(crate) mod funnel;
 pub(crate) mod hub_spoke;
@@ -8,7 +9,6 @@ pub(crate) mod matrix;
 pub(crate) mod org_chart;
 pub(crate) mod process;
 pub(crate) mod pyramid;
-pub(crate) mod sequence;
 mod svg;
 pub mod theme;
 pub(crate) mod timeline;
@@ -27,8 +27,9 @@ pub fn render(diagram: &Diagram, theme: &Theme) -> Result<String, DeclartError> 
 /// scaled to that pixel width while the internal viewBox is preserved.
 pub fn render_opts(diagram: &Diagram, theme: &Theme, width: Option<u32>) -> Result<String, DeclartError> {
     let svg = match diagram {
-        Diagram::Sequence(d)   => sequence::render_sequence(d, theme),
-        Diagram::Hierarchy(d)  => sequence::render_hierarchy(d, theme),
+        Diagram::Flow(d)       => flow::render_flow(d, theme),
+        Diagram::Tier(d)       => flow::render_tier(d, theme),
+        Diagram::Hierarchy(d)  => flow::render_hierarchy(d, theme),
         Diagram::Matrix(d) => matrix::render(d, theme),
         Diagram::HubSpoke(d) => hub_spoke::render(d, theme),
         Diagram::Venn(d) => venn::render(d, theme),

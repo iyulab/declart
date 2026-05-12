@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.17.0
+
+Design integrity release — naming correctness, id-based references, fishbone effect field, CLI warnings.
+
+- **`sequence` → `flow`** (breaking): `kind = "sequence"` renamed to `kind = "flow"`. Using `kind = "sequence"` now produces a migration hint: `` `sequence` was renamed to `flow` in v0.17 ``.
+- **`tier` kind** (new): `kind = "tier"` + `view = "pyramid"` for ranked/layered diagrams. Previously `sequence + view = "pyramid"` — now semantically correct. Using `kind = "flow" + view = "pyramid"` gives a migration hint.
+- **Hierarchy `id` field**: `HierarchyNode` gains optional `id: Option<String>`. Set `id = "cto"` to allow `parent = "cto"` references that survive label renames. Backward compatible — label-based parent still works.
+- **Fishbone `effect` field**: `HierarchyDiagram` gains `effect: Option<String>`. When set, used as the spine-end label instead of `title`. Separates chart title from the effect being analyzed.
+- **Hierarchy auto-select CLI warning**: `declart render`/`declart validate` emits `warning: hierarchy view auto-selected: org_chart (1 root node)` + hint when `view` is omitted. Rendering proceeds normally.
+- **Kind taxonomy** (8 kinds): `flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`.
+- **Tests**: 167 pass.
+
 ## v0.16.0
 
 kind+view 2단계 아키텍처 — 11 kinds → 7 kinds + view layer.

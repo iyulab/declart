@@ -24,7 +24,7 @@ const result = await unified()
   .use(rehypeStringify)
   .process(`
 \`\`\`declart
-kind = "sequence"
+kind = "flow"
 title = "Release Pipeline"
 
 [[items]]
@@ -59,7 +59,7 @@ Invalid diagram declarations produce a `<figure class="declart-error">` element 
 
 ## Supported diagram kinds
 
-`pyramid` · `process` · `cycle` · `matrix` · `hub_spoke` · `venn` · `timeline` · `fishbone` · `org_chart` · `funnel` · `comparison`
+`flow` (process · cycle · funnel) · `tier` (pyramid) · `hierarchy` (org_chart · fishbone) · `matrix` · `hub_spoke` · `venn` · `timeline` · `comparison`
 
 ## License
 

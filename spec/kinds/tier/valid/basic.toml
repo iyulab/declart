@@ -1,9 +1,8 @@
-kind = "sequence"
-view = "pyramid"
+kind = "tier"
 title = "Maslow's Hierarchy of Needs"
 
 [[items]]
-label = "Self-actualization"
+label = "Self-Actualization"
 
 [[items]]
 label = "Esteem"

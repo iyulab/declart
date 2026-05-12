@@ -20,7 +20,8 @@ Declart v0.16+ uses a two-level structure:
 
 | kind | views | Notes |
 |------|-------|-------|
-| `sequence` | `process` (default), `cycle`, `funnel`, `pyramid` | `view` optional — defaults to `process` |
+| `flow` | `process` (default), `cycle`, `funnel` | `view` optional — defaults to `process` |
+| `tier` | `pyramid` (default) | Ranked levels — `view` optional |
 | `hierarchy` | `org_chart`, `fishbone` | `view` optional — auto-selected by root count |
 | `timeline` | — | No view field |
 | `matrix` | — | No view field |
@@ -42,13 +43,12 @@ If `validate` fails, paste the error message back to the LLM and ask it to fix t
 
 ## Prompt Templates
 
-### Pyramid — Hierarchies, priority layers
+### Tier (Pyramid) — Hierarchies, priority layers
 
-**Prompt**: *"Generate a Declart TOML diagram showing Maslow's hierarchy of needs as a pyramid. Use kind = 'sequence' and view = 'pyramid', include a title, and list the 5 levels as items from top (apex) to bottom (base)."*
+**Prompt**: *"Generate a Declart TOML diagram showing Maslow's hierarchy of needs as a pyramid. Use kind = 'tier', include a title, and list the 5 levels as items from top (apex) to bottom (base)."*
 
 ```toml
-kind = "sequence"
-view = "pyramid"
+kind = "tier"
 title = "Maslow's Hierarchy of Needs"
 
 [[items]]
@@ -72,10 +72,10 @@ emphasis = "primary"
 
 ### Process — Sequential steps, workflows
 
-**Prompt**: *"Create a Declart TOML diagram for a 4-step CI/CD pipeline. Use kind = 'sequence' (process view is the default)."*
+**Prompt**: *"Create a Declart TOML diagram for a 4-step CI/CD pipeline. Use kind = 'flow' (process view is the default)."*
 
 ```toml
-kind = "sequence"
+kind = "flow"
 title = "CI/CD Pipeline"
 
 [[items]]
@@ -96,10 +96,10 @@ label = "Deploy"
 
 ### Cycle — Closed loops, PDCA, lifecycles
 
-**Prompt**: *"Generate a Declart TOML diagram for the PDCA improvement cycle. Use kind = 'sequence' and view = 'cycle'."*
+**Prompt**: *"Generate a Declart TOML diagram for the PDCA improvement cycle. Use kind = 'flow' and view = 'cycle'."*
 
 ```toml
-kind = "sequence"
+kind = "flow"
 view = "cycle"
 title = "PDCA Cycle"
 
@@ -309,10 +309,10 @@ parent = "Backend Lead"
 
 ### Funnel — Conversion funnels, sales pipelines
 
-**Prompt**: *"Generate a Declart funnel for a 5-stage sales pipeline. Use kind = 'sequence' and view = 'funnel'."*
+**Prompt**: *"Generate a Declart funnel for a 5-stage sales pipeline. Use kind = 'flow' and view = 'funnel'."*
 
 ```toml
-kind = "sequence"
+kind = "flow"
 view = "funnel"
 title = "Sales Pipeline"
 
@@ -378,7 +378,8 @@ Performance = "★★★★★"
 | `view` is optional | Omit to use the default; include to declare intent explicitly |
 | No unknown fields | Don't add `color`, `style`, or other keys not in the spec |
 | `emphasis` values | Only `"primary"` or `"secondary"` |
-| Sequence views | `kind = "sequence"` + `view`: `process` (default), `cycle`, `funnel`, `pyramid` |
+| Flow views | `kind = "flow"` + `view`: `process` (default), `cycle`, `funnel` |
+| Tier views | `kind = "tier"` + `view`: `pyramid` (default and only) |
 | Hierarchy nodes | `label` must be unique; `parent` references another node's `label` |
 | Hierarchy auto-select | 1 root → `org_chart`; 2+ roots → `fishbone` (or set `view` explicitly) |
 | Fishbone `title` | Rendered as the effect label (right end of spine), not a heading |

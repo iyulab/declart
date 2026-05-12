@@ -1,0 +1,5 @@
+kind = "flow"
+view = "pyramid"
+
+[[items]]
+label = "A"

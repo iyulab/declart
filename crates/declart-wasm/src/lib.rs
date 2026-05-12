@@ -69,7 +69,7 @@ pub fn themes() -> String {
 /// Returns a comma-separated list of supported diagram kind names.
 #[wasm_bindgen]
 pub fn kinds() -> String {
-    "sequence,hierarchy,timeline,matrix,hub_spoke,venn,comparison".to_string()
+    "flow,tier,hierarchy,timeline,matrix,hub_spoke,venn,comparison".to_string()
 }
 
 #[cfg(test)]
@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn render_valid_pyramid() {
-        let input = "kind = \"sequence\"\nview = \"pyramid\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
+        let input = "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
         let svg = render(input, "default", None).unwrap();
         assert!(svg.contains("<svg"), "expected SVG output");
         assert!(svg.contains("Top"), "SVG should contain label text");
@@ -86,21 +86,21 @@ mod tests {
 
     #[test]
     fn render_with_width() {
-        let input = "kind = \"sequence\"\nview = \"pyramid\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
+        let input = "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
         let svg = render(input, "default", Some(400)).unwrap();
         assert!(svg.contains("width=\"400\""), "expected width=400 in SVG");
     }
 
     #[test]
     fn render_unknown_theme_falls_back() {
-        let input = "kind = \"sequence\"\nview = \"pyramid\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
+        let input = "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
         let svg = render(input, "nonexistent", None).unwrap();
         assert!(svg.contains("<svg"));
     }
 
     #[test]
     fn validate_valid_input() {
-        let input = "kind = \"sequence\"\n[[items]]\nlabel = \"Item\"\n";
+        let input = "kind = \"flow\"\n[[items]]\nlabel = \"Item\"\n";
         assert!(validate(input).is_ok());
     }
 
@@ -119,7 +119,7 @@ mod tests {
 
     #[test]
     fn render_with_theme_toml_valid() {
-        let diagram = "kind = \"sequence\"\nview = \"pyramid\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
+        let diagram = "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
         let theme = r##"
 [colors]
 apex       = "#003087"
@@ -143,7 +143,8 @@ title      = "#003087"
     #[test]
     fn kinds_returns_all_supported() {
         let k = kinds();
-        assert!(k.contains("sequence"));
+        assert!(k.contains("flow"));
+        assert!(k.contains("tier"));
         assert!(k.contains("hierarchy"));
         assert!(k.contains("timeline"));
         assert!(k.contains("comparison"));
@@ -151,7 +152,7 @@ title      = "#003087"
 
     #[test]
     fn render_json_valid_pyramid() {
-        let input = r#"{"kind":"sequence","view":"pyramid","items":[{"label":"Top"},{"label":"Bottom"}]}"#;
+        let input = r#"{"kind":"tier","items":[{"label":"Top"},{"label":"Bottom"}]}"#;
         let svg = render_json(input, "default", None).unwrap();
         assert!(svg.contains("<svg"));
         assert!(svg.contains("Top"));
@@ -165,7 +166,7 @@ title      = "#003087"
 
     #[test]
     fn render_auto_detects_json() {
-        let json = r#"{"kind":"sequence","items":[{"label":"A"},{"label":"B"}]}"#;
+        let json = r#"{"kind":"flow","items":[{"label":"A"},{"label":"B"}]}"#;
         let svg = render(json, "default", None).unwrap();
         assert!(svg.contains("<svg"));
     }

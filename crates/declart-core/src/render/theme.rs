@@ -297,17 +297,26 @@ title      = "#003087"
     }
 
     #[test]
-    fn from_toml_renders_sequence() {
-        // Verify that a sequence/pyramid diagram parses successfully with the new kind name.
-        // Full render integration will be validated in Task 4 once the render layer is updated.
+    fn from_toml_renders_flow() {
         let _theme = Theme::from_toml(VALID_TOML).unwrap();
-        let diagram = crate::parse::parse(r#"kind="sequence"
-view="pyramid"
+        let diagram = crate::parse::parse(r#"kind="flow"
+view="cycle"
+[[items]]
+label="Plan"
+[[items]]
+label="Do""#).unwrap();
+        assert!(matches!(diagram, crate::model::Diagram::Flow(_)));
+    }
+
+    #[test]
+    fn from_toml_renders_tier() {
+        let _theme = Theme::from_toml(VALID_TOML).unwrap();
+        let diagram = crate::parse::parse(r#"kind="tier"
 [[items]]
 label="Top"
 [[items]]
 label="Bottom""#).unwrap();
-        assert!(matches!(diagram, crate::model::Diagram::Sequence(_)));
+        assert!(matches!(diagram, crate::model::Diagram::Tier(_)));
     }
 
     #[test]

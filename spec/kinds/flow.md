@@ -1,15 +1,15 @@
-# Sequence
+# Flow
 
-A sequence diagram represents an ordered list of labeled items. The `view` field determines how the sequence is interpreted and rendered.
+A flow diagram represents an ordered list of labeled items. The `view` field determines how the flow is interpreted and rendered.
 
 ## Fields
 
-| Field   | Required | Type          | Description                          |
-|---------|----------|---------------|--------------------------------------|
-| `kind`  | yes      | `"sequence"`  | Must be exactly `"sequence"`         |
-| `view`  | no       | string        | Rendering intent. Default: `process` |
-| `title` | no       | string        | Title rendered above the diagram     |
-| `items` | yes      | array of Item | At least one item required           |
+| Field   | Required | Type       | Description                          |
+|---------|----------|------------|--------------------------------------|
+| `kind`  | yes      | `"flow"`   | Must be exactly `"flow"`             |
+| `view`  | no       | string     | Rendering intent. Default: `process` |
+| `title` | no       | string     | Title rendered above the diagram     |
+| `items` | yes      | array of Item | At least one item required        |
 
 ## Item fields
 
@@ -25,14 +25,15 @@ A sequence diagram represents an ordered list of labeled items. The `view` field
 | `process` | Linear left-to-right steps (default)             | 1         | —         |
 | `cycle`   | Closed loop — last item connects to first        | 2         | —         |
 | `funnel`  | Tapering stages (conversion/filtering)           | 2         | 10        |
-| `pyramid` | Stacked layers from apex (first) to base (last)  | 1         | —         |
 
 When `view` is omitted, the engine uses `process`.
+
+> For ranked/layered visuals (pyramid), use `kind = "tier"` instead.
 
 ## Example
 
 ```declart
-kind = "sequence"
+kind = "flow"
 view = "cycle"
 title = "PDCA"
 

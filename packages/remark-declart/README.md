@@ -20,8 +20,7 @@ const result = await remark()
   .use(remarkHtml, { sanitize: false })
   .process(`
 \`\`\`declart
-kind = "sequence"
-view = "pyramid"
+kind = "tier"
 title = "Maslow's Hierarchy"
 
 [[items]]
@@ -72,7 +71,7 @@ Works with any remark-based pipeline:
 
 ## Supported diagram kinds
 
-`pyramid` · `process` · `cycle` · `matrix` · `hub_spoke` · `venn` · `timeline` · `fishbone` · `org_chart` · `funnel` · `comparison`
+`flow` (process · cycle · funnel) · `tier` (pyramid) · `hierarchy` (org_chart · fishbone) · `matrix` · `hub_spoke` · `venn` · `timeline` · `comparison`
 
 ## License
 

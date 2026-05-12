@@ -58,13 +58,23 @@ fn assert_invalid_examples(kind: &str) {
 }
 
 #[test]
-fn sequence_valid_examples_parse_successfully() {
-    assert_valid_examples("sequence");
+fn flow_valid_examples_parse_successfully() {
+    assert_valid_examples("flow");
 }
 
 #[test]
-fn sequence_invalid_examples_fail_to_parse() {
-    assert_invalid_examples("sequence");
+fn flow_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("flow");
+}
+
+#[test]
+fn tier_valid_examples_parse_successfully() {
+    assert_valid_examples("tier");
+}
+
+#[test]
+fn tier_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("tier");
 }
 
 #[test]

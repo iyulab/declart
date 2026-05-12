@@ -75,6 +75,6 @@ export function isDeclartDocument(doc: vscode.TextDocument): boolean {
     return false;
   }
   const text = doc.getText();
-  // TOML: kind = "sequence"  |  JSON: "kind": "sequence"
+  // TOML: kind = "flow"  |  JSON: "kind": "flow"
   return /^\s*kind\s*=\s*"[^"]+"/m.test(text) || /"kind"\s*:\s*"[^"]+"/m.test(text);
 }

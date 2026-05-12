@@ -1,0 +1,24 @@
+kind = "hierarchy"
+title = "Engineering Division"
+
+[[nodes]]
+id = "vp"
+label = "VP of Engineering"
+
+[[nodes]]
+id = "be"
+label = "Backend Team"
+parent = "vp"
+
+[[nodes]]
+id = "fe"
+label = "Frontend Team"
+parent = "vp"
+
+[[nodes]]
+label = "Alice"
+parent = "be"
+
+[[nodes]]
+label = "Bob"
+parent = "fe"

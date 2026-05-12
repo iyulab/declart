@@ -13,7 +13,7 @@ Declart is a declarative diagram engine. You write a TOML file describing the st
 cargo install declart-cli
 
 # Scaffold a starter diagram
-declart init sequence > diagram.toml
+declart init flow > diagram.toml
 
 # Render to SVG
 declart render diagram.toml
@@ -34,13 +34,13 @@ declart validate diagram.toml
 const declart = require('@iyulab/declart');
 
 const svg = declart.render(`
-kind = "sequence"
-view = "pyramid"
-title = "Maslow's Hierarchy"
+kind = "flow"
+view = "cycle"
+title = "PDCA"
 [[items]]
-label = "Self-actualization"
+label = "Plan"
 [[items]]
-label = "Safety"
+label = "Do"
 `);
 ```
 
@@ -58,7 +58,8 @@ let svg = render(&diagram, &DEFAULT_THEME)?;
 
 | Kind | Views |
 |------|-------|
-| `sequence` | `process` (default), `cycle`, `funnel`, `pyramid` |
+| `flow` | `process` (default), `cycle`, `funnel` |
+| `tier` | `pyramid` (default) |
 | `hierarchy` | `org_chart` (auto), `fishbone` (auto) |
 | `timeline` | — |
 | `matrix` | — |

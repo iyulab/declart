@@ -4,7 +4,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! declart-core = "0.14"
+//! declart-core = "0.17"
 //! ```
 //!
 //! ```rust,no_run
@@ -12,15 +12,15 @@
 //! use declart_core::render::DEFAULT_THEME;
 //!
 //! let input = r#"
-//! kind = "sequence"
-//! view = "pyramid"
+//! kind = "flow"
+//! view = "cycle"
 //! title = "Example"
 //!
 //! [[items]]
-//! label = "Top"
+//! label = "Plan"
 //!
 //! [[items]]
-//! label = "Bottom"
+//! label = "Do"
 //! "#;
 //!
 //! let diagram = parse(input).unwrap();
@@ -36,9 +36,10 @@ pub mod render;
 pub use error::DeclartError;
 pub use model::{
     ComparisonCell, ComparisonDiagram, Diagram, Emphasis,
+    FlowDiagram, FlowView,
+    TierDiagram, TierView,
     HierarchyDiagram, HierarchyNode, HierarchyView,
     HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram,
-    SequenceDiagram, SequenceView,
     TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet,
 };
 pub use parse::{parse, parse_auto, parse_json};

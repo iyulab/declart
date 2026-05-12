@@ -1,0 +1,18 @@
+kind = "hierarchy"
+view = "fishbone"
+title = "API Performance Analysis"
+effect = "Slow API Response"
+
+[[nodes]]
+label = "Materials"
+
+[[nodes]]
+label = "Methods"
+
+[[nodes]]
+label = "Database"
+parent = "Materials"
+
+[[nodes]]
+label = "Caching"
+parent = "Methods"

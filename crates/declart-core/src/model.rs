@@ -7,7 +7,7 @@ pub enum Emphasis {
     Secondary,
 }
 
-/// A labeled item with an optional emphasis hint. Used by Sequence diagrams and as spokes/quadrants.
+/// A labeled item with an optional emphasis hint. Used by Flow diagrams and as spokes/quadrants.
 #[derive(Debug, Clone)]
 pub struct Item {
     pub label: String,
@@ -21,20 +21,33 @@ pub struct ItemsDiagram {
     pub items: Vec<Item>,
 }
 
-/// View variant for a Sequence diagram — determines how the flat item list is rendered.
+/// View variant for a Flow diagram — determines how the flat item list is rendered.
 #[derive(Debug, Clone, PartialEq)]
-pub enum SequenceView {
+pub enum FlowView {
     Process,
     Cycle,
     Funnel,
+}
+
+/// Model for Flow diagrams (process / cycle / funnel views).
+#[derive(Debug, Clone)]
+pub struct FlowDiagram {
+    pub title: Option<String>,
+    pub view: FlowView,
+    pub items: Vec<Item>,
+}
+
+/// View variant for a Tier diagram.
+#[derive(Debug, Clone, PartialEq)]
+pub enum TierView {
     Pyramid,
 }
 
-/// Model for Sequence diagrams (process / cycle / funnel / pyramid views).
+/// Model for Tier diagrams — ranked levels rendered as stacked layers.
 #[derive(Debug, Clone)]
-pub struct SequenceDiagram {
+pub struct TierDiagram {
     pub title: Option<String>,
-    pub view: SequenceView,
+    pub view: TierView,
     pub items: Vec<Item>,
 }
 
@@ -45,18 +58,22 @@ pub enum HierarchyView {
     Fishbone,
 }
 
-/// A single node in a hierarchy diagram. `label` is the unique identifier;
-/// `parent` references the parent node's label (`None` for the root).
+/// A single node in a hierarchy diagram.
+/// `id` (if set) is the stable identifier for `parent` references; otherwise `label` is used.
+/// `parent` references another node's `id` (preferred) or `label`.
 #[derive(Debug, Clone)]
 pub struct HierarchyNode {
     pub label: String,
+    pub id: Option<String>,
     pub parent: Option<String>,
 }
 
 /// Model for Hierarchy diagrams (org_chart / fishbone views).
+/// `effect` (fishbone only) is the spine-end label; falls back to `title` if absent.
 #[derive(Debug, Clone)]
 pub struct HierarchyDiagram {
     pub title: Option<String>,
+    pub effect: Option<String>,
     pub view: HierarchyView,
     pub nodes: Vec<HierarchyNode>,
 }
@@ -171,7 +188,8 @@ pub struct ComparisonDiagram {
 /// The parsed, validated representation of a diagram declaration.
 #[derive(Debug, Clone)]
 pub enum Diagram {
-    Sequence(SequenceDiagram),
+    Flow(FlowDiagram),
+    Tier(TierDiagram),
     Hierarchy(HierarchyDiagram),
     Matrix(MatrixDiagram),
     HubSpoke(HubSpokeDiagram),
@@ -213,22 +231,34 @@ mod tests {
     }
 
     #[test]
-    fn sequence_diagram_holds_view_and_items() {
-        let d = SequenceDiagram {
+    fn flow_diagram_holds_view_and_items() {
+        let d = FlowDiagram {
             title: Some("PDCA".to_string()),
-            view: SequenceView::Cycle,
+            view: FlowView::Cycle,
             items: vec![Item { label: "Plan".to_string(), emphasis: None }],
         };
-        assert_eq!(d.view, SequenceView::Cycle);
+        assert_eq!(d.view, FlowView::Cycle);
         assert_eq!(d.items[0].label, "Plan");
+    }
+
+    #[test]
+    fn tier_diagram_holds_view_and_items() {
+        let d = TierDiagram {
+            title: Some("Maslow".to_string()),
+            view: TierView::Pyramid,
+            items: vec![Item { label: "Top".to_string(), emphasis: None }],
+        };
+        assert_eq!(d.view, TierView::Pyramid);
+        assert_eq!(d.items[0].label, "Top");
     }
 
     #[test]
     fn hierarchy_diagram_holds_view_and_nodes() {
         let d = HierarchyDiagram {
             title: Some("Org".to_string()),
+            effect: None,
             view: HierarchyView::OrgChart,
-            nodes: vec![HierarchyNode { label: "CEO".to_string(), parent: None }],
+            nodes: vec![HierarchyNode { label: "CEO".to_string(), id: None, parent: None }],
         };
         assert_eq!(d.view, HierarchyView::OrgChart);
         assert!(d.nodes[0].parent.is_none());

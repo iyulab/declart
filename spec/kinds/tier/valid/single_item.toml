@@ -1,0 +1,4 @@
+kind = "tier"
+
+[[items]]
+label = "Only Level"

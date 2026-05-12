@@ -3,16 +3,24 @@ mod raw;
 use crate::error::DeclartError;
 use crate::model::{
     ComparisonCell, ComparisonDiagram, Diagram, Emphasis,
+    FlowDiagram, FlowView,
+    TierDiagram, TierView,
     HierarchyDiagram, HierarchyNode, HierarchyView,
     HubSpokeDiagram, Item, MatrixDiagram,
-    SequenceDiagram, SequenceView, TimelineDiagram, TimelineEvent,
+    TimelineDiagram, TimelineEvent,
     VennDiagram, VennIntersection, VennSet,
 };
 
 pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
     let probe: raw::KindProbe = toml::from_str(input)?;
     match probe.kind.as_str() {
-        "sequence" => { let raw: raw::RawSequenceDiagram = toml::from_str(input)?; validate_sequence(raw) }
+        "flow" => { let raw: raw::RawFlowDiagram = toml::from_str(input)?; validate_flow(raw) }
+        "tier" => { let raw: raw::RawTierDiagram = toml::from_str(input)?; validate_tier(raw) }
+        "sequence" => Err(DeclartError::InvalidValue {
+            field: "kind".to_string(),
+            value: "sequence".to_string(),
+            hint: "`sequence` was renamed to `flow` in v0.17 — update your diagram to `kind = \"flow\"`".to_string(),
+        }),
         "hierarchy" => { let raw: raw::RawHierarchyDiagram = toml::from_str(input)?; validate_hierarchy(raw) }
         "matrix" => { let raw: raw::RawMatrixDiagram = toml::from_str(input)?; validate_matrix(raw) }
         "hub_spoke" => { let raw: raw::RawHubSpokeDiagram = toml::from_str(input)?; validate_hub_spoke(raw) }
@@ -26,7 +34,13 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
 pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
     let probe: raw::KindProbe = serde_json::from_str(input)?;
     match probe.kind.as_str() {
-        "sequence" => { let raw: raw::RawSequenceDiagram = serde_json::from_str(input)?; validate_sequence(raw) }
+        "flow" => { let raw: raw::RawFlowDiagram = serde_json::from_str(input)?; validate_flow(raw) }
+        "tier" => { let raw: raw::RawTierDiagram = serde_json::from_str(input)?; validate_tier(raw) }
+        "sequence" => Err(DeclartError::InvalidValue {
+            field: "kind".to_string(),
+            value: "sequence".to_string(),
+            hint: "`sequence` was renamed to `flow` in v0.17 — update your diagram to `\"kind\": \"flow\"`".to_string(),
+        }),
         "hierarchy" => { let raw: raw::RawHierarchyDiagram = serde_json::from_str(input)?; validate_hierarchy(raw) }
         "matrix" => { let raw: raw::RawMatrixDiagram = serde_json::from_str(input)?; validate_matrix(raw) }
         "hub_spoke" => { let raw: raw::RawHubSpokeDiagram = serde_json::from_str(input)?; validate_hub_spoke(raw) }
@@ -64,26 +78,30 @@ fn parse_items(raw_items: Vec<raw::RawItem>) -> Result<Vec<Item>, DeclartError> 
     }).collect()
 }
 
-fn validate_sequence(raw: raw::RawSequenceDiagram) -> Result<Diagram, DeclartError> {
+fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
     if raw.items.is_empty() { return Err(DeclartError::EmptyItems); }
     let view = match raw.view.as_deref() {
-        None | Some("process") => SequenceView::Process,
-        Some("cycle") => SequenceView::Cycle,
-        Some("funnel") => SequenceView::Funnel,
-        Some("pyramid") => SequenceView::Pyramid,
+        None | Some("process") => FlowView::Process,
+        Some("cycle") => FlowView::Cycle,
+        Some("funnel") => FlowView::Funnel,
+        Some("pyramid") => return Err(DeclartError::InvalidValue {
+            field: "view".to_string(),
+            value: "pyramid".to_string(),
+            hint: "pyramid is now a separate kind: use `kind = \"tier\"` with `view = \"pyramid\"` (or omit `view`)".to_string(),
+        }),
         Some(other) => return Err(DeclartError::InvalidValue {
             field: "view".to_string(),
             value: other.to_string(),
-            hint: "Valid view values for sequence: process, cycle, funnel, pyramid".to_string(),
+            hint: "Valid view values for flow: process, cycle, funnel".to_string(),
         }),
     };
     let n = raw.items.len();
     match view {
-        SequenceView::Cycle if n < 2 =>
-            return Err(DeclartError::TooFewItems { kind: "sequence/cycle", min: 2, got: n }),
-        SequenceView::Funnel if n < 2 =>
-            return Err(DeclartError::TooFewItems { kind: "sequence/funnel", min: 2, got: n }),
-        SequenceView::Funnel if n > 10 =>
+        FlowView::Cycle if n < 2 =>
+            return Err(DeclartError::TooFewItems { kind: "flow/cycle", min: 2, got: n }),
+        FlowView::Funnel if n < 2 =>
+            return Err(DeclartError::TooFewItems { kind: "flow/funnel", min: 2, got: n }),
+        FlowView::Funnel if n > 10 =>
             return Err(DeclartError::InvalidValue {
                 field: "items".to_string(),
                 value: format!("{n} items"),
@@ -92,11 +110,27 @@ fn validate_sequence(raw: raw::RawSequenceDiagram) -> Result<Diagram, DeclartErr
         _ => {}
     }
     let items = parse_items(raw.items)?;
-    Ok(Diagram::Sequence(SequenceDiagram { title: raw.title, view, items }))
+    Ok(Diagram::Flow(FlowDiagram { title: raw.title, view, items }))
+}
+
+fn validate_tier(raw: raw::RawTierDiagram) -> Result<Diagram, DeclartError> {
+    if raw.items.is_empty() { return Err(DeclartError::EmptyItems); }
+    let view = match raw.view.as_deref() {
+        None | Some("pyramid") => TierView::Pyramid,
+        Some(other) => return Err(DeclartError::InvalidValue {
+            field: "view".to_string(),
+            value: other.to_string(),
+            hint: "Valid view values for tier: pyramid".to_string(),
+        }),
+    };
+    let items = parse_items(raw.items)?;
+    Ok(Diagram::Tier(TierDiagram { title: raw.title, view, items }))
 }
 
 fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartError> {
     if raw.nodes.is_empty() { return Err(DeclartError::EmptyItems); }
+
+    // Build identifier sets. Each node is identified by its id (if set) or label.
     let labels: std::collections::HashSet<&str> = raw.nodes.iter().map(|n| n.label.as_str()).collect();
     if labels.len() != raw.nodes.len() {
         return Err(DeclartError::InvalidValue {
@@ -105,16 +139,33 @@ fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartE
             hint: "Each node label must be unique within the diagram".to_string(),
         });
     }
+
+    let ids: std::collections::HashSet<&str> = raw.nodes.iter()
+        .filter_map(|n| n.id.as_deref())
+        .collect();
+
+    // Check for duplicate ids
+    let id_count = raw.nodes.iter().filter(|n| n.id.is_some()).count();
+    if ids.len() != id_count {
+        return Err(DeclartError::InvalidValue {
+            field: "id".to_string(),
+            value: "(duplicate)".to_string(),
+            hint: "Each node id must be unique within the diagram".to_string(),
+        });
+    }
+
+    // Validate parent references: parent can match an id or a label
     for node in &raw.nodes {
+        let node_key = node.id.as_deref().unwrap_or(&node.label);
         if let Some(parent) = &node.parent {
-            if !labels.contains(parent.as_str()) {
+            if !ids.contains(parent.as_str()) && !labels.contains(parent.as_str()) {
                 return Err(DeclartError::InvalidValue {
                     field: "parent".to_string(),
                     value: parent.clone(),
-                    hint: "parent must reference an existing node label".to_string(),
+                    hint: "parent must reference an existing node id or label".to_string(),
                 });
             }
-            if node.label == *parent {
+            if node_key == parent.as_str() || node.label == *parent {
                 return Err(DeclartError::InvalidValue {
                     field: "parent".to_string(),
                     value: parent.clone(),
@@ -123,6 +174,7 @@ fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartE
             }
         }
     }
+
     let root_count = raw.nodes.iter().filter(|n| n.parent.is_none()).count();
     if root_count == 0 {
         return Err(DeclartError::InvalidValue {
@@ -158,8 +210,8 @@ fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartE
             }),
         _ => {}
     }
-    let nodes = raw.nodes.into_iter().map(|n| HierarchyNode { label: n.label, parent: n.parent }).collect();
-    Ok(Diagram::Hierarchy(HierarchyDiagram { title: raw.title, view, nodes }))
+    let nodes = raw.nodes.into_iter().map(|n| HierarchyNode { label: n.label, id: n.id, parent: n.parent }).collect();
+    Ok(Diagram::Hierarchy(HierarchyDiagram { title: raw.title, effect: raw.effect, view, nodes }))
 }
 
 fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> {
@@ -368,64 +420,93 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
 
 #[cfg(test)]
 mod tests {
-    use crate::model::{Diagram, HierarchyView, SequenceView};
+    use crate::model::{Diagram, FlowView, TierView, HierarchyView};
     use super::{parse, parse_auto, parse_json};
 
-    // --- sequence tests ---
+    // --- flow tests ---
 
     #[test]
-    fn parse_sequence_defaults_to_process_view() {
-        let input = "kind = \"sequence\"\n\n[[items]]\nlabel = \"Plan\"\n\n[[items]]\nlabel = \"Do\"\n";
+    fn parse_flow_defaults_to_process_view() {
+        let input = "kind = \"flow\"\n\n[[items]]\nlabel = \"Plan\"\n\n[[items]]\nlabel = \"Do\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Sequence(d) = diagram else { panic!("expected Sequence") };
-        assert_eq!(d.view, SequenceView::Process);
+        let Diagram::Flow(d) = diagram else { panic!("expected Flow") };
+        assert_eq!(d.view, FlowView::Process);
         assert_eq!(d.items.len(), 2);
     }
 
     #[test]
-    fn parse_sequence_explicit_view_cycle() {
-        let input = "kind = \"sequence\"\nview = \"cycle\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
+    fn parse_flow_explicit_view_cycle() {
+        let input = "kind = \"flow\"\nview = \"cycle\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Sequence(d) = diagram else { panic!() };
-        assert_eq!(d.view, SequenceView::Cycle);
+        let Diagram::Flow(d) = diagram else { panic!() };
+        assert_eq!(d.view, FlowView::Cycle);
     }
 
     #[test]
-    fn parse_sequence_explicit_view_funnel() {
-        let input = "kind = \"sequence\"\nview = \"funnel\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
+    fn parse_flow_explicit_view_funnel() {
+        let input = "kind = \"flow\"\nview = \"funnel\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Sequence(d) = diagram else { panic!() };
-        assert_eq!(d.view, SequenceView::Funnel);
+        let Diagram::Flow(d) = diagram else { panic!() };
+        assert_eq!(d.view, FlowView::Funnel);
     }
 
     #[test]
-    fn parse_sequence_explicit_view_pyramid() {
-        let input = "kind = \"sequence\"\nview = \"pyramid\"\n\n[[items]]\nlabel = \"Top\"\n";
-        let diagram = parse(input).unwrap();
-        let Diagram::Sequence(d) = diagram else { panic!() };
-        assert_eq!(d.view, SequenceView::Pyramid);
+    fn parse_flow_pyramid_view_gives_migration_hint() {
+        let input = "kind = \"flow\"\nview = \"pyramid\"\n\n[[items]]\nlabel = \"Top\"\n";
+        let err = parse(input).unwrap_err();
+        assert!(err.to_string().contains("tier"), "error should mention tier kind");
     }
 
     #[test]
-    fn parse_sequence_rejects_invalid_view() {
-        let input = "kind = \"sequence\"\nview = \"unknown\"\n\n[[items]]\nlabel = \"A\"\n";
+    fn parse_tier_defaults_to_pyramid_view() {
+        let input = "kind = \"tier\"\n\n[[items]]\nlabel = \"Top\"\n\n[[items]]\nlabel = \"Bottom\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Tier(d) = diagram else { panic!("expected Tier") };
+        assert_eq!(d.view, TierView::Pyramid);
+        assert_eq!(d.items.len(), 2);
+    }
+
+    #[test]
+    fn parse_tier_explicit_view_pyramid() {
+        let input = "kind = \"tier\"\nview = \"pyramid\"\n\n[[items]]\nlabel = \"A\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Tier(d) = diagram else { panic!() };
+        assert_eq!(d.view, TierView::Pyramid);
+    }
+
+    #[test]
+    fn parse_tier_rejects_invalid_view() {
+        let input = "kind = \"tier\"\nview = \"cycle\"\n\n[[items]]\nlabel = \"A\"\n";
         assert!(parse(input).is_err());
     }
 
     #[test]
-    fn parse_sequence_cycle_requires_two_items() {
-        let input = "kind = \"sequence\"\nview = \"cycle\"\n\n[[items]]\nlabel = \"Only\"\n";
+    fn parse_flow_rejects_invalid_view() {
+        let input = "kind = \"flow\"\nview = \"unknown\"\n\n[[items]]\nlabel = \"A\"\n";
         assert!(parse(input).is_err());
     }
 
     #[test]
-    fn parse_sequence_funnel_requires_two_items() {
-        let input = "kind = \"sequence\"\nview = \"funnel\"\n\n[[items]]\nlabel = \"Only\"\n";
+    fn parse_flow_cycle_requires_two_items() {
+        let input = "kind = \"flow\"\nview = \"cycle\"\n\n[[items]]\nlabel = \"Only\"\n";
         assert!(parse(input).is_err());
     }
 
     #[test]
-    fn parse_rejects_old_sequence_kind_names() {
+    fn parse_flow_funnel_requires_two_items() {
+        let input = "kind = \"flow\"\nview = \"funnel\"\n\n[[items]]\nlabel = \"Only\"\n";
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_sequence_gives_deprecation_hint() {
+        let input = "kind = \"sequence\"\n\n[[items]]\nlabel = \"A\"\n";
+        let err = parse(input).unwrap_err();
+        assert!(err.to_string().contains("renamed to `flow`"), "error should mention renamed to flow");
+    }
+
+    #[test]
+    fn parse_rejects_old_flow_kind_names() {
         for kind in &["process", "cycle", "funnel", "pyramid"] {
             let input = format!("kind = \"{kind}\"\n\n[[items]]\nlabel = \"A\"\n");
             assert!(parse(&input).is_err(), "kind '{kind}' should be rejected");
@@ -487,6 +568,76 @@ mod tests {
         assert!(parse(fish).is_err());
     }
 
+    #[test]
+    fn parse_hierarchy_node_id_allows_parent_by_id() {
+        let input = r#"
+kind = "hierarchy"
+
+[[nodes]]
+id = "ceo"
+label = "Chief Executive Officer"
+
+[[nodes]]
+label = "CTO"
+parent = "ceo"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        assert_eq!(d.nodes.len(), 2);
+        assert_eq!(d.nodes[0].id.as_deref(), Some("ceo"));
+        assert_eq!(d.nodes[1].parent.as_deref(), Some("ceo"));
+    }
+
+    #[test]
+    fn parse_hierarchy_rejects_duplicate_id() {
+        let input = r#"
+kind = "hierarchy"
+
+[[nodes]]
+id = "dup"
+label = "Node A"
+
+[[nodes]]
+id = "dup"
+label = "Node B"
+"#;
+        assert!(parse(input).is_err(), "duplicate id should be rejected");
+    }
+
+    #[test]
+    fn parse_hierarchy_label_parent_still_works_without_id() {
+        let input = "kind = \"hierarchy\"\n\n[[nodes]]\nlabel = \"CEO\"\n\n[[nodes]]\nlabel = \"CTO\"\nparent = \"CEO\"\n";
+        assert!(parse(input).is_ok(), "existing label-based parent reference must still work");
+    }
+
+    #[test]
+    fn parse_hierarchy_effect_field_separate_from_title() {
+        let input = r#"
+kind = "hierarchy"
+view = "fishbone"
+title = "API Performance"
+effect = "Slow API Response"
+
+[[nodes]]
+label = "Materials"
+
+[[nodes]]
+label = "Methods"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        assert_eq!(d.title.as_deref(), Some("API Performance"));
+        assert_eq!(d.effect.as_deref(), Some("Slow API Response"));
+    }
+
+    #[test]
+    fn parse_hierarchy_effect_defaults_to_none() {
+        let input = "kind = \"hierarchy\"\nview = \"fishbone\"\ntitle = \"Issues\"\n\n[[nodes]]\nlabel = \"Materials\"\n\n[[nodes]]\nlabel = \"Methods\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        assert!(d.effect.is_none());
+    }
+
     // --- smoke tests for unchanged kinds ---
 
     #[test]
@@ -502,11 +653,11 @@ mod tests {
     }
 
     #[test]
-    fn parse_auto_dispatches_json_sequence() {
-        let input = r#"{"kind":"sequence","view":"cycle","items":[{"label":"A"},{"label":"B"}]}"#;
+    fn parse_auto_dispatches_json_flow() {
+        let input = r#"{"kind":"flow","view":"cycle","items":[{"label":"A"},{"label":"B"}]}"#;
         let diagram = parse_auto(input).unwrap();
-        let Diagram::Sequence(d) = diagram else { panic!() };
-        assert_eq!(d.view, SequenceView::Cycle);
+        let Diagram::Flow(d) = diagram else { panic!() };
+        assert_eq!(d.view, FlowView::Cycle);
     }
 
     #[test]
@@ -630,8 +781,8 @@ label = "Q1"
     }
 
     #[test]
-    fn parse_sequence_funnel_rejects_more_than_10_items() {
-        let mut input = "kind = \"sequence\"\nview = \"funnel\"\n".to_string();
+    fn parse_flow_funnel_rejects_more_than_10_items() {
+        let mut input = "kind = \"flow\"\nview = \"funnel\"\n".to_string();
         for i in 0..11 {
             input.push_str(&format!("[[items]]\nlabel = \"Stage {}\"\n", i));
         }
@@ -640,8 +791,8 @@ label = "Q1"
     }
 
     #[test]
-    fn parse_sequence_funnel_accepts_exactly_10_items() {
-        let mut input = "kind = \"sequence\"\nview = \"funnel\"\n".to_string();
+    fn parse_flow_funnel_accepts_exactly_10_items() {
+        let mut input = "kind = \"flow\"\nview = \"funnel\"\n".to_string();
         for i in 0..10 {
             input.push_str(&format!("[[items]]\nlabel = \"Stage {}\"\n", i));
         }
@@ -657,25 +808,32 @@ label = "Q1"
     }
 
     #[test]
-    fn parse_json_valid_sequence_process() {
-        let input = r#"{"kind": "sequence", "items": [{"label": "Plan"}, {"label": "Do"}]}"#;
+    fn parse_json_valid_flow_process() {
+        let input = r#"{"kind": "flow", "items": [{"label": "Plan"}, {"label": "Do"}]}"#;
         let diagram = parse_json(input).unwrap();
-        let Diagram::Sequence(d) = diagram else { panic!() };
-        assert_eq!(d.view, SequenceView::Process);
+        let Diagram::Flow(d) = diagram else { panic!() };
+        assert_eq!(d.view, FlowView::Process);
     }
 
     #[test]
-    fn parse_auto_dispatches_toml_sequence() {
-        let input = "kind = \"sequence\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
+    fn parse_json_sequence_gives_deprecation_hint() {
+        let input = r#"{"kind": "sequence", "items": [{"label": "A"}]}"#;
+        let err = parse_json(input).unwrap_err();
+        assert!(err.to_string().contains("renamed to `flow`"));
+    }
+
+    #[test]
+    fn parse_auto_dispatches_toml_flow() {
+        let input = "kind = \"flow\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
         let diagram = parse_auto(input).unwrap();
-        assert!(matches!(diagram, Diagram::Sequence(_)));
+        assert!(matches!(diagram, Diagram::Flow(_)));
     }
 
     #[test]
     fn parse_auto_json_with_leading_whitespace() {
-        let input = "  \n{\"kind\":\"sequence\",\"items\":[{\"label\":\"A\"},{\"label\":\"B\"}]}";
+        let input = "  \n{\"kind\":\"flow\",\"items\":[{\"label\":\"A\"},{\"label\":\"B\"}]}";
         let diagram = parse_auto(input).unwrap();
-        assert!(matches!(diagram, Diagram::Sequence(_)));
+        assert!(matches!(diagram, Diagram::Flow(_)));
     }
 
     // --- Timeline partial dates ---

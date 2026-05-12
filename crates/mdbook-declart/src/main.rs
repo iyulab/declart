@@ -126,8 +126,7 @@ mod tests {
         let input = concat!(
             "Before\n\n",
             "```declart\n",
-            "kind = \"sequence\"\n",
-            "view = \"pyramid\"\n",
+            "kind = \"tier\"\n",
             "[[items]]\nlabel = \"Top\"\n",
             "[[items]]\nlabel = \"Base\"\n",
             "```\n\n",
@@ -161,7 +160,7 @@ mod tests {
 
     #[test]
     fn handles_crlf_line_endings() {
-        let input = "Before\r\n\r\n```declart\r\nkind = \"sequence\"\r\nview = \"pyramid\"\r\n[[items]]\r\nlabel = \"Top\"\r\n[[items]]\r\nlabel = \"Base\"\r\n```\r\n\r\nAfter\r\n";
+        let input = "Before\r\n\r\n```declart\r\nkind = \"tier\"\r\n[[items]]\r\nlabel = \"Top\"\r\n[[items]]\r\nlabel = \"Base\"\r\n```\r\n\r\nAfter\r\n";
         let out = process_content(input);
         assert!(out.contains("<figure class=\"declart\">"), "CRLF input should render SVG figure");
         assert!(out.contains("<svg"), "should contain SVG");

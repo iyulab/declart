@@ -6,10 +6,21 @@ pub struct KindProbe {
     pub kind: String,
 }
 
-/// Raw representation for `sequence` kind.
+/// Raw representation for `flow` kind.
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
-pub struct RawSequenceDiagram {
+pub struct RawFlowDiagram {
+    pub kind: String,
+    pub view: Option<String>,
+    pub title: Option<String>,
+    #[serde(default)]
+    pub items: Vec<RawItem>,
+}
+
+/// Raw representation for `tier` kind.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawTierDiagram {
     pub kind: String,
     pub view: Option<String>,
     pub title: Option<String>,
@@ -104,6 +115,7 @@ pub struct RawHierarchyDiagram {
     pub kind: String,
     pub view: Option<String>,
     pub title: Option<String>,
+    pub effect: Option<String>,
     #[serde(default)]
     pub nodes: Vec<RawHierarchyNode>,
 }
@@ -112,6 +124,7 @@ pub struct RawHierarchyDiagram {
 #[serde(deny_unknown_fields)]
 pub struct RawHierarchyNode {
     pub label: String,
+    pub id: Option<String>,
     pub parent: Option<String>,
 }
 

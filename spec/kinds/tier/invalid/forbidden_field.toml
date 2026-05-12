@@ -1,0 +1,5 @@
+kind = "tier"
+unknown_field = "bad"
+
+[[items]]
+label = "A"

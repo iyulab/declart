@@ -273,7 +273,7 @@
   <h1>Declart Playground</h1>
   <p>Edit TOML on the left — see your diagram instantly on the right</p>
   <div class="header-links">
-    <span class="header-badge">v0.10.0</span>
+    <span class="header-badge">v0.17.0</span>
     <a href="https://github.com/iyulab/declart" target="_blank" rel="noopener">GitHub</a>
     <a href="../introduction.html" target="_blank" rel="noopener">Docs</a>
   </div>
@@ -283,10 +283,10 @@
   <label>
     Example
     <select id="example-select">
-      <option value="sequence_process">Sequence (process) — Software Release Pipeline</option>
-      <option value="sequence_cycle">Sequence (cycle) — PDCA</option>
-      <option value="sequence_funnel">Sequence (funnel) — Marketing Conversion</option>
-      <option value="sequence_pyramid">Sequence (pyramid) — Maslow's Hierarchy</option>
+      <option value="flow_process">Flow (process) — Software Release Pipeline</option>
+      <option value="flow_cycle">Flow (cycle) — PDCA</option>
+      <option value="flow_funnel">Flow (funnel) — Marketing Conversion</option>
+      <option value="tier">Tier — Maslow's Hierarchy</option>
       <option value="hierarchy_org">Hierarchy (org_chart) — Engineering Division</option>
       <option value="hierarchy_fishbone">Hierarchy (fishbone) — Website Performance</option>
       <option value="matrix">Matrix — Eisenhower Matrix</option>
@@ -338,7 +338,7 @@
 </div>
 
 <footer>
-  <span>Declart v0.10.0 &nbsp;·&nbsp; MIT License</span>
+  <span>Declart v0.17.0 &nbsp;·&nbsp; MIT License</span>
   <span>
     <a href="https://github.com/iyulab/declart" target="_blank" rel="noopener">GitHub</a>
     &nbsp;·&nbsp;
@@ -352,7 +352,7 @@
 import init, { render, render_with_theme_toml } from './wasm/declart_wasm.js';
 
 const EXAMPLES = {
-  sequence_process: `kind = "sequence"
+  flow_process: `kind = "flow"
 title = "Software Release Pipeline"
 
 [[items]]
@@ -371,7 +371,7 @@ label = "Deploy"
 label = "Monitor"
 `,
 
-  sequence_cycle: `kind = "sequence"
+  flow_cycle: `kind = "flow"
 view = "cycle"
 title = "PDCA Cycle"
 
@@ -388,7 +388,7 @@ label = "Check"
 label = "Act"
 `,
 
-  sequence_funnel: `kind = "sequence"
+  flow_funnel: `kind = "flow"
 view = "funnel"
 title = "Marketing Conversion"
 
@@ -409,8 +409,7 @@ label = "Intent"
 label = "Conversion"
 `,
 
-  sequence_pyramid: `kind = "sequence"
-view = "pyramid"
+  tier: `kind = "tier"
 title = "Maslow's Hierarchy of Needs"
 
 [[items]]

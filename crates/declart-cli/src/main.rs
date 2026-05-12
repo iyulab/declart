@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use declart_core::render::{Theme, ACCESSIBLE_THEME, DEFAULT_THEME, MONOCHROME_THEME, WARM_THEME};
+use declart_core::{Diagram, HierarchyView};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -41,7 +42,7 @@ enum Commands {
     },
     /// Print a starter TOML declaration for a diagram kind
     Init {
-        /// Diagram kind: sequence, hierarchy, timeline, matrix, hub_spoke, venn, comparison
+        /// Diagram kind: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison
         kind: String,
     },
     /// Watch a file and re-render on every change
@@ -76,7 +77,12 @@ fn run() -> Result<()> {
     match cli.command {
         Commands::Render { input, output, theme: theme_name, width, format, stdout } => {
             let theme = resolve_theme(&theme_name)?;
-            let bytes = render_bytes(&input, &theme, width, &format)?;
+            let content = fs::read_to_string(&input)
+                .with_context(|| format!("failed to read {}", input.display()))?;
+            let diagram = declart_core::parse_auto(&content)
+                .with_context(|| format!("invalid declaration: {}", input.display()))?;
+            warn_hierarchy_auto_view(&diagram, &content);
+            let bytes = render_to_bytes(&diagram, &theme, width, &format)?;
             if stdout {
                 std::io::stdout().write_all(&bytes)?;
             } else {
@@ -89,13 +95,14 @@ fn run() -> Result<()> {
         Commands::Validate { input } => {
             let content = fs::read_to_string(&input)
                 .with_context(|| format!("failed to read {}", input.display()))?;
-            declart_core::parse_auto(&content)
+            let diagram = declart_core::parse_auto(&content)
                 .with_context(|| format!("invalid declaration: {}", input.display()))?;
+            warn_hierarchy_auto_view(&diagram, &content);
         }
         Commands::Init { kind } => {
             let template = init_template(&kind).with_context(|| {
                 format!(
-                    "unknown kind `{}`\n  = hint: Available kinds: sequence, hierarchy, timeline, matrix, hub_spoke, venn, comparison",
+                    "unknown kind `{}`\n  = hint: Available kinds: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison",
                     kind
                 )
             })?;
@@ -156,17 +163,21 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn render_bytes(input: &Path, theme: &Theme, width: Option<u32>, format: &str) -> Result<Vec<u8>> {
-    let content = fs::read_to_string(input)
-        .with_context(|| format!("failed to read {}", input.display()))?;
-    let model = declart_core::parse_auto(&content)
-        .with_context(|| format!("invalid declaration: {}", input.display()))?;
-    let svg = declart_core::render_opts(&model, theme, width)?;
+fn render_to_bytes(diagram: &Diagram, theme: &Theme, width: Option<u32>, format: &str) -> Result<Vec<u8>> {
+    let svg = declart_core::render_opts(diagram, theme, width)?;
     match format {
         "svg" => Ok(svg.into_bytes()),
         "png" => svg_to_png(&svg),
         other => anyhow::bail!("unknown format `{}`\n  = hint: Available formats: svg, png", other),
     }
+}
+
+fn render_bytes(input: &Path, theme: &Theme, width: Option<u32>, format: &str) -> Result<Vec<u8>> {
+    let content = fs::read_to_string(input)
+        .with_context(|| format!("failed to read {}", input.display()))?;
+    let model = declart_core::parse_auto(&content)
+        .with_context(|| format!("invalid declaration: {}", input.display()))?;
+    render_to_bytes(&model, theme, width, format)
 }
 
 fn svg_to_png(svg_str: &str) -> Result<Vec<u8>> {
@@ -203,8 +214,8 @@ fn resolve_theme(name: &str) -> Result<Theme> {
 
 fn init_template(kind: &str) -> Option<&'static str> {
     match kind {
-        "sequence" => Some(
-            r#"kind = "sequence"
+        "flow" => Some(
+            r#"kind = "flow"
 title = "My Process"
 
 [[items]]
@@ -215,6 +226,20 @@ label = "Step 2"
 
 [[items]]
 label = "Step 3"
+"#,
+        ),
+        "tier" => Some(
+            r#"kind = "tier"
+title = "My Tiers"
+
+[[items]]
+label = "Top"
+
+[[items]]
+label = "Middle"
+
+[[items]]
+label = "Bottom"
 "#,
         ),
         "hierarchy" => Some(
@@ -339,4 +364,27 @@ value = "★★★★"
         ),
         _ => None,
     }
+}
+
+fn warn_hierarchy_auto_view(diagram: &Diagram, content: &str) {
+    let Diagram::Hierarchy(h) = diagram else { return };
+    if has_explicit_view(content) { return; }
+    let (view_name, root_count) = match h.view {
+        HierarchyView::OrgChart => {
+            let n = h.nodes.iter().filter(|n| n.parent.is_none()).count();
+            ("org_chart", n)
+        }
+        HierarchyView::Fishbone => {
+            let n = h.nodes.iter().filter(|n| n.parent.is_none()).count();
+            ("fishbone", n)
+        }
+    };
+    let plural = if root_count == 1 { "" } else { "s" };
+    eprintln!("warning: hierarchy view auto-selected: {view_name} ({root_count} root node{plural})");
+    eprintln!("  = hint: add `view = \"{view_name}\"` to make this explicit");
+}
+
+fn has_explicit_view(content: &str) -> bool {
+    // Simple text scan: TOML `view = ` or JSON `"view":` or `"view" :`
+    content.contains("view =") || content.contains("\"view\":")  || content.contains("\"view\" :")
 }
