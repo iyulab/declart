@@ -283,16 +283,16 @@
   <label>
     Example
     <select id="example-select">
-      <option value="pyramid">Pyramid — Maslow's Hierarchy</option>
-      <option value="process">Process — Software Release Pipeline</option>
-      <option value="cycle">Cycle — PDCA</option>
+      <option value="sequence_process">Sequence (process) — Software Release Pipeline</option>
+      <option value="sequence_cycle">Sequence (cycle) — PDCA</option>
+      <option value="sequence_funnel">Sequence (funnel) — Marketing Conversion</option>
+      <option value="sequence_pyramid">Sequence (pyramid) — Maslow's Hierarchy</option>
+      <option value="hierarchy_org">Hierarchy (org_chart) — Engineering Division</option>
+      <option value="hierarchy_fishbone">Hierarchy (fishbone) — Website Performance</option>
       <option value="matrix">Matrix — Eisenhower Matrix</option>
       <option value="hub_spoke">Hub-and-Spoke — Cloud Architecture</option>
       <option value="venn">Venn — Skills Overlap</option>
       <option value="timeline">Timeline — Product Launch</option>
-      <option value="fishbone">Fishbone — Website Performance</option>
-      <option value="org_chart">Org Chart — Engineering Division</option>
-      <option value="funnel">Funnel — Marketing Conversion</option>
       <option value="comparison">Comparison — Framework Analysis</option>
     </select>
   </label>
@@ -352,26 +352,7 @@
 import init, { render, render_with_theme_toml } from './wasm/declart_wasm.js';
 
 const EXAMPLES = {
-  pyramid: `kind = "pyramid"
-title = "Maslow's Hierarchy of Needs"
-
-[[items]]
-label = "Self-actualization"
-
-[[items]]
-label = "Esteem"
-
-[[items]]
-label = "Love & Belonging"
-
-[[items]]
-label = "Safety"
-
-[[items]]
-label = "Physiological"
-`,
-
-  process: `kind = "process"
+  sequence_process: `kind = "sequence"
 title = "Software Release Pipeline"
 
 [[items]]
@@ -390,7 +371,8 @@ label = "Deploy"
 label = "Monitor"
 `,
 
-  cycle: `kind = "cycle"
+  sequence_cycle: `kind = "sequence"
+view = "cycle"
 title = "PDCA Cycle"
 
 [[items]]
@@ -404,6 +386,107 @@ label = "Check"
 
 [[items]]
 label = "Act"
+`,
+
+  sequence_funnel: `kind = "sequence"
+view = "funnel"
+title = "Marketing Conversion"
+
+[[items]]
+label = "Awareness"
+emphasis = "primary"
+
+[[items]]
+label = "Interest"
+
+[[items]]
+label = "Consideration"
+
+[[items]]
+label = "Intent"
+
+[[items]]
+label = "Conversion"
+`,
+
+  sequence_pyramid: `kind = "sequence"
+view = "pyramid"
+title = "Maslow's Hierarchy of Needs"
+
+[[items]]
+label = "Self-actualization"
+
+[[items]]
+label = "Esteem"
+
+[[items]]
+label = "Love & Belonging"
+
+[[items]]
+label = "Safety"
+
+[[items]]
+label = "Physiological"
+`,
+
+  hierarchy_org: `kind = "hierarchy"
+title = "Engineering Division"
+
+[[nodes]]
+label = "VP of Engineering"
+
+[[nodes]]
+label = "Backend Team"
+parent = "VP of Engineering"
+
+[[nodes]]
+label = "Frontend Team"
+parent = "VP of Engineering"
+
+[[nodes]]
+label = "Alice"
+parent = "Backend Team"
+
+[[nodes]]
+label = "Bob"
+parent = "Backend Team"
+
+[[nodes]]
+label = "Carol"
+parent = "Frontend Team"
+`,
+
+  hierarchy_fishbone: `kind = "hierarchy"
+view = "fishbone"
+title = "Slow Page Load"
+
+[[nodes]]
+label = "Server"
+
+[[nodes]]
+label = "CPU saturation"
+parent = "Server"
+
+[[nodes]]
+label = "Memory limits"
+parent = "Server"
+
+[[nodes]]
+label = "Network"
+
+[[nodes]]
+label = "Bandwidth"
+parent = "Network"
+
+[[nodes]]
+label = "Code"
+
+[[nodes]]
+label = "Database"
+
+[[nodes]]
+label = "Slow queries"
+parent = "Database"
 `,
 
   matrix: `kind = "matrix"
@@ -477,83 +560,6 @@ label = "Launch"
 [[events]]
 date = "2024-12-01"
 label = "v2.0"
-`,
-
-  fishbone: `kind = "fishbone"
-title = "Website Performance Issues"
-
-effect = "Slow Page Load"
-
-[[causes]]
-label = "Server"
-
-[[causes.items]]
-label = "CPU saturation"
-
-[[causes.items]]
-label = "Memory limits"
-
-[[causes]]
-label = "Network"
-
-[[causes.items]]
-label = "Bandwidth"
-
-[[causes]]
-label = "Code"
-
-[[causes]]
-label = "Database"
-
-[[causes.items]]
-label = "Slow queries"
-`,
-
-  org_chart: `kind = "org_chart"
-title = "Engineering Division"
-
-[[nodes]]
-label = "VP of Engineering"
-
-[[nodes]]
-label = "Backend Team"
-parent = "VP of Engineering"
-
-[[nodes]]
-label = "Frontend Team"
-parent = "VP of Engineering"
-
-[[nodes]]
-label = "Alice"
-parent = "Backend Team"
-
-[[nodes]]
-label = "Bob"
-parent = "Backend Team"
-
-[[nodes]]
-label = "Carol"
-parent = "Frontend Team"
-`,
-
-  funnel: `kind = "funnel"
-title = "Marketing Conversion"
-
-[[items]]
-label = "Awareness"
-emphasis = "primary"
-
-[[items]]
-label = "Interest"
-
-[[items]]
-label = "Consideration"
-
-[[items]]
-label = "Intent"
-
-[[items]]
-label = "Conversion"
 `,
 
   comparison: `kind = "comparison"
