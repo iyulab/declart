@@ -8,6 +8,7 @@ pub(crate) mod matrix;
 pub(crate) mod org_chart;
 pub(crate) mod process;
 pub(crate) mod pyramid;
+pub(crate) mod sequence;
 mod svg;
 pub mod theme;
 pub(crate) mod timeline;
@@ -26,16 +27,12 @@ pub fn render(diagram: &Diagram, theme: &Theme) -> Result<String, DeclartError> 
 /// scaled to that pixel width while the internal viewBox is preserved.
 pub fn render_opts(diagram: &Diagram, theme: &Theme, width: Option<u32>) -> Result<String, DeclartError> {
     let svg = match diagram {
-        Diagram::Pyramid(d) => pyramid::render(d, theme),
-        Diagram::Process(d) => process::render(d, theme),
-        Diagram::Cycle(d) => cycle::render(d, theme),
+        Diagram::Sequence(d)   => sequence::render_sequence(d, theme),
+        Diagram::Hierarchy(d)  => sequence::render_hierarchy(d, theme),
         Diagram::Matrix(d) => matrix::render(d, theme),
         Diagram::HubSpoke(d) => hub_spoke::render(d, theme),
         Diagram::Venn(d) => venn::render(d, theme),
         Diagram::Timeline(d) => timeline::render(d, theme),
-        Diagram::Fishbone(d) => fishbone::render(d, theme),
-        Diagram::OrgChart(d) => org_chart::render(d, theme),
-        Diagram::Funnel(d) => funnel::render(d, theme),
         Diagram::Comparison(d) => comparison::render(d, theme),
     };
     if let Some(w) = width {

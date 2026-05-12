@@ -6,11 +6,12 @@ pub struct KindProbe {
     pub kind: String,
 }
 
-/// Raw representation for kinds that use `[[items]]`: pyramid, process, cycle.
+/// Raw representation for `sequence` kind.
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
-pub struct RawItemsDiagram {
+pub struct RawSequenceDiagram {
     pub kind: String,
+    pub view: Option<String>,
     pub title: Option<String>,
     #[serde(default)]
     pub items: Vec<RawItem>,
@@ -96,48 +97,22 @@ pub struct RawTimelineEvent {
     pub label: String,
 }
 
-/// Raw representation for the org_chart kind.
+/// Raw representation for `hierarchy` kind.
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
-pub struct RawOrgChartDiagram {
+pub struct RawHierarchyDiagram {
     pub kind: String,
+    pub view: Option<String>,
     pub title: Option<String>,
     #[serde(default)]
-    pub nodes: Vec<RawOrgChartNode>,
+    pub nodes: Vec<RawHierarchyNode>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
-pub struct RawOrgChartNode {
+pub struct RawHierarchyNode {
     pub label: String,
     pub parent: Option<String>,
-}
-
-/// Raw representation for the fishbone kind.
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RawFishboneDiagram {
-    pub kind: String,
-    pub title: Option<String>,
-    pub effect: String,
-    #[serde(default)]
-    pub causes: Vec<RawFishboneCause>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RawFishboneCause {
-    pub label: String,
-    #[serde(default)]
-    pub items: Vec<RawFishboneItem>,
-}
-
-/// Sub-cause item in a fishbone diagram. Intentionally has only `label` — emphasis is not
-/// supported on fishbone sub-items per spec.
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RawFishboneItem {
-    pub label: String,
 }
 
 /// Raw representation for the comparison kind.

@@ -7,18 +7,58 @@ pub enum Emphasis {
     Secondary,
 }
 
-/// A labeled item with an optional emphasis hint. Used by Pyramid, Process, Cycle, and as spokes/quadrants.
+/// A labeled item with an optional emphasis hint. Used by Sequence diagrams and as spokes/quadrants.
 #[derive(Debug, Clone)]
 pub struct Item {
     pub label: String,
     pub emphasis: Option<Emphasis>,
 }
 
-/// Model for diagram kinds that use a flat list of items: Pyramid, Process, Cycle.
+/// Model for diagram kinds that use a flat list of items (kept for internal compatibility).
 #[derive(Debug, Clone)]
 pub struct ItemsDiagram {
     pub title: Option<String>,
     pub items: Vec<Item>,
+}
+
+/// View variant for a Sequence diagram — determines how the flat item list is rendered.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SequenceView {
+    Process,
+    Cycle,
+    Funnel,
+    Pyramid,
+}
+
+/// Model for Sequence diagrams (process / cycle / funnel / pyramid views).
+#[derive(Debug, Clone)]
+pub struct SequenceDiagram {
+    pub title: Option<String>,
+    pub view: SequenceView,
+    pub items: Vec<Item>,
+}
+
+/// View variant for a Hierarchy diagram — determines how the node tree is rendered.
+#[derive(Debug, Clone, PartialEq)]
+pub enum HierarchyView {
+    OrgChart,
+    Fishbone,
+}
+
+/// A single node in a hierarchy diagram. `label` is the unique identifier;
+/// `parent` references the parent node's label (`None` for the root).
+#[derive(Debug, Clone)]
+pub struct HierarchyNode {
+    pub label: String,
+    pub parent: Option<String>,
+}
+
+/// Model for Hierarchy diagrams (org_chart / fishbone views).
+#[derive(Debug, Clone)]
+pub struct HierarchyDiagram {
+    pub title: Option<String>,
+    pub view: HierarchyView,
+    pub nodes: Vec<HierarchyNode>,
 }
 
 /// Model for the Matrix 2×2 kind.
@@ -75,31 +115,32 @@ pub struct TimelineDiagram {
 }
 
 /// A single cause branch in a fishbone diagram (may have sub-causes).
+/// Internal bridge type used by the render layer.
 #[derive(Debug, Clone)]
-pub struct FishboneCause {
+pub(crate) struct FishboneCause {
     pub label: String,
     pub items: Vec<Item>,
 }
 
-/// Model for the Fishbone (Ishikawa) kind.
+/// Internal bridge model for the Fishbone render path.
 #[derive(Debug, Clone)]
-pub struct FishboneDiagram {
+pub(crate) struct FishboneDiagram {
     pub title: Option<String>,
     pub effect: String,
     pub causes: Vec<FishboneCause>,
 }
 
-/// A single node in an org chart. `label` is the unique identifier; `parent` references the parent's label.
+/// A single node in an org chart. Internal bridge type used by the render layer.
 #[derive(Debug, Clone)]
-pub struct OrgChartNode {
+pub(crate) struct OrgChartNode {
     pub label: String,
     /// `None` for the root node; references `label` of the parent node for all others.
     pub parent: Option<String>,
 }
 
-/// Model for the Org Chart kind — hierarchical tree of labeled nodes.
+/// Internal bridge model for the OrgChart render path.
 #[derive(Debug, Clone)]
-pub struct OrgChartDiagram {
+pub(crate) struct OrgChartDiagram {
     pub title: Option<String>,
     pub nodes: Vec<OrgChartNode>,
 }
@@ -130,16 +171,12 @@ pub struct ComparisonDiagram {
 /// The parsed, validated representation of a diagram declaration.
 #[derive(Debug, Clone)]
 pub enum Diagram {
-    Pyramid(ItemsDiagram),
-    Process(ItemsDiagram),
-    Cycle(ItemsDiagram),
+    Sequence(SequenceDiagram),
+    Hierarchy(HierarchyDiagram),
     Matrix(MatrixDiagram),
     HubSpoke(HubSpokeDiagram),
     Venn(VennDiagram),
     Timeline(TimelineDiagram),
-    Fishbone(FishboneDiagram),
-    OrgChart(OrgChartDiagram),
-    Funnel(ItemsDiagram),
     Comparison(ComparisonDiagram),
 }
 
@@ -173,5 +210,27 @@ mod tests {
         };
         assert_eq!(d.quadrants.len(), 4);
         assert_eq!(d.x_axis, "Effort");
+    }
+
+    #[test]
+    fn sequence_diagram_holds_view_and_items() {
+        let d = SequenceDiagram {
+            title: Some("PDCA".to_string()),
+            view: SequenceView::Cycle,
+            items: vec![Item { label: "Plan".to_string(), emphasis: None }],
+        };
+        assert_eq!(d.view, SequenceView::Cycle);
+        assert_eq!(d.items[0].label, "Plan");
+    }
+
+    #[test]
+    fn hierarchy_diagram_holds_view_and_nodes() {
+        let d = HierarchyDiagram {
+            title: Some("Org".to_string()),
+            view: HierarchyView::OrgChart,
+            nodes: vec![HierarchyNode { label: "CEO".to_string(), parent: None }],
+        };
+        assert_eq!(d.view, HierarchyView::OrgChart);
+        assert!(d.nodes[0].parent.is_none());
     }
 }

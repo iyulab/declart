@@ -12,7 +12,8 @@
 //! use declart_core::render::DEFAULT_THEME;
 //!
 //! let input = r#"
-//! kind = "pyramid"
+//! kind = "sequence"
+//! view = "pyramid"
 //! title = "Example"
 //!
 //! [[items]]
@@ -34,8 +35,10 @@ pub mod render;
 
 pub use error::DeclartError;
 pub use model::{
-    ComparisonCell, ComparisonDiagram, Diagram, Emphasis, FishboneCause, FishboneDiagram,
-    HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram, OrgChartDiagram, OrgChartNode,
+    ComparisonCell, ComparisonDiagram, Diagram, Emphasis,
+    HierarchyDiagram, HierarchyNode, HierarchyView,
+    HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram,
+    SequenceDiagram, SequenceView,
     TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet,
 };
 pub use parse::{parse, parse_auto, parse_json};

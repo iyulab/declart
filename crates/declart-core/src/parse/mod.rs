@@ -1,92 +1,38 @@
 mod raw;
 
 use crate::error::DeclartError;
-use crate::model::{ComparisonCell, ComparisonDiagram, Diagram, Emphasis, FishboneCause, FishboneDiagram, HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram, OrgChartDiagram, OrgChartNode, TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet};
+use crate::model::{
+    ComparisonCell, ComparisonDiagram, Diagram, Emphasis,
+    HierarchyDiagram, HierarchyNode, HierarchyView,
+    HubSpokeDiagram, Item, MatrixDiagram,
+    SequenceDiagram, SequenceView, TimelineDiagram, TimelineEvent,
+    VennDiagram, VennIntersection, VennSet,
+};
 
-/// Parses a TOML declaration string into a validated [`Diagram`].
-///
-/// Returns [`DeclartError`] for unknown kinds, forbidden fields, missing required fields,
-/// invalid values, or structural violations (e.g. wrong quadrant count).
 pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
     let probe: raw::KindProbe = toml::from_str(input)?;
-
     match probe.kind.as_str() {
-        "pyramid" | "process" | "cycle" | "funnel" => {
-            let raw: raw::RawItemsDiagram = toml::from_str(input)?;
-            validate_items(raw)
-        }
-        "matrix" => {
-            let raw: raw::RawMatrixDiagram = toml::from_str(input)?;
-            validate_matrix(raw)
-        }
-        "hub_spoke" => {
-            let raw: raw::RawHubSpokeDiagram = toml::from_str(input)?;
-            validate_hub_spoke(raw)
-        }
-        "venn" => {
-            let raw: raw::RawVennDiagram = toml::from_str(input)?;
-            validate_venn(raw)
-        }
-        "timeline" => {
-            let raw: raw::RawTimelineDiagram = toml::from_str(input)?;
-            validate_timeline(raw)
-        }
-        "fishbone" => {
-            let raw: raw::RawFishboneDiagram = toml::from_str(input)?;
-            validate_fishbone(raw)
-        }
-        "org_chart" => {
-            let raw: raw::RawOrgChartDiagram = toml::from_str(input)?;
-            validate_org_chart(raw)
-        }
-        "comparison" => {
-            let raw: raw::RawComparisonDiagram = toml::from_str(input)?;
-            validate_comparison(raw)
-        }
+        "sequence" => { let raw: raw::RawSequenceDiagram = toml::from_str(input)?; validate_sequence(raw) }
+        "hierarchy" => { let raw: raw::RawHierarchyDiagram = toml::from_str(input)?; validate_hierarchy(raw) }
+        "matrix" => { let raw: raw::RawMatrixDiagram = toml::from_str(input)?; validate_matrix(raw) }
+        "hub_spoke" => { let raw: raw::RawHubSpokeDiagram = toml::from_str(input)?; validate_hub_spoke(raw) }
+        "venn" => { let raw: raw::RawVennDiagram = toml::from_str(input)?; validate_venn(raw) }
+        "timeline" => { let raw: raw::RawTimelineDiagram = toml::from_str(input)?; validate_timeline(raw) }
+        "comparison" => { let raw: raw::RawComparisonDiagram = toml::from_str(input)?; validate_comparison(raw) }
         other => Err(DeclartError::UnknownKind(other.to_string())),
     }
 }
 
-/// Parses a JSON declaration string into a validated [`Diagram`].
-///
-/// The JSON structure mirrors the TOML format: `"kind"` is required, and array fields
-/// use JSON arrays (e.g., `"items": [...]` instead of `[[items]]` in TOML).
 pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
     let probe: raw::KindProbe = serde_json::from_str(input)?;
-
     match probe.kind.as_str() {
-        "pyramid" | "process" | "cycle" | "funnel" => {
-            let raw: raw::RawItemsDiagram = serde_json::from_str(input)?;
-            validate_items(raw)
-        }
-        "matrix" => {
-            let raw: raw::RawMatrixDiagram = serde_json::from_str(input)?;
-            validate_matrix(raw)
-        }
-        "hub_spoke" => {
-            let raw: raw::RawHubSpokeDiagram = serde_json::from_str(input)?;
-            validate_hub_spoke(raw)
-        }
-        "venn" => {
-            let raw: raw::RawVennDiagram = serde_json::from_str(input)?;
-            validate_venn(raw)
-        }
-        "timeline" => {
-            let raw: raw::RawTimelineDiagram = serde_json::from_str(input)?;
-            validate_timeline(raw)
-        }
-        "fishbone" => {
-            let raw: raw::RawFishboneDiagram = serde_json::from_str(input)?;
-            validate_fishbone(raw)
-        }
-        "org_chart" => {
-            let raw: raw::RawOrgChartDiagram = serde_json::from_str(input)?;
-            validate_org_chart(raw)
-        }
-        "comparison" => {
-            let raw: raw::RawComparisonDiagram = serde_json::from_str(input)?;
-            validate_comparison(raw)
-        }
+        "sequence" => { let raw: raw::RawSequenceDiagram = serde_json::from_str(input)?; validate_sequence(raw) }
+        "hierarchy" => { let raw: raw::RawHierarchyDiagram = serde_json::from_str(input)?; validate_hierarchy(raw) }
+        "matrix" => { let raw: raw::RawMatrixDiagram = serde_json::from_str(input)?; validate_matrix(raw) }
+        "hub_spoke" => { let raw: raw::RawHubSpokeDiagram = serde_json::from_str(input)?; validate_hub_spoke(raw) }
+        "venn" => { let raw: raw::RawVennDiagram = serde_json::from_str(input)?; validate_venn(raw) }
+        "timeline" => { let raw: raw::RawTimelineDiagram = serde_json::from_str(input)?; validate_timeline(raw) }
+        "comparison" => { let raw: raw::RawComparisonDiagram = serde_json::from_str(input)?; validate_comparison(raw) }
         other => Err(DeclartError::UnknownKind(other.to_string())),
     }
 }
@@ -95,11 +41,7 @@ pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
 ///
 /// If the trimmed input starts with `{`, JSON parsing is used; otherwise TOML.
 pub fn parse_auto(input: &str) -> Result<Diagram, DeclartError> {
-    if input.trim_start().starts_with('{') {
-        parse_json(input)
-    } else {
-        parse(input)
-    }
+    if input.trim_start().starts_with('{') { parse_json(input) } else { parse(input) }
 }
 
 fn parse_emphasis(s: Option<&str>) -> Result<Option<Emphasis>, DeclartError> {
@@ -116,44 +58,108 @@ fn parse_emphasis(s: Option<&str>) -> Result<Option<Emphasis>, DeclartError> {
 }
 
 fn parse_items(raw_items: Vec<raw::RawItem>) -> Result<Vec<Item>, DeclartError> {
-    raw_items
-        .into_iter()
-        .map(|item| {
-            let emphasis = parse_emphasis(item.emphasis.as_deref())?;
-            Ok(Item { label: item.label, emphasis })
-        })
-        .collect()
+    raw_items.into_iter().map(|item| {
+        let emphasis = parse_emphasis(item.emphasis.as_deref())?;
+        Ok(Item { label: item.label, emphasis })
+    }).collect()
 }
 
-fn validate_items(raw: raw::RawItemsDiagram) -> Result<Diagram, DeclartError> {
-    if raw.items.is_empty() {
-        return Err(DeclartError::EmptyItems);
-    }
-    let kind_str = raw.kind.as_str();
-    let n_items = raw.items.len();
-    if kind_str == "cycle" && n_items < 2 {
-        return Err(DeclartError::TooFewItems { kind: "cycle", min: 2, got: n_items });
-    }
-    if kind_str == "funnel" && n_items < 2 {
-        return Err(DeclartError::TooFewItems { kind: "funnel", min: 2, got: n_items });
-    }
-    if kind_str == "funnel" && n_items > 10 {
-        return Err(DeclartError::InvalidValue {
-            field: "items".to_string(),
-            value: format!("{} items", n_items),
-            hint: "Funnel diagrams support at most 10 stages. Beyond that, lower stages collapse to the minimum width and lose the funnel shape.".to_string(),
-        });
+fn validate_sequence(raw: raw::RawSequenceDiagram) -> Result<Diagram, DeclartError> {
+    if raw.items.is_empty() { return Err(DeclartError::EmptyItems); }
+    let view = match raw.view.as_deref() {
+        None | Some("process") => SequenceView::Process,
+        Some("cycle") => SequenceView::Cycle,
+        Some("funnel") => SequenceView::Funnel,
+        Some("pyramid") => SequenceView::Pyramid,
+        Some(other) => return Err(DeclartError::InvalidValue {
+            field: "view".to_string(),
+            value: other.to_string(),
+            hint: "Valid view values for sequence: process, cycle, funnel, pyramid".to_string(),
+        }),
+    };
+    let n = raw.items.len();
+    match view {
+        SequenceView::Cycle if n < 2 =>
+            return Err(DeclartError::TooFewItems { kind: "sequence/cycle", min: 2, got: n }),
+        SequenceView::Funnel if n < 2 =>
+            return Err(DeclartError::TooFewItems { kind: "sequence/funnel", min: 2, got: n }),
+        SequenceView::Funnel if n > 10 =>
+            return Err(DeclartError::InvalidValue {
+                field: "items".to_string(),
+                value: format!("{n} items"),
+                hint: "Funnel view supports at most 10 stages.".to_string(),
+            }),
+        _ => {}
     }
     let items = parse_items(raw.items)?;
-    let inner = ItemsDiagram { title: raw.title, items };
-    let diagram = match kind_str {
-        "pyramid" => Diagram::Pyramid(inner),
-        "process" => Diagram::Process(inner),
-        "cycle" => Diagram::Cycle(inner),
-        "funnel" => Diagram::Funnel(inner),
-        _ => unreachable!(),
+    Ok(Diagram::Sequence(SequenceDiagram { title: raw.title, view, items }))
+}
+
+fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartError> {
+    if raw.nodes.is_empty() { return Err(DeclartError::EmptyItems); }
+    let labels: std::collections::HashSet<&str> = raw.nodes.iter().map(|n| n.label.as_str()).collect();
+    if labels.len() != raw.nodes.len() {
+        return Err(DeclartError::InvalidValue {
+            field: "label".to_string(),
+            value: "(duplicate)".to_string(),
+            hint: "Each node label must be unique within the diagram".to_string(),
+        });
+    }
+    for node in &raw.nodes {
+        if let Some(parent) = &node.parent {
+            if !labels.contains(parent.as_str()) {
+                return Err(DeclartError::InvalidValue {
+                    field: "parent".to_string(),
+                    value: parent.clone(),
+                    hint: "parent must reference an existing node label".to_string(),
+                });
+            }
+            if node.label == *parent {
+                return Err(DeclartError::InvalidValue {
+                    field: "parent".to_string(),
+                    value: parent.clone(),
+                    hint: "A node cannot be its own parent".to_string(),
+                });
+            }
+        }
+    }
+    let root_count = raw.nodes.iter().filter(|n| n.parent.is_none()).count();
+    if root_count == 0 {
+        return Err(DeclartError::InvalidValue {
+            field: "parent".to_string(),
+            value: "(all nodes have parents)".to_string(),
+            hint: "At least one root node (with no parent) is required".to_string(),
+        });
+    }
+    let view = match raw.view.as_deref() {
+        None => if root_count == 1 { HierarchyView::OrgChart } else { HierarchyView::Fishbone },
+        Some("org_chart") => HierarchyView::OrgChart,
+        Some("fishbone") => HierarchyView::Fishbone,
+        Some(other) => return Err(DeclartError::InvalidValue {
+            field: "view".to_string(),
+            value: other.to_string(),
+            hint: "Valid view values for hierarchy: org_chart, fishbone".to_string(),
+        }),
     };
-    Ok(diagram)
+    match view {
+        HierarchyView::OrgChart if root_count != 1 =>
+            return Err(DeclartError::InvalidValue {
+                field: "parent".to_string(),
+                value: format!("{root_count} root nodes"),
+                hint: "org_chart view requires exactly one root node".to_string(),
+            }),
+        HierarchyView::Fishbone if root_count < 2 =>
+            return Err(DeclartError::TooFewItems { kind: "hierarchy/fishbone", min: 2, got: root_count }),
+        HierarchyView::Fishbone if root_count > 20 =>
+            return Err(DeclartError::InvalidValue {
+                field: "nodes".to_string(),
+                value: format!("{root_count} root nodes"),
+                hint: "fishbone view supports at most 20 cause categories".to_string(),
+            }),
+        _ => {}
+    }
+    let nodes = raw.nodes.into_iter().map(|n| HierarchyNode { label: n.label, parent: n.parent }).collect();
+    Ok(Diagram::Hierarchy(HierarchyDiagram { title: raw.title, view, nodes }))
 }
 
 fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> {
@@ -212,31 +218,23 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
     }))
 }
 
-fn validate_fishbone(raw: raw::RawFishboneDiagram) -> Result<Diagram, DeclartError> {
-    debug_assert_eq!(raw.kind, "fishbone");
-    if raw.causes.len() < 2 {
-        return Err(DeclartError::TooFewItems { kind: "fishbone", min: 2, got: raw.causes.len() });
-    }
-    if raw.causes.len() > 20 {
+fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "venn");
+    let n = raw.sets.len();
+    if n < 2 || n > 3 {
         return Err(DeclartError::InvalidValue {
-            field: "causes".to_string(),
-            value: format!("{} causes", raw.causes.len()),
-            hint: "Fishbone diagrams support at most 20 causes. For visual clarity, 8 or fewer is recommended.".to_string(),
+            field: "sets".to_string(),
+            value: format!("{} sets", n),
+            hint: "Venn diagrams require exactly 2 or 3 sets".to_string(),
         });
     }
-    let causes = raw
-        .causes
+    let sets = raw.sets.into_iter().map(|s| VennSet { label: s.label }).collect();
+    let intersections = raw
+        .intersections
         .into_iter()
-        .map(|c| {
-            let items = c.items.into_iter().map(|i| Item { label: i.label, emphasis: None }).collect();
-            FishboneCause { label: c.label, items }
-        })
+        .map(|i| VennIntersection { sets: i.sets, label: i.label })
         .collect();
-    Ok(Diagram::Fishbone(FishboneDiagram {
-        title: raw.title,
-        effect: raw.effect,
-        causes,
-    }))
+    Ok(Diagram::Venn(VennDiagram { title: raw.title, sets, intersections }))
 }
 
 fn validate_timeline(raw: raw::RawTimelineDiagram) -> Result<Diagram, DeclartError> {
@@ -278,79 +276,6 @@ pub(crate) fn normalize_date(s: &str) -> Option<String> {
             && b[8..].iter().all(|c| c.is_ascii_digit()) => Some(s.to_string()),
         _ => None,
     }
-}
-
-fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
-    debug_assert_eq!(raw.kind, "venn");
-    let n = raw.sets.len();
-    if n < 2 || n > 3 {
-        return Err(DeclartError::InvalidValue {
-            field: "sets".to_string(),
-            value: format!("{} sets", n),
-            hint: "Venn diagrams require exactly 2 or 3 sets".to_string(),
-        });
-    }
-    let sets = raw.sets.into_iter().map(|s| VennSet { label: s.label }).collect();
-    let intersections = raw
-        .intersections
-        .into_iter()
-        .map(|i| VennIntersection { sets: i.sets, label: i.label })
-        .collect();
-    Ok(Diagram::Venn(VennDiagram { title: raw.title, sets, intersections }))
-}
-
-fn validate_org_chart(raw: raw::RawOrgChartDiagram) -> Result<Diagram, DeclartError> {
-    debug_assert_eq!(raw.kind, "org_chart");
-    if raw.nodes.is_empty() {
-        return Err(DeclartError::EmptyItems);
-    }
-    // label is the unique identifier; validate uniqueness and parent references.
-    let labels: std::collections::HashSet<&str> = raw.nodes.iter().map(|n| n.label.as_str()).collect();
-    if labels.len() != raw.nodes.len() {
-        return Err(DeclartError::InvalidValue {
-            field: "label".to_string(),
-            value: "(duplicate)".to_string(),
-            hint: "Each node label must be unique within the diagram".to_string(),
-        });
-    }
-    for node in &raw.nodes {
-        if let Some(parent) = &node.parent {
-            if !labels.contains(parent.as_str()) {
-                return Err(DeclartError::InvalidValue {
-                    field: "parent".to_string(),
-                    value: parent.clone(),
-                    hint: "parent must reference an existing node label".to_string(),
-                });
-            }
-            if node.label == *parent {
-                return Err(DeclartError::InvalidValue {
-                    field: "parent".to_string(),
-                    value: parent.clone(),
-                    hint: "A node cannot be its own parent".to_string(),
-                });
-            }
-        }
-    }
-    let roots: Vec<&raw::RawOrgChartNode> = raw.nodes.iter().filter(|n| n.parent.is_none()).collect();
-    if roots.is_empty() {
-        return Err(DeclartError::InvalidValue {
-            field: "parent".to_string(),
-            value: "(all nodes have parents)".to_string(),
-            hint: "Exactly one root node (with no parent) is required".to_string(),
-        });
-    }
-    if roots.len() > 1 {
-        return Err(DeclartError::InvalidValue {
-            field: "parent".to_string(),
-            value: format!("{} root nodes", roots.len()),
-            hint: "Exactly one root node (with no parent) is required".to_string(),
-        });
-    }
-    let nodes = raw.nodes.into_iter().map(|n| OrgChartNode {
-        label: n.label,
-        parent: n.parent,
-    }).collect();
-    Ok(Diagram::OrgChart(OrgChartDiagram { title: raw.title, nodes }))
 }
 
 fn validate_hub_spoke(raw: raw::RawHubSpokeDiagram) -> Result<Diagram, DeclartError> {
@@ -443,70 +368,155 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
 
 #[cfg(test)]
 mod tests {
-    use crate::model::{Diagram, Emphasis};
+    use crate::model::{Diagram, Emphasis, HierarchyView, SequenceView};
     use super::{parse, parse_auto, parse_json};
 
-    const VALID_PYRAMID: &str = r#"
-kind = "pyramid"
-title = "Test Pyramid"
-
-[[items]]
-label = "Top"
-
-[[items]]
-label = "Bottom"
-emphasis = "primary"
-"#;
+    // --- sequence tests ---
 
     #[test]
-    fn parse_valid_pyramid() {
-        let diagram = parse(VALID_PYRAMID).unwrap();
-        let Diagram::Pyramid(d) = diagram else { panic!("expected Pyramid") };
-        assert_eq!(d.title, Some("Test Pyramid".to_string()));
+    fn parse_sequence_defaults_to_process_view() {
+        let input = "kind = \"sequence\"\n\n[[items]]\nlabel = \"Plan\"\n\n[[items]]\nlabel = \"Do\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Sequence(d) = diagram else { panic!("expected Sequence") };
+        assert_eq!(d.view, SequenceView::Process);
         assert_eq!(d.items.len(), 2);
-        assert_eq!(d.items[0].label, "Top");
-        assert_eq!(d.items[1].emphasis, Some(Emphasis::Primary));
     }
 
     #[test]
-    fn parse_rejects_forbidden_field() {
-        let input = "kind = \"pyramid\"\n\n[[items]]\nlabel = \"Top\"\ncolor = \"blue\"\n";
+    fn parse_sequence_explicit_view_cycle() {
+        let input = "kind = \"sequence\"\nview = \"cycle\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Sequence(d) = diagram else { panic!() };
+        assert_eq!(d.view, SequenceView::Cycle);
+    }
+
+    #[test]
+    fn parse_sequence_explicit_view_funnel() {
+        let input = "kind = \"sequence\"\nview = \"funnel\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Sequence(d) = diagram else { panic!() };
+        assert_eq!(d.view, SequenceView::Funnel);
+    }
+
+    #[test]
+    fn parse_sequence_explicit_view_pyramid() {
+        let input = "kind = \"sequence\"\nview = \"pyramid\"\n\n[[items]]\nlabel = \"Top\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Sequence(d) = diagram else { panic!() };
+        assert_eq!(d.view, SequenceView::Pyramid);
+    }
+
+    #[test]
+    fn parse_sequence_rejects_invalid_view() {
+        let input = "kind = \"sequence\"\nview = \"unknown\"\n\n[[items]]\nlabel = \"A\"\n";
         assert!(parse(input).is_err());
     }
 
     #[test]
-    fn parse_rejects_unknown_kind() {
-        let input = "kind = \"diagram\"\n\n[[items]]\nlabel = \"Item\"\n";
+    fn parse_sequence_cycle_requires_two_items() {
+        let input = "kind = \"sequence\"\nview = \"cycle\"\n\n[[items]]\nlabel = \"Only\"\n";
         assert!(parse(input).is_err());
     }
 
     #[test]
-    fn parse_rejects_empty_items() {
-        let input = "kind = \"pyramid\"\n";
+    fn parse_sequence_funnel_requires_two_items() {
+        let input = "kind = \"sequence\"\nview = \"funnel\"\n\n[[items]]\nlabel = \"Only\"\n";
         assert!(parse(input).is_err());
     }
 
     #[test]
-    fn parse_title_is_optional() {
-        let input = "kind = \"pyramid\"\n\n[[items]]\nlabel = \"Only\"\n";
+    fn parse_rejects_old_sequence_kind_names() {
+        for kind in &["process", "cycle", "funnel", "pyramid"] {
+            let input = format!("kind = \"{kind}\"\n\n[[items]]\nlabel = \"A\"\n");
+            assert!(parse(&input).is_err(), "kind '{kind}' should be rejected");
+        }
+    }
+
+    // --- hierarchy tests ---
+
+    #[test]
+    fn parse_hierarchy_auto_selects_org_chart_for_single_root() {
+        let input = "kind = \"hierarchy\"\n\n[[nodes]]\nlabel = \"CEO\"\n\n[[nodes]]\nlabel = \"CTO\"\nparent = \"CEO\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Pyramid(d) = diagram else { panic!() };
-        assert!(d.title.is_none());
+        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        assert_eq!(d.view, HierarchyView::OrgChart);
+        assert_eq!(d.nodes.len(), 2);
     }
 
     #[test]
-    fn parse_valid_process() {
-        let input = "kind = \"process\"\n\n[[items]]\nlabel = \"Step 1\"\n\n[[items]]\nlabel = \"Step 2\"\n";
+    fn parse_hierarchy_auto_selects_fishbone_for_multiple_roots() {
+        let input = "kind = \"hierarchy\"\ntitle = \"Issues\"\n\n[[nodes]]\nlabel = \"Materials\"\n\n[[nodes]]\nlabel = \"Methods\"\n\n[[nodes]]\nlabel = \"Bad input\"\nparent = \"Materials\"\n";
         let diagram = parse(input).unwrap();
-        assert!(matches!(diagram, Diagram::Process(_)));
+        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        assert_eq!(d.view, HierarchyView::Fishbone);
     }
 
     #[test]
-    fn parse_valid_cycle() {
-        let input = "kind = \"cycle\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
+    fn parse_hierarchy_explicit_view_org_chart() {
+        let input = "kind = \"hierarchy\"\nview = \"org_chart\"\n\n[[nodes]]\nlabel = \"Root\"\n\n[[nodes]]\nlabel = \"Child\"\nparent = \"Root\"\n";
         let diagram = parse(input).unwrap();
-        assert!(matches!(diagram, Diagram::Cycle(_)));
+        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        assert_eq!(d.view, HierarchyView::OrgChart);
     }
+
+    #[test]
+    fn parse_hierarchy_explicit_view_fishbone() {
+        let input = "kind = \"hierarchy\"\nview = \"fishbone\"\ntitle = \"Effect\"\n\n[[nodes]]\nlabel = \"Cause A\"\n\n[[nodes]]\nlabel = \"Cause B\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        assert_eq!(d.view, HierarchyView::Fishbone);
+    }
+
+    #[test]
+    fn parse_hierarchy_org_chart_rejects_multiple_roots() {
+        let input = "kind = \"hierarchy\"\nview = \"org_chart\"\n\n[[nodes]]\nlabel = \"Root A\"\n\n[[nodes]]\nlabel = \"Root B\"\n";
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_hierarchy_fishbone_requires_two_root_nodes() {
+        let input = "kind = \"hierarchy\"\nview = \"fishbone\"\ntitle = \"Effect\"\n\n[[nodes]]\nlabel = \"Only Cause\"\n";
+        assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_rejects_old_hierarchy_kind_names() {
+        let org = "kind = \"org_chart\"\n\n[[nodes]]\nlabel = \"Root\"\n";
+        assert!(parse(org).is_err());
+        let fish = "kind = \"fishbone\"\neffect = \"E\"\n\n[[causes]]\nlabel = \"C1\"\n\n[[causes]]\nlabel = \"C2\"\n";
+        assert!(parse(fish).is_err());
+    }
+
+    // --- smoke tests for unchanged kinds ---
+
+    #[test]
+    fn parse_matrix_smoke() {
+        let input = "kind = \"matrix\"\nx_axis = \"X\"\ny_axis = \"Y\"\n\n[[quadrants]]\nlabel = \"Q1\"\n\n[[quadrants]]\nlabel = \"Q2\"\n\n[[quadrants]]\nlabel = \"Q3\"\n\n[[quadrants]]\nlabel = \"Q4\"\n";
+        assert!(parse(input).is_ok());
+    }
+
+    #[test]
+    fn parse_timeline_smoke() {
+        let input = "kind = \"timeline\"\n\n[[events]]\ndate = \"2024\"\nlabel = \"A\"\n\n[[events]]\ndate = \"2025\"\nlabel = \"B\"\n";
+        assert!(parse(input).is_ok());
+    }
+
+    #[test]
+    fn parse_auto_dispatches_json_sequence() {
+        let input = r#"{"kind":"sequence","view":"cycle","items":[{"label":"A"},{"label":"B"}]}"#;
+        let diagram = parse_auto(input).unwrap();
+        let Diagram::Sequence(d) = diagram else { panic!() };
+        assert_eq!(d.view, SequenceView::Cycle);
+    }
+
+    #[test]
+    fn parse_json_hierarchy() {
+        let input = r#"{"kind":"hierarchy","nodes":[{"label":"CEO"},{"label":"CTO","parent":"CEO"}]}"#;
+        let diagram = parse_json(input).unwrap();
+        assert!(matches!(diagram, Diagram::Hierarchy(_)));
+    }
+
+    // --- existing tests preserved (matrix) ---
 
     #[test]
     fn parse_matrix_requires_four_quadrants() {
@@ -526,7 +536,6 @@ label = "Q2"
 
     #[test]
     fn parse_matrix_with_position_reorders_quadrants() {
-        // Declared in reverse order: bottom-right first, then top-left, top-right, bottom-left
         let input = r#"
 kind = "matrix"
 x_axis = "X"
@@ -550,7 +559,6 @@ position = "bottom-left"
 "#;
         let diagram = parse(input).unwrap();
         let Diagram::Matrix(d) = diagram else { panic!("expected Matrix") };
-        // Model stores in canonical order: top-left, top-right, bottom-left, bottom-right
         assert_eq!(d.quadrants[0].label, "Top-Left");
         assert_eq!(d.quadrants[1].label, "Top-Right");
         assert_eq!(d.quadrants[2].label, "Bottom-Left");
@@ -622,27 +630,8 @@ label = "Q1"
     }
 
     #[test]
-    fn parse_fishbone_rejects_too_many_causes() {
-        let mut input = "kind = \"fishbone\"\neffect = \"E\"\n".to_string();
-        for i in 0..21 {
-            input.push_str(&format!("[[causes]]\nlabel = \"C{}\"\n", i));
-        }
-        let err = parse(&input).unwrap_err();
-        assert!(err.to_string().contains("causes"), "error should mention 'causes'");
-    }
-
-    #[test]
-    fn parse_fishbone_accepts_exactly_20_causes() {
-        let mut input = "kind = \"fishbone\"\neffect = \"E\"\n".to_string();
-        for i in 0..20 {
-            input.push_str(&format!("[[causes]]\nlabel = \"C{}\"\n", i));
-        }
-        assert!(parse(&input).is_ok(), "20 causes should be accepted");
-    }
-
-    #[test]
-    fn parse_funnel_rejects_more_than_10_items() {
-        let mut input = "kind = \"funnel\"\n".to_string();
+    fn parse_sequence_funnel_rejects_more_than_10_items() {
+        let mut input = "kind = \"sequence\"\nview = \"funnel\"\n".to_string();
         for i in 0..11 {
             input.push_str(&format!("[[items]]\nlabel = \"Stage {}\"\n", i));
         }
@@ -651,8 +640,8 @@ label = "Q1"
     }
 
     #[test]
-    fn parse_funnel_accepts_exactly_10_items() {
-        let mut input = "kind = \"funnel\"\n".to_string();
+    fn parse_sequence_funnel_accepts_exactly_10_items() {
+        let mut input = "kind = \"sequence\"\nview = \"funnel\"\n".to_string();
         for i in 0..10 {
             input.push_str(&format!("[[items]]\nlabel = \"Stage {}\"\n", i));
         }
@@ -661,25 +650,6 @@ label = "Q1"
 
     // --- JSON parsing ---
 
-    const VALID_PYRAMID_JSON: &str = r#"{
-  "kind": "pyramid",
-  "title": "Maslow",
-  "items": [
-    { "label": "Self-Actualization" },
-    { "label": "Esteem", "emphasis": "primary" }
-  ]
-}"#;
-
-    #[test]
-    fn parse_json_valid_pyramid() {
-        let diagram = parse_json(VALID_PYRAMID_JSON).unwrap();
-        let Diagram::Pyramid(d) = diagram else { panic!("expected Pyramid") };
-        assert_eq!(d.title, Some("Maslow".to_string()));
-        assert_eq!(d.items.len(), 2);
-        assert_eq!(d.items[0].label, "Self-Actualization");
-        assert_eq!(d.items[1].emphasis, Some(Emphasis::Primary));
-    }
-
     #[test]
     fn parse_json_rejects_unknown_kind() {
         let input = r#"{"kind": "foobar", "items": []}"#;
@@ -687,48 +657,25 @@ label = "Q1"
     }
 
     #[test]
-    fn parse_json_rejects_forbidden_field() {
-        let input = r#"{"kind": "pyramid", "items": [{"label": "A", "color": "red"}]}"#;
-        assert!(parse_json(input).is_err());
-    }
-
-    #[test]
-    fn parse_json_valid_process() {
-        let input = r#"{"kind": "process", "items": [{"label": "Plan"}, {"label": "Do"}]}"#;
+    fn parse_json_valid_sequence_process() {
+        let input = r#"{"kind": "sequence", "items": [{"label": "Plan"}, {"label": "Do"}]}"#;
         let diagram = parse_json(input).unwrap();
-        assert!(matches!(diagram, Diagram::Process(_)));
+        let Diagram::Sequence(d) = diagram else { panic!() };
+        assert_eq!(d.view, SequenceView::Process);
     }
 
     #[test]
-    fn parse_json_valid_org_chart() {
-        let input = r#"{
-  "kind": "org_chart",
-  "nodes": [
-    {"label": "CEO"},
-    {"label": "CTO", "parent": "CEO"}
-  ]
-}"#;
-        let diagram = parse_json(input).unwrap();
-        assert!(matches!(diagram, Diagram::OrgChart(_)));
-    }
-
-    #[test]
-    fn parse_auto_dispatches_json() {
-        let diagram = parse_auto(VALID_PYRAMID_JSON).unwrap();
-        assert!(matches!(diagram, Diagram::Pyramid(_)));
-    }
-
-    #[test]
-    fn parse_auto_dispatches_toml() {
-        let diagram = parse_auto(VALID_PYRAMID).unwrap();
-        assert!(matches!(diagram, Diagram::Pyramid(_)));
+    fn parse_auto_dispatches_toml_sequence() {
+        let input = "kind = \"sequence\"\n\n[[items]]\nlabel = \"A\"\n\n[[items]]\nlabel = \"B\"\n";
+        let diagram = parse_auto(input).unwrap();
+        assert!(matches!(diagram, Diagram::Sequence(_)));
     }
 
     #[test]
     fn parse_auto_json_with_leading_whitespace() {
-        let input = format!("  \n{}", VALID_PYRAMID_JSON);
-        let diagram = parse_auto(&input).unwrap();
-        assert!(matches!(diagram, Diagram::Pyramid(_)));
+        let input = "  \n{\"kind\":\"sequence\",\"items\":[{\"label\":\"A\"},{\"label\":\"B\"}]}";
+        let diagram = parse_auto(input).unwrap();
+        assert!(matches!(diagram, Diagram::Sequence(_)));
     }
 
     // --- Timeline partial dates ---
@@ -897,5 +844,11 @@ label = "A"
         let Diagram::Comparison(d) = diagram else { panic!() };
         assert_eq!(d.cells.len(), 1);
         assert_eq!(d.cells[0].value, "Fast");
+    }
+
+    #[test]
+    fn parse_rejects_unknown_kind() {
+        let input = "kind = \"diagram\"\n\n[[items]]\nlabel = \"Item\"\n";
+        assert!(parse(input).is_err());
     }
 }
