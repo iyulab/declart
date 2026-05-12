@@ -92,7 +92,8 @@ mod tests {
 
     #[test]
     fn render_valid_pyramid() {
-        let input = c("kind = \"pyramid\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n");
+        let input = c("kind = \"sequence\"
+view = \"pyramid\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n");
         let theme = c("default");
         unsafe {
             let ptr = declart_render(input.as_ptr(), theme.as_ptr(), 0);
@@ -105,7 +106,8 @@ mod tests {
 
     #[test]
     fn render_with_width() {
-        let input = c("kind = \"pyramid\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n");
+        let input = c("kind = \"sequence\"
+view = \"pyramid\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n");
         let theme = c("default");
         unsafe {
             let ptr = declart_render(input.as_ptr(), theme.as_ptr(), 400);
@@ -137,7 +139,8 @@ mod tests {
 
     #[test]
     fn validate_valid_returns_null() {
-        let input = c("kind = \"pyramid\"\n[[items]]\nlabel = \"Item\"\n");
+        let input = c("kind = \"sequence\"
+view = \"pyramid\"\n[[items]]\nlabel = \"Item\"\n");
         unsafe {
             let ptr = declart_validate(input.as_ptr());
             assert!(ptr.is_null(), "expected null for valid input");

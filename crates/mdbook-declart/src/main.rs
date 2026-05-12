@@ -117,7 +117,8 @@ mod tests {
         let input = concat!(
             "Before\n\n",
             "```declart\n",
-            "kind = \"pyramid\"\n",
+            "kind = \"sequence\"\n",
+            "view = \"pyramid\"\n",
             "[[items]]\nlabel = \"Top\"\n",
             "[[items]]\nlabel = \"Base\"\n",
             "```\n\n",
