@@ -1,0 +1,45 @@
+kind = "fishbone"
+effect = "Effect"
+
+[[causes]]
+label = "C1"
+[[causes]]
+label = "C2"
+[[causes]]
+label = "C3"
+[[causes]]
+label = "C4"
+[[causes]]
+label = "C5"
+[[causes]]
+label = "C6"
+[[causes]]
+label = "C7"
+[[causes]]
+label = "C8"
+[[causes]]
+label = "C9"
+[[causes]]
+label = "C10"
+[[causes]]
+label = "C11"
+[[causes]]
+label = "C12"
+[[causes]]
+label = "C13"
+[[causes]]
+label = "C14"
+[[causes]]
+label = "C15"
+[[causes]]
+label = "C16"
+[[causes]]
+label = "C17"
+[[causes]]
+label = "C18"
+[[causes]]
+label = "C19"
+[[causes]]
+label = "C20"
+[[causes]]
+label = "C21"
