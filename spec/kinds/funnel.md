@@ -50,7 +50,7 @@ label = "Conversion"
 
 ## Example: Sales Pipeline
 
-```toml
+```declart
 kind = "funnel"
 title = "Sales Pipeline"
 

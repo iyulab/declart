@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.15.0
+
+Markdown ecosystem plugins — remark/rehype integration for Astro, Next.js, Docusaurus, MDX, VitePress.
+
+- **`remark-declart`** (`packages/remark-declart`): remark plugin for Markdown pipelines
+  - Transforms ` ```declart ` code blocks to inline SVG figures at build time
+  - Options: `theme`, `width`, `themeToml`
+  - Error-resilient: invalid declarations emit `<figure class="declart-error">` instead of crashing the build
+  - Works with Astro, Next.js MDX, Docusaurus, VitePress, and any remark-based pipeline
+- **`rehype-declart`** (`packages/rehype-declart`): rehype plugin for HTML AST pipelines
+  - Transforms `<pre><code class="language-declart">` blocks to inline SVG figures
+  - Uses `hast-util-from-html` for proper hast integration (no `rehype-raw` required)
+  - Same options as `remark-declart`
+- **npm publish CI** (`.github/workflows/publish-npm.yml`): publishes `@iyulab/declart`, `remark-declart`, `rehype-declart` on tag push
+- **Spec pages**: all 11 diagram kind pages now use ` ```declart ` examples — rendered as live SVG via `mdbook-declart` in the spec site
+- **151 tests** (unchanged — remark/rehype tests use node:test, separate from Cargo workspace)
+
 ## v0.14.0
 
 VS Code Extension + mdbook-declart preprocessor — editor integration and Markdown ecosystem support.

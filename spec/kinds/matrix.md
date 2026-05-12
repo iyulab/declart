@@ -41,7 +41,7 @@ When any quadrant has `position`, all four must specify it.
 
 ## Example
 
-```toml
+```declart
 kind = "matrix"
 title = "Eisenhower Matrix"
 x_axis = "Importance"

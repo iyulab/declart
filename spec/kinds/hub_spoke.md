@@ -28,7 +28,7 @@ A hub-and-spoke diagram. A central node radiates connections to surrounding spok
 
 ## Example
 
-```toml
+```declart
 kind = "hub_spoke"
 title = "Cloud Architecture"
 

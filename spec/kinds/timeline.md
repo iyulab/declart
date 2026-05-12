@@ -27,7 +27,7 @@ A timeline diagram. Events are placed along a horizontal axis at positions propo
 
 ## Example
 
-```toml
+```declart
 kind = "timeline"
 title = "Product Launch History"
 

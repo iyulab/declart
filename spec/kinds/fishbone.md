@@ -36,7 +36,7 @@ A fishbone (Ishikawa) cause-and-effect diagram. A central spine leads to an effe
 
 ## Example
 
-```toml
+```declart
 kind = "fishbone"
 title = "Website Performance Issues"
 

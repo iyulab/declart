@@ -28,7 +28,7 @@ A cycle diagram. Items are arranged as steps in a closed loop, connected by dire
 
 ## Example
 
-```toml
+```declart
 kind = "cycle"
 title = "PDCA Cycle"
 

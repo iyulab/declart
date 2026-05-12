@@ -49,7 +49,7 @@ parent = "CEO"
 
 ## Example: Company Structure
 
-```toml
+```declart
 kind = "org_chart"
 title = "Engineering Division"
 

@@ -39,7 +39,7 @@ label = <string>          # item being compared (required, unique)
 
 ## Example
 
-```toml
+```declart
 kind = "comparison"
 title = "JavaScript Framework Comparison"
 

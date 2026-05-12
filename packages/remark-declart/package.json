@@ -1,0 +1,40 @@
+{
+  "name": "remark-declart",
+  "version": "0.15.0",
+  "description": "remark plugin to render ```declart code blocks as SVG diagrams",
+  "keywords": ["remark", "plugin", "declart", "diagram", "svg", "markdown", "unified"],
+  "license": "MIT",
+  "author": "iyulab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iyulab/declart",
+    "directory": "packages/remark-declart"
+  },
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "default": "./index.js"
+    }
+  },
+  "files": ["index.js", "index.d.ts"],
+  "scripts": {
+    "test": "node --test test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "unified": ">=10"
+  },
+  "dependencies": {
+    "@iyulab/declart": "file:../declart-node",
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "remark": "^15.0.0",
+    "remark-html": "^16.0.0"
+  }
+}

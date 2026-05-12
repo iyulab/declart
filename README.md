@@ -65,7 +65,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.14.0** — VS Code Extension + mdbook-declart preprocessor. 151 tests.
+**Current: v0.15.0** — remark-declart + rehype-declart ecosystem plugins. 151 tests.
 
 | Capability | State |
 |------------|-------|

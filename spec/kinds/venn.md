@@ -34,7 +34,7 @@ A Venn diagram. Two or three overlapping circles represent sets. Intersection re
 
 ## Example
 
-```toml
+```declart
 kind = "venn"
 title = "Skills Overlap"
 

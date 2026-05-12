@@ -1,0 +1,105 @@
+name: Publish npm packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Rust stable + wasm32 target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-wasm-npm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-wasm-npm-
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM (nodejs target)
+        run: wasm-pack build crates/declart-wasm --target nodejs --out-dir ../../packages/declart-node/wasm
+        working-directory: crates/declart-wasm
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish @iyulab/declart
+        run: npm publish --access public
+        working-directory: packages/declart-node
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install remark-declart deps (local @iyulab/declart)
+        run: npm install
+        working-directory: packages/remark-declart
+
+      - name: Test remark-declart
+        run: npm test
+        working-directory: packages/remark-declart
+
+      - name: Fix @iyulab/declart dep version for publish
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.dependencies['@iyulab/declart'] = '^${{ steps.version.outputs.VERSION }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+        working-directory: packages/remark-declart
+
+      - name: Publish remark-declart
+        run: npm publish --access public
+        working-directory: packages/remark-declart
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install rehype-declart deps (local @iyulab/declart)
+        run: npm install
+        working-directory: packages/rehype-declart
+
+      - name: Test rehype-declart
+        run: npm test
+        working-directory: packages/rehype-declart
+
+      - name: Fix @iyulab/declart dep version for publish
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.dependencies['@iyulab/declart'] = '^${{ steps.version.outputs.VERSION }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+        working-directory: packages/rehype-declart
+
+      - name: Publish rehype-declart
+        run: npm publish --access public
+        working-directory: packages/rehype-declart
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
