@@ -24,7 +24,7 @@ const result = await unified()
   .use(rehypeStringify)
   .process(`
 \`\`\`declart
-kind = "process"
+kind = "sequence"
 title = "Release Pipeline"
 
 [[items]]

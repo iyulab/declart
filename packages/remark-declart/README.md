@@ -20,7 +20,8 @@ const result = await remark()
   .use(remarkHtml, { sanitize: false })
   .process(`
 \`\`\`declart
-kind = "pyramid"
+kind = "sequence"
+view = "pyramid"
 title = "Maslow's Hierarchy"
 
 [[items]]
