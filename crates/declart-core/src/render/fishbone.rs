@@ -135,16 +135,16 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
         };
         builder.text(head_x, head_y, &cause_display, &text_color.to_hex(), fs);
 
-        // Sub-items: diagonal branches off the cause branch (45° away from spine)
-        let diag = SUB_BRANCH_LEN * std::f32::consts::FRAC_1_SQRT_2;
+        // Sub-items: horizontal branches off the lower half of the cause branch
         for (j, item) in cause.items.iter().enumerate() {
-            let t = (j as f32 + 1.0) / (cause.items.len() as f32 + 1.0);
+            // Restrict to lower 50% so sub-items stay away from the cause box
+            let t = (j as f32 + 1.0) / (cause.items.len() as f32 + 1.0) * 0.5;
             let sx = foot_x + (head_x - foot_x) * t;
             let sy = foot_y + (head_y - foot_y) * t;
 
-            // Diagonal: go left and outward (away from spine) at 45°
-            let sub_end_x = sx - diag;
-            let sub_end_y = sy + sign * diag; // sign=-1 for above → goes up; +1 for below → goes down
+            // Horizontal sub-branch going left
+            let sub_end_x = sx - SUB_BRANCH_LEN;
+            let sub_end_y = sy;
             builder.line(sx, sy, sub_end_x, sub_end_y, &sub_color.to_hex(), 1.5);
 
             let mut sfs = theme.typography.label_size - 2.0;
@@ -158,7 +158,9 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
             } else {
                 item.label.clone()
             };
-            builder.text(sub_end_x, sub_end_y + sign * sfs * 0.7, &sub_display, &sub_text_color.to_hex(), sfs);
+            // Label above/below the sub-branch line (toward the cause side)
+            let label_y = sub_end_y + sign * (sfs * 0.6 + 3.0);
+            builder.text(sub_end_x, label_y, &sub_display, &sub_text_color.to_hex(), sfs);
         }
     }
 

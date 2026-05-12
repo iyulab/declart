@@ -2,7 +2,7 @@
   "name": "declart",
   "displayName": "Declart",
   "description": "Declarative diagram preview for Declart TOML/JSON files",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "publisher": "iyulab",
   "license": "MIT",
   "repository": {

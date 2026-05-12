@@ -1,8 +1,16 @@
 {
   "name": "rehype-declart",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "description": "rehype plugin to render <pre><code class=\"language-declart\"> blocks as SVG diagrams",
-  "keywords": ["rehype", "plugin", "declart", "diagram", "svg", "html", "unified"],
+  "keywords": [
+    "rehype",
+    "plugin",
+    "declart",
+    "diagram",
+    "svg",
+    "html",
+    "unified"
+  ],
   "license": "MIT",
   "author": "iyulab",
   "repository": {
@@ -19,7 +27,10 @@
       "default": "./index.js"
     }
   },
-  "files": ["index.js", "index.d.ts"],
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
   "scripts": {
     "test": "node --test test.js"
   },

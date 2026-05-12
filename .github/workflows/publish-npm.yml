@@ -50,7 +50,12 @@ jobs:
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Publish @iyulab/declart
-        run: npm publish --access public
+        run: |
+          if npm view "@iyulab/declart@${{ steps.version.outputs.VERSION }}" version 2>/dev/null | grep -q "${{ steps.version.outputs.VERSION }}"; then
+            echo "Already published, skipping"
+          else
+            npm publish --access public
+          fi
         working-directory: packages/declart-node
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -74,7 +79,12 @@ jobs:
         working-directory: packages/remark-declart
 
       - name: Publish remark-declart
-        run: npm publish --access public
+        run: |
+          if npm view "remark-declart@${{ steps.version.outputs.VERSION }}" version 2>/dev/null | grep -q "${{ steps.version.outputs.VERSION }}"; then
+            echo "Already published, skipping"
+          else
+            npm publish --access public
+          fi
         working-directory: packages/remark-declart
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -98,7 +108,12 @@ jobs:
         working-directory: packages/rehype-declart
 
       - name: Publish rehype-declart
-        run: npm publish --access public
+        run: |
+          if npm view "rehype-declart@${{ steps.version.outputs.VERSION }}" version 2>/dev/null | grep -q "${{ steps.version.outputs.VERSION }}"; then
+            echo "Already published, skipping"
+          else
+            npm publish --access public
+          fi
         working-directory: packages/rehype-declart
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

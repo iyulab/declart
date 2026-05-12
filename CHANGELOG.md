@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.15.1
+
+Patch: fishbone sub-item overlap fix + npm publish CI improvements.
+
+- **Fishbone sub-item layout**: sub-item labels no longer overlap cause boxes. Sub-branches now attach to the lower 50% of the cause branch and extend horizontally; labels are positioned above/below the sub-branch line rather than in the cause box area.
+- **npm publish CI**: fixed `--out-dir` absolute path for wasm-pack, added skip-if-already-published guard for all three packages.
+
 ## v0.15.0
 
 Markdown ecosystem plugins — remark/rehype integration for Astro, Next.js, Docusaurus, MDX, VitePress.

@@ -1,5 +1,10 @@
 # Declart
 
+[![CI](https://github.com/iyulab/declart/actions/workflows/ci.yml/badge.svg)](https://github.com/iyulab/declart/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@iyulab/declart)](https://www.npmjs.com/package/@iyulab/declart)
+[![Crates.io](https://img.shields.io/crates/v/declart-core)](https://crates.io/crates/declart-core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 > Declare what to show. The engine decides how it looks.
 
 Declart is a declarative diagram library for **business and conceptual visuals** — the kind found in PowerPoint SmartArt, consulting decks, and strategy documents. You describe *what data belongs to which kind of diagram*. The engine handles layout, typography, spacing, and styling.
@@ -65,7 +70,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.15.0** — remark-declart + rehype-declart ecosystem plugins. 151 tests.
+**Current: v0.15.1** — remark-declart + rehype-declart + fishbone fix. 151 tests.
 
 | Capability | State |
 |------------|-------|
