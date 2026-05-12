@@ -78,6 +78,13 @@ fn validate_items(raw: raw::RawItemsDiagram) -> Result<Diagram, DeclartError> {
     if kind_str == "funnel" && n_items < 2 {
         return Err(DeclartError::TooFewItems { kind: "funnel", min: 2, got: n_items });
     }
+    if kind_str == "funnel" && n_items > 10 {
+        return Err(DeclartError::InvalidValue {
+            field: "items".to_string(),
+            value: format!("{} items", n_items),
+            hint: "Funnel diagrams support at most 10 stages. Beyond that, lower stages collapse to the minimum width and lose the funnel shape.".to_string(),
+        });
+    }
     let items = parse_items(raw.items)?;
     let inner = ItemsDiagram { title: raw.title, items };
     let diagram = match kind_str {
@@ -150,6 +157,13 @@ fn validate_fishbone(raw: raw::RawFishboneDiagram) -> Result<Diagram, DeclartErr
     debug_assert_eq!(raw.kind, "fishbone");
     if raw.causes.len() < 2 {
         return Err(DeclartError::TooFewItems { kind: "fishbone", min: 2, got: raw.causes.len() });
+    }
+    if raw.causes.len() > 20 {
+        return Err(DeclartError::InvalidValue {
+            field: "causes".to_string(),
+            value: format!("{} causes", raw.causes.len()),
+            hint: "Fishbone diagrams support at most 20 causes. For visual clarity, 8 or fewer is recommended.".to_string(),
+        });
     }
     let causes = raw
         .causes
@@ -467,5 +481,43 @@ y_axis = "Y"
 label = "Q1"
 "#;
         assert!(parse(input).is_err());
+    }
+
+    #[test]
+    fn parse_fishbone_rejects_too_many_causes() {
+        let mut input = "kind = \"fishbone\"\neffect = \"E\"\n".to_string();
+        for i in 0..21 {
+            input.push_str(&format!("[[causes]]\nlabel = \"C{}\"\n", i));
+        }
+        let err = parse(&input).unwrap_err();
+        assert!(err.to_string().contains("causes"), "error should mention 'causes'");
+    }
+
+    #[test]
+    fn parse_fishbone_accepts_exactly_20_causes() {
+        let mut input = "kind = \"fishbone\"\neffect = \"E\"\n".to_string();
+        for i in 0..20 {
+            input.push_str(&format!("[[causes]]\nlabel = \"C{}\"\n", i));
+        }
+        assert!(parse(&input).is_ok(), "20 causes should be accepted");
+    }
+
+    #[test]
+    fn parse_funnel_rejects_more_than_10_items() {
+        let mut input = "kind = \"funnel\"\n".to_string();
+        for i in 0..11 {
+            input.push_str(&format!("[[items]]\nlabel = \"Stage {}\"\n", i));
+        }
+        let err = parse(&input).unwrap_err();
+        assert!(err.to_string().contains("items"), "error should mention 'items'");
+    }
+
+    #[test]
+    fn parse_funnel_accepts_exactly_10_items() {
+        let mut input = "kind = \"funnel\"\n".to_string();
+        for i in 0..10 {
+            input.push_str(&format!("[[items]]\nlabel = \"Stage {}\"\n", i));
+        }
+        assert!(parse(&input).is_ok(), "10 funnel stages should be accepted");
     }
 }

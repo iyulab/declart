@@ -65,6 +65,8 @@ let svg = render(&diagram, &DEFAULT_THEME)?;
 | `venn` | Set intersections, overlapping groups |
 | `timeline` | Date-anchored events |
 | `fishbone` | Cause-and-effect, root cause analysis |
+| `org_chart` | Hierarchical trees, organizational structures |
+| `funnel` | Conversion funnels, sales pipelines |
 
 ## Design Philosophy
 

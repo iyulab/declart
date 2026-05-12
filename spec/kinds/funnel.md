@@ -36,7 +36,8 @@ label = "Conversion"
 
 ## Constraints
 
-- At least 2 items are required.
+- At least 2 items are required; maximum 10.
+- **10 stages or fewer is recommended.** Beyond 10 stages, lower stages reach the minimum width and cease to narrow, losing the funnel shape.
 
 ## Rendering
 

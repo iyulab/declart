@@ -31,7 +31,8 @@ A fishbone (Ishikawa) cause-and-effect diagram. A central spine leads to an effe
 - Causes alternate above and below the spine, evenly spaced.
 - Each cause is represented by a diagonal branch line ending in a labeled box.
 - Sub-causes are shorter branches off the cause branch.
-- At least two causes are required.
+- At least two causes are required; maximum 20.
+- **8 or fewer causes is recommended** for visual clarity. With more than 9 causes, cause boxes on the same side of the spine begin to overlap horizontally.
 
 ## Example
 

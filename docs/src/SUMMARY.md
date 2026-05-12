@@ -14,6 +14,7 @@
 
 - [Principles](principles.md)
 - [Common Schema](schema.md)
+- [Using with AI (Claude / GPT)](llm-guide.md)
 
 ---
 

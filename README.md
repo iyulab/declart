@@ -65,6 +65,8 @@ Explicit boundaries that protect focus:
 
 ## Status
 
+v0.11.0 — Visualization quality hardening (Phase 11-A/B): Fishbone max 20 causes validation, Funnel max 10 stages, Timeline dynamic label-available width (density-aware), Matrix axis label scale/truncation, LLM-friendly documentation (llm-guide.md, 10 kinds × prompt templates).
+
 v0.10.0 — User-defined TOML themes (`Theme::from_toml`, `--theme file.toml`, `render_with_theme_toml` WASM), truncate_text full integration (all 10 renderers), `is_dark()` WCAG threshold improvement, Org Chart layout fix (asymmetric subtree centering), spec/themes/ suite.
 
 v0.9.0 — Org Chart kind (hierarchical tree), Funnel kind (tapered stages), accessible/warm themes (Okabe-Ito + terracotta), truncate_text() helper (ellipsis for long labels), Hub-Spoke min-2 spokes validation, Phase 8-C research (theme system design + expressiveness levers).
@@ -104,6 +106,11 @@ v0.8.0 — Fishbone standard visuals (arrowhead + diagonal sub-items), Matrix qu
 | User-defined TOML themes (`--theme file.toml`, `Theme::from_toml`) | ✅ v0.10 |
 | Playground Custom theme TOML editor | ✅ v0.10 |
 | Org Chart layout fix (asymmetric tree centering) | ✅ v0.10 |
+| Fishbone max causes validation (>20 rejected, ≤8 recommended) | ✅ v0.11 |
+| Funnel max stages validation (>10 rejected) | ✅ v0.11 |
+| Timeline density-aware label available width | ✅ v0.11 |
+| Matrix axis label scale + truncation | ✅ v0.11 |
+| LLM guide (docs/llm-guide.md, 10 kinds × prompt templates) | ✅ v0.11 |
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 

@@ -78,7 +78,10 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
             axis_y + TICK_HEIGHT + LABEL_OFFSET + DATE_FONT_SIZE
         };
 
-        let available = 100.0_f32;
+        // available width scales with event spacing to reduce horizontal label collision.
+        // Half the average inter-event gap, capped to [40, 100] px.
+        let avg_spacing = if n > 1 { usable_width / (n - 1) as f32 } else { usable_width };
+        let available = (avg_spacing * 0.45).clamp(40.0, 100.0);
         let mut fs = theme.typography.label_size;
         let tw = font::measure_text(&event.label, fs);
         if tw > available && available > 0.0 {
@@ -169,5 +172,24 @@ mod tests {
         assert!(date_to_days("2024-01-01") < date_to_days("2024-06-01"));
         assert!(date_to_days("2024-06-01") < date_to_days("2024-12-31"));
         assert!(date_to_days("2023-12-31") < date_to_days("2024-01-01"));
+    }
+
+    #[test]
+    fn dense_timeline_truncates_long_labels() {
+        // 15 events: canvas_w = max(800, 15*55+120) = 945. avg_spacing = (945-120)/14 ≈ 58.9.
+        // available = (58.9 * 0.45).clamp(40, 100) ≈ 26.5 → clamped to 40.0.
+        // A 40-char label must be truncated.
+        let events: Vec<TimelineEvent> = (0..15)
+            .map(|i| TimelineEvent {
+                date: format!("2024-{:02}-01", (i % 12) + 1),
+                label: "A Very Long Event Label That Should Be Truncated".to_string(),
+            })
+            .collect();
+        let d = TimelineDiagram { title: None, events };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.starts_with("<svg"));
+        // Full label should not appear; truncated version (with ellipsis) should
+        assert!(!svg.contains("A Very Long Event Label That Should Be Truncated"),
+            "long label should be truncated in dense timeline");
     }
 }

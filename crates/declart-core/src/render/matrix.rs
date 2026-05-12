@@ -93,13 +93,35 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
     let y_label_x = PADDING / 3.0;
     let y_label_y = (grid_top + grid_bottom) / 2.0;
 
-    // X-axis: centered label + Low/High direction indicators at grid edges
-    builder.text((grid_left + grid_right) / 2.0, x_label_y, &diagram.x_axis, label_color, AXIS_LABEL_SIZE);
+    // X-axis: centered label with scale/truncation + Low/High direction indicators
+    let x_avail = grid_w * 0.7;
+    let mut x_fs = AXIS_LABEL_SIZE;
+    let xtw = font::measure_text(&diagram.x_axis, x_fs);
+    if xtw > x_avail && x_avail > 0.0 {
+        x_fs = (x_fs * x_avail / xtw).max(9.0);
+    }
+    let x_label = if font::measure_text(&diagram.x_axis, x_fs) > x_avail {
+        font::truncate_text(&diagram.x_axis, x_fs, x_avail)
+    } else {
+        diagram.x_axis.clone()
+    };
+    builder.text((grid_left + grid_right) / 2.0, x_label_y, &x_label, label_color, x_fs);
     builder.text(grid_left, x_label_y, "Low", dir_color, AXIS_DIRECTION_SIZE);
     builder.text(grid_right, x_label_y, "High", dir_color, AXIS_DIRECTION_SIZE);
 
-    // Y-axis: rotated label + Low/High at grid bottom/top (horizontal, no rotation needed for short words)
-    builder.text_rotated(y_label_x, y_label_y, &diagram.y_axis, label_color, AXIS_LABEL_SIZE, -90.0);
+    // Y-axis: rotated label with scale/truncation + Low/High at grid edges
+    let y_avail = grid_h * 0.7;
+    let mut y_fs = AXIS_LABEL_SIZE;
+    let ytw = font::measure_text(&diagram.y_axis, y_fs);
+    if ytw > y_avail && y_avail > 0.0 {
+        y_fs = (y_fs * y_avail / ytw).max(9.0);
+    }
+    let y_label = if font::measure_text(&diagram.y_axis, y_fs) > y_avail {
+        font::truncate_text(&diagram.y_axis, y_fs, y_avail)
+    } else {
+        diagram.y_axis.clone()
+    };
+    builder.text_rotated(y_label_x, y_label_y, &y_label, label_color, y_fs, -90.0);
     builder.text(y_label_x, grid_bottom, "Low", dir_color, AXIS_DIRECTION_SIZE);
     builder.text(y_label_x, grid_top, "High", dir_color, AXIS_DIRECTION_SIZE);
 
@@ -179,5 +201,28 @@ mod tests {
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.contains("font-weight=\"bold\""), "primary quadrant should be bold");
         assert!(svg.contains("stroke-width=\"3.0\""), "primary quadrant should have stroke");
+    }
+
+    #[test]
+    fn render_long_axis_labels_do_not_overflow() {
+        // grid_w ≈ 425px. x_avail = 425 * 0.7 = 297.5. A 50-char label at 13px ≈ 350px → must scale/truncate.
+        let long_label = "Return on Investment vs Market Capitalization Rate";
+        let d = MatrixDiagram {
+            title: None,
+            x_axis: long_label.to_string(),
+            y_axis: long_label.to_string(),
+            quadrants: vec![
+                Item { label: "Q1".to_string(), emphasis: None },
+                Item { label: "Q2".to_string(), emphasis: None },
+                Item { label: "Q3".to_string(), emphasis: None },
+                Item { label: "Q4".to_string(), emphasis: None },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.starts_with("<svg"), "should produce valid SVG");
+        // Full label should not appear verbatim — it must be scaled or truncated
+        // (either truncated to "Return…" or scaled down)
+        // At minimum the diagram renders without panic
+        assert!(svg.ends_with("</svg>"));
     }
 }

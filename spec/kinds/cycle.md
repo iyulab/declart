@@ -24,6 +24,7 @@ A cycle diagram. Items are arranged as steps in a closed loop, connected by dire
 - Directional arrows point clockwise between adjacent nodes.
 - Each node is a rectangular box centered on its position.
 - Colors cycle through the apex-to-base gradient across all nodes. Colors are positional decorators — they do not indicate importance or priority among steps in the cycle.
+- The diagram radius scales dynamically with item count, ensuring nodes never overlap regardless of how many items are used.
 
 ## Example
 
