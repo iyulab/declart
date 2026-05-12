@@ -1,0 +1,25 @@
+kind = "sequence"
+view = "funnel"
+
+[[items]]
+label = "S1"
+[[items]]
+label = "S2"
+[[items]]
+label = "S3"
+[[items]]
+label = "S4"
+[[items]]
+label = "S5"
+[[items]]
+label = "S6"
+[[items]]
+label = "S7"
+[[items]]
+label = "S8"
+[[items]]
+label = "S9"
+[[items]]
+label = "S10"
+[[items]]
+label = "S11"

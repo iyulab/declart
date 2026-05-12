@@ -1,0 +1,27 @@
+kind = "hierarchy"
+view = "fishbone"
+title = "Slow Page Load"
+
+[[nodes]]
+label = "Server"
+
+[[nodes]]
+label = "CPU saturation"
+parent = "Server"
+
+[[nodes]]
+label = "Network"
+
+[[nodes]]
+label = "Bandwidth"
+parent = "Network"
+
+[[nodes]]
+label = "Code"
+
+[[nodes]]
+label = "Database"
+
+[[nodes]]
+label = "Slow queries"
+parent = "Database"

@@ -1,0 +1,6 @@
+kind = "hierarchy"
+view = "fishbone"
+title = "Effect"
+
+[[nodes]]
+label = "Only Cause"

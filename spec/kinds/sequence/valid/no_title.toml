@@ -1,0 +1,7 @@
+kind = "sequence"
+
+[[items]]
+label = "Step 1"
+
+[[items]]
+label = "Step 2"

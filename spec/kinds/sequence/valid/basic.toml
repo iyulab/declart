@@ -1,0 +1,14 @@
+kind = "sequence"
+title = "Software Release Pipeline"
+
+[[items]]
+label = "Code Review"
+
+[[items]]
+label = "Build"
+
+[[items]]
+label = "Test"
+
+[[items]]
+label = "Deploy"

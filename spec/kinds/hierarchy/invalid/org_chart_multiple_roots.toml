@@ -1,0 +1,8 @@
+kind = "hierarchy"
+view = "org_chart"
+
+[[nodes]]
+label = "Root A"
+
+[[nodes]]
+label = "Root B"

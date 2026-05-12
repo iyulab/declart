@@ -1,8 +1,0 @@
-kind = "org_chart"
-
-[[nodes]]
-label = "Node A"
-
-[[nodes]]
-label = "Node A"
-parent = "Node A"

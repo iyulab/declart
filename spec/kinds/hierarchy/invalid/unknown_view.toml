@@ -1,0 +1,5 @@
+kind = "hierarchy"
+view = "tree"
+
+[[nodes]]
+label = "Root"

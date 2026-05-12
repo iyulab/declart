@@ -1,5 +1,0 @@
-kind = "org_chart"
-
-[[nodes]]
-label = "Self-referencing"
-parent = "Self-referencing"

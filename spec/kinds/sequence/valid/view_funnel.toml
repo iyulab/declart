@@ -1,0 +1,15 @@
+kind = "sequence"
+view = "funnel"
+title = "Sales Funnel"
+
+[[items]]
+label = "Awareness"
+
+[[items]]
+label = "Interest"
+
+[[items]]
+label = "Decision"
+
+[[items]]
+label = "Purchase"

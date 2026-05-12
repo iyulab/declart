@@ -58,33 +58,23 @@ fn assert_invalid_examples(kind: &str) {
 }
 
 #[test]
-fn pyramid_valid_examples_parse_successfully() {
-    assert_valid_examples("pyramid");
+fn sequence_valid_examples_parse_successfully() {
+    assert_valid_examples("sequence");
 }
 
 #[test]
-fn pyramid_invalid_examples_fail_to_parse() {
-    assert_invalid_examples("pyramid");
+fn sequence_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("sequence");
 }
 
 #[test]
-fn process_valid_examples_parse_successfully() {
-    assert_valid_examples("process");
+fn hierarchy_valid_examples_parse_successfully() {
+    assert_valid_examples("hierarchy");
 }
 
 #[test]
-fn process_invalid_examples_fail_to_parse() {
-    assert_invalid_examples("process");
-}
-
-#[test]
-fn cycle_valid_examples_parse_successfully() {
-    assert_valid_examples("cycle");
-}
-
-#[test]
-fn cycle_invalid_examples_fail_to_parse() {
-    assert_invalid_examples("cycle");
+fn hierarchy_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("hierarchy");
 }
 
 #[test]
@@ -125,36 +115,6 @@ fn timeline_valid_examples_parse_successfully() {
 #[test]
 fn timeline_invalid_examples_fail_to_parse() {
     assert_invalid_examples("timeline");
-}
-
-#[test]
-fn fishbone_valid_examples_parse_successfully() {
-    assert_valid_examples("fishbone");
-}
-
-#[test]
-fn fishbone_invalid_examples_fail_to_parse() {
-    assert_invalid_examples("fishbone");
-}
-
-#[test]
-fn org_chart_valid_examples_parse_successfully() {
-    assert_valid_examples("org_chart");
-}
-
-#[test]
-fn org_chart_invalid_examples_fail_to_parse() {
-    assert_invalid_examples("org_chart");
-}
-
-#[test]
-fn funnel_valid_examples_parse_successfully() {
-    assert_valid_examples("funnel");
-}
-
-#[test]
-fn funnel_invalid_examples_fail_to_parse() {
-    assert_invalid_examples("funnel");
 }
 
 #[test]

@@ -1,9 +1,0 @@
-kind = "fishbone"
-effect = "Effect"
-color = "blue"
-
-[[causes]]
-label = "Cause 1"
-
-[[causes]]
-label = "Cause 2"

@@ -1,0 +1,5 @@
+kind = "sequence"
+
+[[items]]
+label = "A"
+color = "red"

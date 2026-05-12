@@ -1,5 +1,0 @@
-kind = "process"
-
-[[items]]
-label = "Start"
-color = "green"

@@ -6,18 +6,19 @@ Rules that apply to every Declart declaration file.
 
 | Field | Type   | Description                          |
 |-------|--------|--------------------------------------|
-| kind  | string | One of: `pyramid`, `process`, `cycle`, `matrix`, `hub_spoke`, `venn`, `timeline`, `fishbone`, `org_chart`, `funnel`, `comparison` |
+| kind  | string | One of: `sequence`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison` |
 
 ## Optional fields
 
 | Field | Type   | Description                                        |
 |-------|--------|----------------------------------------------------|
 | title | string | Display title rendered above the diagram. Omit to suppress. |
+| view  | string | Rendering intent within the kind. Valid values depend on `kind`. Omit to let the engine select automatically. |
 
 ## Item arrays
 
 - Items are declared as `[[items]]` TOML array-of-tables.
-- At least one item is required for all items-based kinds (pyramid, process, cycle). The matrix kind uses `[[quadrants]]` instead.
+- At least one item is required for `sequence`. The `matrix` kind uses `[[quadrants]]`; `hierarchy` uses `[[nodes]]`.
 - Item order in the file is rendering order.
 
 ## Forbidden fields

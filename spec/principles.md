@@ -10,4 +10,4 @@ These principles govern every declaration file format in Declart, across all dia
 
 4. **Minimal and concise.** Each kind defines only its required fields. Optional fields are added only when proven necessary across multiple use cases. When in doubt, leave it out.
 
-5. **One representation per kind.** There is exactly one way to express each diagram. No aliases, no alternate structures, no flags that change interpretation. Two valid declarations that express the same diagram must be byte-for-byte identical except for whitespace.
+5. **One representation per diagram.** Each `kind + view` pair has exactly one valid schema. No aliases, structural variants, or flags that change interpretation. Two declarations expressing the same diagram are byte-for-byte identical except for whitespace.

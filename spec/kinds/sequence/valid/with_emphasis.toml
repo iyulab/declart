@@ -1,0 +1,11 @@
+kind = "sequence"
+
+[[items]]
+label = "Plan"
+
+[[items]]
+label = "Execute"
+emphasis = "primary"
+
+[[items]]
+label = "Review"

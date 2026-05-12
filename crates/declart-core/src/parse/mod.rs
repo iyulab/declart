@@ -368,7 +368,7 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
 
 #[cfg(test)]
 mod tests {
-    use crate::model::{Diagram, Emphasis, HierarchyView, SequenceView};
+    use crate::model::{Diagram, HierarchyView, SequenceView};
     use super::{parse, parse_auto, parse_json};
 
     // --- sequence tests ---

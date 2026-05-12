@@ -1,0 +1,15 @@
+kind = "sequence"
+view = "cycle"
+title = "PDCA"
+
+[[items]]
+label = "Plan"
+
+[[items]]
+label = "Do"
+
+[[items]]
+label = "Check"
+
+[[items]]
+label = "Act"

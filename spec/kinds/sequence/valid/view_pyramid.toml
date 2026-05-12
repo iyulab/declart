@@ -1,0 +1,18 @@
+kind = "sequence"
+view = "pyramid"
+title = "Maslow's Hierarchy of Needs"
+
+[[items]]
+label = "Self-actualization"
+
+[[items]]
+label = "Esteem"
+
+[[items]]
+label = "Love & Belonging"
+
+[[items]]
+label = "Safety"
+
+[[items]]
+label = "Physiological"

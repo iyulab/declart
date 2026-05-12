@@ -1,0 +1,5 @@
+kind = "sequence"
+view = "horizontal"
+
+[[items]]
+label = "A"
