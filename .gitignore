@@ -2,6 +2,7 @@ CLAUDE.md
 claudedocs/
 target/
 *.svg
+*.rlib
 docs/book/
 docs/src/principles.md
 docs/src/schema.md

@@ -48,6 +48,15 @@ fn process_items(items: &mut Vec<Value>) {
 }
 
 fn process_content(content: &str) -> String {
+    // Normalize CRLF to LF (Windows git checkout produces CRLF on Windows)
+    let content_lf;
+    let content = if content.contains('\r') {
+        content_lf = content.replace("\r\n", "\n");
+        content_lf.as_str()
+    } else {
+        content
+    };
+
     let fence_open = "```declart\n";
     let fence_close = "\n```";
 
@@ -148,6 +157,14 @@ mod tests {
         let out = process_content(input);
         // Unclosed block → restore original content
         assert!(out.contains("```declart\n"));
+    }
+
+    #[test]
+    fn handles_crlf_line_endings() {
+        let input = "Before\r\n\r\n```declart\r\nkind = \"sequence\"\r\nview = \"pyramid\"\r\n[[items]]\r\nlabel = \"Top\"\r\n[[items]]\r\nlabel = \"Base\"\r\n```\r\n\r\nAfter\r\n";
+        let out = process_content(input);
+        assert!(out.contains("<figure class=\"declart\">"), "CRLF input should render SVG figure");
+        assert!(out.contains("<svg"), "should contain SVG");
     }
 
     #[test]
