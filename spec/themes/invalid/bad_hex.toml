@@ -1,0 +1,8 @@
+# Invalid hex color: not #RRGGBB format
+[colors]
+apex       = "dark-blue"
+base       = "#B8D0E8"
+background = "#FFFFFF"
+on_dark    = "#FFFFFF"
+on_light   = "#003087"
+title      = "#003087"

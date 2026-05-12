@@ -136,9 +136,14 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             font_size = (font_size * available_width / text_width)
                 .max(theme.typography.label_size_min);
         }
+        let display_label = if font::measure_text(&item.label, font_size) > available_width {
+            font::truncate_text(&item.label, font_size, available_width)
+        } else {
+            item.label.clone()
+        };
 
         let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
-        builder.text_weighted(nx, ny, &item.label, &text_color.to_hex(), font_size, is_bold);
+        builder.text_weighted(nx, ny, &display_label, &text_color.to_hex(), font_size, is_bold);
     }
 
     builder.build(&theme.background.to_hex())

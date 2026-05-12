@@ -17,6 +17,23 @@ pub fn render(input: &str, theme: &str, width: Option<u32>) -> Result<String, Js
         .map_err(|e| JsError::new(&e.to_string()))
 }
 
+/// Renders a TOML diagram declaration with a custom theme defined as a TOML string.
+///
+/// - `input`: TOML declaration string
+/// - `theme_toml`: TOML theme string (see [`Theme::from_toml`])
+/// - `width`: optional canvas width in pixels
+///
+/// Returns the SVG string on success, or a `JsError` on parse/validation failure.
+#[wasm_bindgen]
+pub fn render_with_theme_toml(input: &str, theme_toml: &str, width: Option<u32>) -> Result<String, JsError> {
+    let diagram = declart_core::parse(input)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    let theme = Theme::from_toml(theme_toml)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    declart_core::render_opts(&diagram, &theme, width)
+        .map_err(|e| JsError::new(&e.to_string()))
+}
+
 /// Validates a TOML diagram declaration without rendering.
 ///
 /// Returns `Ok(())` if valid, or a `JsError` with the parse/validation error message.
@@ -100,6 +117,34 @@ label = "Item"
     #[test]
     fn themes_returns_nonempty() {
         assert!(!themes().is_empty());
+    }
+
+    #[test]
+    fn render_with_theme_toml_valid() {
+        let diagram = r#"kind = "pyramid"
+[[items]]
+label = "Top"
+[[items]]
+label = "Bottom"
+"#;
+        let theme = r##"
+[colors]
+apex       = "#003087"
+base       = "#B8D0E8"
+background = "#FFFFFF"
+on_dark    = "#FFFFFF"
+on_light   = "#003087"
+title      = "#003087"
+"##;
+        let svg = render_with_theme_toml(diagram, theme, None).unwrap();
+        assert!(svg.contains("<svg"));
+        assert!(svg.contains("#003087"));
+    }
+
+    #[test]
+    fn render_with_theme_toml_invalid_theme() {
+        let result = declart_core::render::Theme::from_toml("not valid toml ???");
+        assert!(result.is_err(), "invalid theme TOML should be rejected");
     }
 
     #[test]

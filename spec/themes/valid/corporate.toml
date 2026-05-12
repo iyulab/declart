@@ -1,0 +1,12 @@
+[colors]
+apex       = "#003087"
+base       = "#B8D0E8"
+background = "#FFFFFF"
+on_dark    = "#FFFFFF"
+on_light   = "#003087"
+title      = "#003087"
+
+[typography]
+title_size     = 20.0
+label_size     = 15.0
+label_size_min = 10.0

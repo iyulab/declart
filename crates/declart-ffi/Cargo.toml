@@ -1,6 +1,6 @@
 [package]
 name = "declart-ffi"
-version = "0.9.0"
+version = "0.10.0"
 edition = "2021"
 description = "C ABI bindings for Declart — produces .dll/.so/.dylib for use from Python, C#, Node.js, and other languages"
 license = "MIT"

@@ -110,7 +110,12 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
         if tw > available && available > 0.0 {
             fs = (fs * available / tw).max(theme.typography.label_size_min);
         }
-        builder.text_weighted(sx, sy, &spoke.label, &text_color.to_hex(), fs, bold);
+        let spoke_display = if font::measure_text(&spoke.label, fs) > available {
+            font::truncate_text(&spoke.label, fs, available)
+        } else {
+            spoke.label.clone()
+        };
+        builder.text_weighted(sx, sy, &spoke_display, &text_color.to_hex(), fs, bold);
     }
 
     // Draw hub node on top
@@ -129,7 +134,12 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
     if tw > available && available > 0.0 {
         fs = (fs * available / tw).max(theme.typography.label_size_min);
     }
-    builder.text(cx, cy, &diagram.center, &hub_text_color.to_hex(), fs);
+    let hub_display = if font::measure_text(&diagram.center, fs) > available {
+        font::truncate_text(&diagram.center, fs, available)
+    } else {
+        diagram.center.clone()
+    };
+    builder.text(cx, cy, &hub_display, &hub_text_color.to_hex(), fs);
 
     builder.build(&theme.background.to_hex())
 }

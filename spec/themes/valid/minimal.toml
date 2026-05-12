@@ -1,0 +1,7 @@
+[colors]
+apex       = "#8B2500"
+base       = "#F4C1A1"
+background = "#FFFAF7"
+on_dark    = "#FFFFFF"
+on_light   = "#8B2500"
+title      = "#8B2500"

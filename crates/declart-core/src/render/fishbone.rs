@@ -76,10 +76,15 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
     if etw > eavail {
         efs = (efs * eavail / etw).max(theme.typography.label_size_min);
     }
+    let effect_display = if font::measure_text(&diagram.effect, efs) > eavail {
+        font::truncate_text(&diagram.effect, efs, eavail)
+    } else {
+        diagram.effect.clone()
+    };
     builder.text(
         effect_x + EFFECT_BOX_W / 2.0,
         spine_y,
-        &diagram.effect,
+        &effect_display,
         &effect_text_color.to_hex(),
         efs,
     );
@@ -123,7 +128,12 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
         if tw > available {
             fs = (fs * available / tw).max(theme.typography.label_size_min);
         }
-        builder.text(head_x, head_y, &cause.label, &text_color.to_hex(), fs);
+        let cause_display = if font::measure_text(&cause.label, fs) > available {
+            font::truncate_text(&cause.label, fs, available)
+        } else {
+            cause.label.clone()
+        };
+        builder.text(head_x, head_y, &cause_display, &text_color.to_hex(), fs);
 
         // Sub-items: diagonal branches off the cause branch (45° away from spine)
         let diag = SUB_BRANCH_LEN * std::f32::consts::FRAC_1_SQRT_2;
@@ -143,7 +153,12 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
             if stw > savail {
                 sfs = (sfs * savail / stw).max(theme.typography.label_size_min);
             }
-            builder.text(sub_end_x, sub_end_y + sign * sfs * 0.7, &item.label, &sub_text_color.to_hex(), sfs);
+            let sub_display = if font::measure_text(&item.label, sfs) > savail {
+                font::truncate_text(&item.label, sfs, savail)
+            } else {
+                item.label.clone()
+            };
+            builder.text(sub_end_x, sub_end_y + sign * sfs * 0.7, &sub_display, &sub_text_color.to_hex(), sfs);
         }
     }
 

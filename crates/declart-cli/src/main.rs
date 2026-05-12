@@ -76,7 +76,7 @@ fn run() -> Result<()> {
     match cli.command {
         Commands::Render { input, output, theme: theme_name, width, format, stdout } => {
             let theme = resolve_theme(&theme_name)?;
-            let bytes = render_bytes(&input, theme, width, &format)?;
+            let bytes = render_bytes(&input, &theme, width, &format)?;
             if stdout {
                 std::io::stdout().write_all(&bytes)?;
             } else {
@@ -107,7 +107,7 @@ fn run() -> Result<()> {
             let out_path = output.unwrap_or_else(|| input.with_extension(ext));
 
             // Initial render
-            render_bytes(&input, theme, width, &format)
+            render_bytes(&input, &theme, width, &format)
                 .and_then(|bytes| {
                     fs::write(&out_path, &bytes)
                         .with_context(|| format!("failed to write {}", out_path.display()))
@@ -137,7 +137,7 @@ fn run() -> Result<()> {
                         while rx.try_recv().is_ok() {}
 
                         eprint!("[declart] rebuilding ...");
-                        match render_bytes(&input, theme, width, &format).and_then(|bytes| {
+                        match render_bytes(&input, &theme, width, &format).and_then(|bytes| {
                             fs::write(&out_path, &bytes).with_context(|| {
                                 format!("failed to write {}", out_path.display())
                             })
@@ -156,7 +156,7 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn render_bytes(input: &Path, theme: &'static Theme, width: Option<u32>, format: &str) -> Result<Vec<u8>> {
+fn render_bytes(input: &Path, theme: &Theme, width: Option<u32>, format: &str) -> Result<Vec<u8>> {
     let content = fs::read_to_string(input)
         .with_context(|| format!("failed to read {}", input.display()))?;
     let model = declart_core::parse(&content)
@@ -181,14 +181,21 @@ fn svg_to_png(svg_str: &str) -> Result<Vec<u8>> {
     Ok(pixmap.encode_png()?)
 }
 
-fn resolve_theme(name: &str) -> Result<&'static declart_core::render::Theme> {
+fn resolve_theme(name: &str) -> Result<Theme> {
+    // If the value looks like a file path, load it as a custom theme TOML
+    if name.contains('/') || name.contains('\\') || name.ends_with(".toml") {
+        let toml_str = fs::read_to_string(name)
+            .with_context(|| format!("failed to read theme file `{name}`"))?;
+        return Theme::from_toml(&toml_str)
+            .with_context(|| format!("invalid theme file `{name}`"));
+    }
     match name {
-        "default" => Ok(&DEFAULT_THEME),
-        "monochrome" => Ok(&MONOCHROME_THEME),
-        "accessible" => Ok(&ACCESSIBLE_THEME),
-        "warm" => Ok(&WARM_THEME),
+        "default" => Ok(DEFAULT_THEME.clone()),
+        "monochrome" => Ok(MONOCHROME_THEME.clone()),
+        "accessible" => Ok(ACCESSIBLE_THEME.clone()),
+        "warm" => Ok(WARM_THEME.clone()),
         other => anyhow::bail!(
-            "unknown theme `{}`\n  = hint: Available themes: default, monochrome, accessible, warm",
+            "unknown theme `{}`\n  = hint: Available themes: default, monochrome, accessible, warm, or a path to a .toml theme file",
             other
         ),
     }

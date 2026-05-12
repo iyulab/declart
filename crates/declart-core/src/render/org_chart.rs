@@ -145,15 +145,16 @@ fn assign_positions(
         return width;
     }
 
-    // Internal node: center over its children.
-    let subtree_start = *next_x;
+    // Internal node: recursively position children, then center over them.
     let mut total_width = 0.0_f32;
     for &child_idx in &child_indices {
         total_width += assign_positions(child_idx, depth + 1, children, nodes, x_positions, y_positions, next_x);
     }
-    let subtree_end = *next_x;
-    // Center the parent over its children.
-    x_positions[idx] = (subtree_start + subtree_end - H_GAP) / 2.0 - NODE_W / 2.0;
+    // Center the parent over the span from first child center to last child center.
+    // This is visually correct even for asymmetric subtrees.
+    let first_cx = x_positions[child_indices[0]] + NODE_W / 2.0;
+    let last_cx = x_positions[*child_indices.last().unwrap()] + NODE_W / 2.0;
+    x_positions[idx] = (first_cx + last_cx) / 2.0 - NODE_W / 2.0;
     total_width
 }
 
@@ -197,5 +198,46 @@ mod tests {
         let svg = render(&d, &DEFAULT_THEME);
         // Lines are used for connectors
         assert!(svg.contains("<line"));
+    }
+
+    #[test]
+    fn root_centered_over_two_children() {
+        // Root → L → LL, LR  (asymmetric: L has 2 children, R has 1)
+        let d = OrgChartDiagram {
+            title: None,
+            nodes: vec![
+                OrgChartNode { id: "root".to_string(), label: "Root".to_string(), parent: None },
+                OrgChartNode { id: "l".to_string(), label: "L".to_string(), parent: Some("root".to_string()) },
+                OrgChartNode { id: "r".to_string(), label: "R".to_string(), parent: Some("root".to_string()) },
+                OrgChartNode { id: "ll".to_string(), label: "LL".to_string(), parent: Some("l".to_string()) },
+                OrgChartNode { id: "lr".to_string(), label: "LR".to_string(), parent: Some("l".to_string()) },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.starts_with("<svg"));
+        // Root, L, R, LL, LR should all appear
+        for label in &["Root", "L", "R", "LL", "LR"] {
+            assert!(svg.contains(label), "missing label: {}", label);
+        }
+    }
+
+    #[test]
+    fn wide_tree_no_negative_x() {
+        // 1 root, 6 leaf children → wide flat tree
+        let mut nodes = vec![
+            OrgChartNode { id: "root".to_string(), label: "Root".to_string(), parent: None },
+        ];
+        for i in 0..6 {
+            nodes.push(OrgChartNode {
+                id: format!("c{}", i),
+                label: format!("Child {}", i),
+                parent: Some("root".to_string()),
+            });
+        }
+        let d = OrgChartDiagram { title: None, nodes };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.starts_with("<svg"));
+        // No negative x coordinates in the SVG output (all polygon/text x values ≥ 0)
+        assert!(!svg.contains("x=\"-"), "SVG should not contain negative x coordinates");
     }
 }

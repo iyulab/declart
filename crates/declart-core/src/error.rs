@@ -23,4 +23,10 @@ pub enum DeclartError {
 
     #[error(transparent)]
     Parse(#[from] toml::de::Error),
+
+    #[error("invalid theme: {0}")]
+    InvalidTheme(String),
+
+    #[error("invalid hex color `{hex}` for theme field `{field}`\n  = hint: Use `#RRGGBB` format, e.g. `#003087`")]
+    InvalidThemeColor { field: String, hex: String },
 }

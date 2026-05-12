@@ -84,7 +84,12 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
         if tw > available && available > 0.0 {
             fs = (fs * available / tw).max(theme.typography.label_size_min);
         }
-        builder.text(ex, label_y, &event.label, &theme.title_color.to_hex(), fs);
+        let display_label = if font::measure_text(&event.label, fs) > available {
+            font::truncate_text(&event.label, fs, available)
+        } else {
+            event.label.clone()
+        };
+        builder.text(ex, label_y, &display_label, &theme.title_color.to_hex(), fs);
 
         // Date label (below axis, smaller)
         let date_y = if above {

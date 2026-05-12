@@ -1,0 +1,8 @@
+# Shorthand hex (#FFF) is not accepted — must be #RRGGBB
+[colors]
+apex       = "#FFF"
+base       = "#B8D0E8"
+background = "#FFFFFF"
+on_dark    = "#FFFFFF"
+on_light   = "#003087"
+title      = "#003087"

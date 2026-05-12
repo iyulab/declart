@@ -65,6 +65,8 @@ Explicit boundaries that protect focus:
 
 ## Status
 
+v0.10.0 — User-defined TOML themes (`Theme::from_toml`, `--theme file.toml`, `render_with_theme_toml` WASM), truncate_text full integration (all 10 renderers), `is_dark()` WCAG threshold improvement, Org Chart layout fix (asymmetric subtree centering), spec/themes/ suite.
+
 v0.9.0 — Org Chart kind (hierarchical tree), Funnel kind (tapered stages), accessible/warm themes (Okabe-Ito + terracotta), truncate_text() helper (ellipsis for long labels), Hub-Spoke min-2 spokes validation, Phase 8-C research (theme system design + expressiveness levers).
 
 v0.8.0 — Fishbone standard visuals (arrowhead + diagonal sub-items), Matrix quadrant position field, Playground Header/Footer branding, URL permalink, Preview zoom/pan, label_size_min accessibility improvement, Timeline dynamic canvas width.
@@ -97,6 +99,11 @@ v0.8.0 — Fishbone standard visuals (arrowhead + diagonal sub-items), Matrix qu
 | Hub-Spoke min 2 spokes validation | ✅ v0.9 |
 | Org Chart kind (hierarchical tree, flat TOML + parent refs) | ✅ v0.9 |
 | Funnel kind (tapered stages, marketing/sales pipelines) | ✅ v0.9 |
+| `truncate_text()` full integration (all 10 renderers) | ✅ v0.10 |
+| `is_dark()` WCAG AA threshold improvement (140→128) | ✅ v0.10 |
+| User-defined TOML themes (`--theme file.toml`, `Theme::from_toml`) | ✅ v0.10 |
+| Playground Custom theme TOML editor | ✅ v0.10 |
+| Org Chart layout fix (asymmetric tree centering) | ✅ v0.10 |
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 

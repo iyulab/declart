@@ -228,6 +228,36 @@
 
     .hidden { display: none !important; }
 
+    #custom-theme-bar {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 20px;
+      background: #f0f4ff;
+      border-bottom: 1px solid #c7d3f5;
+      flex-shrink: 0;
+    }
+    #custom-theme-bar label {
+      font-size: 0.75rem;
+      color: var(--label);
+      font-weight: 600;
+      white-space: nowrap;
+      padding-top: 4px;
+    }
+    #theme-input {
+      flex: 1;
+      height: 80px;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      padding: 6px 10px;
+      border: 1px solid #c7d3f5;
+      border-radius: var(--radius);
+      background: var(--editor-bg);
+      color: var(--editor-text);
+      resize: vertical;
+    }
+
     @media (max-width: 680px) {
       body { overflow: auto; }
       .main { grid-template-columns: 1fr !important; height: auto; }
@@ -243,7 +273,7 @@
   <h1>Declart Playground</h1>
   <p>Edit TOML on the left — see your diagram instantly on the right</p>
   <div class="header-links">
-    <span class="header-badge">v0.9.0</span>
+    <span class="header-badge">v0.10.0</span>
     <a href="https://github.com/iyulab/declart" target="_blank" rel="noopener">GitHub</a>
     <a href="../introduction.html" target="_blank" rel="noopener">Docs</a>
   </div>
@@ -272,10 +302,16 @@
       <option value="monochrome">Monochrome</option>
       <option value="accessible">Accessible</option>
       <option value="warm">Warm</option>
+      <option value="custom">Custom…</option>
     </select>
   </label>
   <span id="status" class="loading">Loading WASM…</span>
   <button id="share-btn" title="Copy shareable link to clipboard">🔗 Share</button>
+</div>
+
+<div id="custom-theme-bar" class="hidden">
+  <label>Theme TOML</label>
+  <textarea id="theme-input" spellcheck="false" autocomplete="off" placeholder="[colors]&#10;apex       = &quot;#003087&quot;&#10;base       = &quot;#B8D0E8&quot;&#10;background = &quot;#FFFFFF&quot;&#10;on_dark    = &quot;#FFFFFF&quot;&#10;on_light   = &quot;#003087&quot;&#10;title      = &quot;#003087&quot;"></textarea>
 </div>
 
 <div class="main" id="main-grid">
@@ -301,7 +337,7 @@
 </div>
 
 <footer>
-  <span>Declart v0.9.0 &nbsp;·&nbsp; MIT License</span>
+  <span>Declart v0.10.0 &nbsp;·&nbsp; MIT License</span>
   <span>
     <a href="https://github.com/iyulab/declart" target="_blank" rel="noopener">GitHub</a>
     &nbsp;·&nbsp;
@@ -312,7 +348,7 @@
 </footer>
 
 <script type="module">
-import init, { render } from './wasm/declart_wasm.js';
+import init, { render, render_with_theme_toml } from './wasm/declart_wasm.js';
 
 const EXAMPLES = {
   pyramid: `kind = "pyramid"
@@ -557,16 +593,18 @@ document.addEventListener('mouseup', () => {
   document.body.style.userSelect = '';
 });
 
-const inputEl      = document.getElementById('input');
-const previewEl    = document.getElementById('preview');
-const previewArea  = document.getElementById('preview-area');
-const errorEl      = document.getElementById('error');
-const exampleSel   = document.getElementById('example-select');
-const themeSel     = document.getElementById('theme-select');
-const statusEl     = document.getElementById('status');
-const downloadBtn  = document.getElementById('download-svg');
-const resetZoomBtn = document.getElementById('reset-zoom');
-const shareBtn     = document.getElementById('share-btn');
+const inputEl        = document.getElementById('input');
+const previewEl      = document.getElementById('preview');
+const previewArea    = document.getElementById('preview-area');
+const errorEl        = document.getElementById('error');
+const exampleSel     = document.getElementById('example-select');
+const themeSel       = document.getElementById('theme-select');
+const statusEl       = document.getElementById('status');
+const downloadBtn    = document.getElementById('download-svg');
+const resetZoomBtn   = document.getElementById('reset-zoom');
+const shareBtn       = document.getElementById('share-btn');
+const customThemeBar = document.getElementById('custom-theme-bar');
+const themeInputEl   = document.getElementById('theme-input');
 const svgParser    = new DOMParser();
 const DRAFT_KEY    = 'declart-draft';
 
@@ -689,10 +727,21 @@ function jumpEditorToLine(line, col) {
   inputEl.focus();
 }
 
+const DEFAULT_CUSTOM_THEME = `[colors]
+apex       = "#003087"
+base       = "#B8D0E8"
+background = "#FFFFFF"
+on_dark    = "#FFFFFF"
+on_light   = "#003087"
+title      = "#003087"`;
+
 function update() {
   if (!wasmReady) return;
   try {
-    const svg = render(inputEl.value, themeSel.value, undefined);
+    const isCustom = themeSel.value === 'custom';
+    const svg = isCustom
+      ? render_with_theme_toml(inputEl.value, themeInputEl.value || DEFAULT_CUSTOM_THEME, undefined)
+      : render(inputEl.value, themeSel.value, undefined);
     showSvg(svg);
     errorEl.textContent = '';
     errorEl.classList.add('hidden');
@@ -753,7 +802,14 @@ exampleSel.addEventListener('change', () => {
   update();
 });
 
-themeSel.addEventListener('change', update);
+themeSel.addEventListener('change', () => {
+  const isCustom = themeSel.value === 'custom';
+  customThemeBar.classList.toggle('hidden', !isCustom);
+  if (isCustom && !themeInputEl.value) themeInputEl.value = DEFAULT_CUSTOM_THEME;
+  update();
+});
+
+themeInputEl.addEventListener('input', update);
 
 inputEl.addEventListener('input', () => {
   saveDraft();
