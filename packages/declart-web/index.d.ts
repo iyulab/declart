@@ -1,11 +1,4 @@
 /**
- * Initializes the WASM module. Call once before using other functions
- * if your bundler does not handle WASM imports automatically.
- * With vite-plugin-wasm, this is not required.
- */
-export function init(module_or_path?: string | URL | RequestInfo | BufferSource | WebAssembly.Module): Promise<void>;
-
-/**
  * Renders a TOML or JSON diagram declaration to SVG.
  * @param input - TOML or JSON declaration string (format auto-detected)
  * @param theme - Theme name: 'default', 'monochrome', 'accessible', 'warm' (defaults to 'default')
