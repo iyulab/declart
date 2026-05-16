@@ -45,6 +45,9 @@ jobs:
       - name: Build WASM (nodejs target)
         run: wasm-pack build crates/declart-wasm --target nodejs --out-dir "$(pwd)/packages/declart-node/wasm"
 
+      - name: Build WASM (bundler target)
+        run: wasm-pack build crates/declart-wasm --target bundler --out-dir "$(pwd)/packages/declart-web/wasm"
+
       - name: Extract version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
@@ -57,6 +60,17 @@ jobs:
             npm publish --access public
           fi
         working-directory: packages/declart-node
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @iyulab/declart-web
+        run: |
+          if npm view "@iyulab/declart-web@${{ steps.version.outputs.VERSION }}" version 2>/dev/null | grep -q "${{ steps.version.outputs.VERSION }}"; then
+            echo "Already published, skipping"
+          else
+            npm publish --access public
+          fi
+        working-directory: packages/declart-web
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
