@@ -133,7 +133,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.17.1** — 문서 정확도 개선, 코드 품질 수정. 167 tests.
+**Current: v0.17.2** — TypeScript bundler moduleResolution 타입 해석 수정, Vite 통합 노트 개선. 167 tests.
 
 | Capability | State |
 |------------|-------|
