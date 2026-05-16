@@ -1,6 +1,6 @@
 {
   "name": "@iyulab/declart",
-  "version": "0.17.1",
+  "version": "0.17.2",
   "description": "Declarative diagram engine — declare what to show, the engine renders SVG",
   "license": "MIT",
   "repository": {
@@ -11,6 +11,7 @@
   "types": "index.d.ts",
   "exports": {
     ".": {
+      "types": "./index.d.ts",
       "import": "./index.mjs",
       "require": "./index.js"
     }
