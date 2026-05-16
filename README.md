@@ -118,7 +118,8 @@ Additional kinds (Roadmap, Swimlane, etc.) may be considered after the core kind
 - **Rust library** — `declart-core` crate (parse + render API)
 - **WebAssembly** — `declart-wasm` (wasm-pack, browser + Node.js)
 - **C ABI** — `declart-ffi` (shared library + `declart.h` header, for P/Invoke and ctypes callers)
-- **Node.js** — `@iyulab/declart` npm package (WASM wrapper, CommonJS + TypeScript types)
+- **Node.js** — `@iyulab/declart` npm package (WASM wrapper, CommonJS + ESM, Node.js 16+)
+- **Browser/Bundler** — `@iyulab/declart-web` npm package (WASM wrapper, ESM, Vite · webpack · Rollup)
 
 ## Non-goals
 
@@ -144,6 +145,7 @@ Explicit boundaries that protect focus:
 | WASM bindings (`render`, `render_json`, `render_with_theme_toml`) | ✅ |
 | C ABI (`declart-ffi` + `declart.h`) | ✅ |
 | Node.js package (`@iyulab/declart`, CJS + ESM) | ✅ |
+| Browser/Bundler package (`@iyulab/declart-web`, ESM + WASM) | ✅ |
 | GitHub Releases binaries (Linux musl, macOS, Windows) | ✅ |
 | Interactive playground (live WASM, URL permalink, zoom/pan) | ✅ |
 | Spec site (mdBook + GitHub Actions CI) | ✅ (GitHub Pages: enable in repo Settings) |
@@ -154,6 +156,38 @@ Explicit boundaries that protect focus:
 See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
+
+## Browser / Vite
+
+For Vite, webpack, or Rollup apps, use `@iyulab/declart-web` instead of `@iyulab/declart`.
+
+```bash
+npm install @iyulab/declart-web
+```
+
+Install `vite-plugin-wasm` so Vite handles `.wasm` imports automatically:
+
+```bash
+npm install -D vite-plugin-wasm
+```
+
+```ts
+// vite.config.ts
+import wasm from 'vite-plugin-wasm';
+export default { plugins: [wasm()] };
+```
+
+```tsx
+import { render } from '@iyulab/declart-web';
+
+const svg = render(`
+kind = "flow"
+[[items]]
+label = "Plan"
+`, 'default');
+```
+
+> **Note:** `@iyulab/declart` is Node.js-only (`require('fs')` in the WASM glue). For browser environments always use `@iyulab/declart-web`.
 
 ## Install
 
