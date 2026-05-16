@@ -44,6 +44,16 @@ label = "Do"
 `);
 ```
 
+> **Vite / ESM 환경:** `moduleResolution: "bundler"` (Vite 기본값)에서 타입이 자동으로 해결됩니다 (v0.17.2+). 이전 버전 사용 시 `tsconfig.json`에 `"moduleResolution": "node"` 또는 `vite-env.d.ts`에 수동 선언이 필요합니다.
+>
+> WASM 번들(~1.3 MB) 로드를 Vite가 최적화하도록 하려면:
+> ```ts
+> // vite.config.ts
+> export default defineConfig({
+>   optimizeDeps: { include: ['@iyulab/declart'] }
+> });
+> ```
+
 ### Rust (library)
 
 ```rust
