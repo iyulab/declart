@@ -1,6 +1,6 @@
 {
   "name": "@iyulab/declart",
-  "version": "0.17.2",
+  "version": "0.18.0",
   "description": "Declarative diagram engine for Node.js — declare what to show, the engine renders SVG",
   "license": "MIT",
   "repository": {

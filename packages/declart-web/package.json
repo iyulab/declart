@@ -1,6 +1,6 @@
 {
   "name": "@iyulab/declart-web",
-  "version": "0.17.2",
+  "version": "0.18.0",
   "description": "Declarative diagram engine for browsers and bundlers (Vite, webpack, Rollup) — declare what to show, the engine renders SVG",
   "license": "MIT",
   "type": "module",

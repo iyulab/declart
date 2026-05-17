@@ -64,7 +64,7 @@ let svg = render(&diagram, &DEFAULT_THEME)?;
 |------|-------|
 | `flow` | `process` (default), `cycle`, `funnel`, `swimlane` |
 | `tier` | `pyramid` (default) |
-| `hierarchy` | `org_chart` (auto), `fishbone` (auto) |
+| `hierarchy` | `org_chart` (auto), `fishbone` (auto), `mind_map` |
 | `timeline` | — |
 | `matrix` | — |
 | `hub_spoke` | — |

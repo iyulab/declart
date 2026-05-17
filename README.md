@@ -134,7 +134,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.17.2** — TypeScript bundler moduleResolution 타입 해석 수정, Vite 통합 노트 개선. 167 tests.
+**Current: v0.18.0** — hierarchy `mind_map` view 추가 (방사형 트리), E2E Playwright 테스트. 167 tests.
 
 | Capability | State |
 |------------|-------|
