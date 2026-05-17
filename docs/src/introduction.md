@@ -44,9 +44,9 @@ label = "Do"
 `);
 ```
 
-> **Vite / ESM 환경 (타입 해석):** `moduleResolution: "bundler"` (Vite 기본값)에서 타입이 자동으로 해결됩니다 (v0.17.2+). 이전 버전 사용 시 `tsconfig.json`에 `"moduleResolution": "node"` 또는 `vite-env.d.ts`에 수동 선언이 필요합니다.
+> **Vite / ESM (type resolution):** With `moduleResolution: "bundler"` (Vite default), types resolve automatically (v0.18.0+). For older setups add `"moduleResolution": "node"` to `tsconfig.json` or declare types manually in `vite-env.d.ts`.
 >
-> **주의:** 이 패키지는 Node.js 런타임용 WASM 빌드입니다. Vite SSR / Node.js 환경에서 사용 가능합니다. 브라우저 번들에서 직접 `import`하면 `Cannot find module 'fs'` 에러가 발생합니다.
+> **Note:** This package is a Node.js-runtime WASM build. It works in Vite SSR / Node.js environments. Importing it directly in a browser bundle will throw `Cannot find module 'fs'`.
 
 ### Rust (library)
 

@@ -40,40 +40,40 @@ Unknown references → validation error. Duplicate labels without `id` → valid
 
 ```declart
 kind = "state"
-title = "주문 처리 상태"
+title = "Order Lifecycle"
 
 [[states]]
 id = "idle"
-label = "대기"
+label = "Pending"
 role = "initial"
 
 [[states]]
 id = "processing"
-label = "처리 중"
+label = "Processing"
 
 [[states]]
 id = "done"
-label = "완료"
+label = "Completed"
 role = "terminal"
 
 [[states]]
 id = "cancelled"
-label = "취소됨"
+label = "Cancelled"
 role = "terminal"
 
 [[transitions]]
 from = "idle"
 to = "processing"
-trigger = "주문 접수"
+trigger = "Order Received"
 
 [[transitions]]
 from = "processing"
 to = "done"
-trigger = "결제 완료"
+trigger = "Payment OK"
 
 [[transitions]]
 from = "processing"
 to = "cancelled"
-trigger = "결제 실패"
+trigger = "Payment Failed"
 type = "exception"
 ```

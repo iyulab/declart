@@ -1,23 +1,23 @@
 kind = "flow"
 view = "swimlane"
-title = "주문 처리 프로세스"
+title = "Order Processing"
 
 [[items]]
-actor = "고객"
-label = "주문 요청"
+actor = "Customer"
+label = "Place Order"
 
 [[items]]
-actor = "시스템"
-label = "재고 확인"
+actor = "System"
+label = "Check Inventory"
 
 [[items]]
-actor = "결제 게이트웨이"
-label = "결제 처리"
+actor = "Payment Gateway"
+label = "Process Payment"
 
 [[items]]
-actor = "시스템"
-label = "주문 확정"
+actor = "System"
+label = "Confirm Order"
 
 [[items]]
-actor = "고객"
-label = "확인 수신"
+actor = "Customer"
+label = "Receive Confirmation"

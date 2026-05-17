@@ -295,8 +295,8 @@
       <option value="venn">Venn — Skills Overlap</option>
       <option value="timeline">Timeline — Product Launch</option>
       <option value="comparison">Comparison — Framework Analysis</option>
-      <option value="flow_swimlane">Flow (swimlane) — 주문 처리</option>
-      <option value="state">State — 주문 처리 상태</option>
+      <option value="flow_swimlane">Flow (swimlane) — Order Processing</option>
+      <option value="state">State — Order Lifecycle</option>
     </select>
   </label>
   <label>
@@ -341,7 +341,7 @@
 </div>
 
 <footer>
-  <span>Declart v0.17.1 &nbsp;·&nbsp; MIT License</span>
+  <span>Declart v0.18.0 &nbsp;·&nbsp; MIT License</span>
   <span>
     <a href="https://github.com/iyulab/declart" target="_blank" rel="noopener">GitHub</a>
     &nbsp;·&nbsp;
@@ -599,52 +599,52 @@ label = "v2.0"
 
   flow_swimlane: `kind = "flow"
 view = "swimlane"
-title = "주문 처리"
+title = "Order Processing"
 
 [[items]]
-actor = "고객"
-label = "주문 요청"
+actor = "Customer"
+label = "Place Order"
 
 [[items]]
-actor = "시스템"
-label = "재고 확인"
+actor = "System"
+label = "Check Inventory"
 
 [[items]]
-actor = "결제 게이트웨이"
-label = "결제 처리"
+actor = "Payment Gateway"
+label = "Process Payment"
 
 [[items]]
-actor = "시스템"
-label = "주문 확정"
+actor = "System"
+label = "Confirm Order"
 `,
 
   state: `kind = "state"
-title = "주문 처리 상태"
+title = "Order Lifecycle"
 
 [[states]]
 id = "idle"
-label = "대기"
+label = "Pending"
 role = "initial"
 
 [[states]]
 id = "done"
-label = "완료"
+label = "Completed"
 role = "terminal"
 
 [[states]]
 id = "cancelled"
-label = "취소됨"
+label = "Cancelled"
 role = "terminal"
 
 [[transitions]]
 from = "idle"
 to = "done"
-trigger = "결제 완료"
+trigger = "Payment OK"
 
 [[transitions]]
 from = "idle"
 to = "cancelled"
-trigger = "결제 실패"
+trigger = "Payment Failed"
 type = "exception"
 `,
 
