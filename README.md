@@ -134,7 +134,7 @@ Explicit boundaries that protect focus:
 
 ## Status
 
-**Current: v0.18.0** — hierarchy `mind_map` radial tree view, E2E Playwright tests. 167 tests.
+**Current: v0.18.1** — fix `@iyulab/declart-web` npm package (missing `declart_wasm_bg.js`). 167 tests.
 
 | Capability | State |
 |------------|-------|

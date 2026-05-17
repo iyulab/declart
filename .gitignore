@@ -13,3 +13,6 @@ packages/declart-web/wasm/
 docs/src/playground/wasm/
 .playwright-mcp/
 .serena/
+tests/vite-integration/node_modules/
+tests/vite-integration/dist/
+tests/vite-integration/screenshot-*.png

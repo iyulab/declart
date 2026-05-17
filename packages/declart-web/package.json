@@ -1,6 +1,6 @@
 {
   "name": "@iyulab/declart-web",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "description": "Declarative diagram engine for browsers and bundlers (Vite, webpack, Rollup) — declare what to show, the engine renders SVG",
   "license": "MIT",
   "type": "module",
@@ -21,7 +21,9 @@
     "index.d.ts",
     "wasm/declart_wasm.js",
     "wasm/declart_wasm.d.ts",
-    "wasm/declart_wasm_bg.wasm"
+    "wasm/declart_wasm_bg.js",
+    "wasm/declart_wasm_bg.wasm",
+    "wasm/declart_wasm_bg.wasm.d.ts"
   ],
   "scripts": {
     "build": "wasm-pack build ../../crates/declart-wasm --target bundler --out-dir ../../packages/declart-web/wasm"

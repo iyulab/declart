@@ -1,6 +1,6 @@
 {
   "name": "remark-declart",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "description": "remark plugin to render ```declart code blocks as SVG diagrams",
   "keywords": [
     "remark",
