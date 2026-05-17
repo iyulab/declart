@@ -96,7 +96,7 @@ label = "Unsupervised"
 parent = "ML Concepts"
 
 [[nodes]]
-label = "Reinforcement"
+label = "Reinforce"
 parent = "ML Concepts"
 
 [[nodes]]
