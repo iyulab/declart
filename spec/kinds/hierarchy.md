@@ -26,13 +26,15 @@ A hierarchy diagram represents a tree of labeled nodes connected by parent-child
 |------------|--------------------------------------------------|-------------------------|
 | `org_chart`| Top-down tree; exactly one root required         | exactly 1 root node     |
 | `fishbone` | Cause-and-effect diagram                         | 2+ root nodes           |
+| `mind_map` | Radial tree centered on the root node            | never (must be explicit)|
 
 **Auto-selection:** When `view` is omitted, the engine selects `org_chart` for exactly one root node, `fishbone` for two or more root nodes. The CLI emits a warning when `view` is auto-selected; add an explicit `view` to suppress it.
 
 ## View-specific constraints
 
 **org_chart:** exactly one root node required.  
-**fishbone:** 2–20 root nodes (cause categories); `effect` (or `title` if `effect` is omitted) is rendered as the effect label at the right end of the spine. Recommend 8 or fewer root nodes — 9+ cause categories on the same side of the spine may overlap.
+**fishbone:** 2–20 root nodes (cause categories); `effect` (or `title` if `effect` is omitted) is rendered as the effect label at the right end of the spine. Recommend 8 or fewer root nodes — 9+ cause categories on the same side of the spine may overlap.  
+**mind_map:** exactly one root node required. The root is placed at the center; its subtree radiates outward in all directions. Use for learning maps, brainstorm notes, and topic exploration.
 
 ## Example — org_chart view (auto-selected)
 
@@ -73,6 +75,37 @@ label = "Network"
 [[nodes]]
 label = "Bandwidth"
 parent = "Network"
+```
+
+## Example — mind_map view
+
+```declart
+kind = "hierarchy"
+view = "mind_map"
+title = "Machine Learning"
+
+[[nodes]]
+label = "ML Concepts"
+
+[[nodes]]
+label = "Supervised"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Unsupervised"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Reinforcement"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Classification"
+parent = "Supervised"
+
+[[nodes]]
+label = "Regression"
+parent = "Supervised"
 ```
 
 ## Example — org_chart with stable id references

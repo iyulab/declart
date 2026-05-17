@@ -1,0 +1,26 @@
+kind = "hierarchy"
+view = "mind_map"
+title = "Machine Learning"
+
+[[nodes]]
+label = "ML Concepts"
+
+[[nodes]]
+label = "Supervised"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Unsupervised"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Reinforcement"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Classification"
+parent = "Supervised"
+
+[[nodes]]
+label = "Regression"
+parent = "Supervised"

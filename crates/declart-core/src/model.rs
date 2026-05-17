@@ -65,6 +65,7 @@ pub struct TierDiagram {
 pub enum HierarchyView {
     OrgChart,
     Fishbone,
+    MindMap,
 }
 
 /// A single node in a hierarchy diagram.

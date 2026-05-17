@@ -6,6 +6,7 @@ pub(crate) mod font;
 pub(crate) mod funnel;
 pub(crate) mod hub_spoke;
 pub(crate) mod matrix;
+pub(crate) mod mind_map;
 pub(crate) mod org_chart;
 pub(crate) mod process;
 pub(crate) mod pyramid;

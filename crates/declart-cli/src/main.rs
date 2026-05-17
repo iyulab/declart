@@ -378,6 +378,7 @@ fn warn_hierarchy_auto_view(diagram: &Diagram, content: &str) {
             let n = h.nodes.iter().filter(|n| n.parent.is_none()).count();
             ("fishbone", n)
         }
+        HierarchyView::MindMap => return,
     };
     let plural = if root_count == 1 { "" } else { "s" };
     eprintln!("warning: hierarchy view auto-selected: {view_name} ({root_count} root node{plural})");

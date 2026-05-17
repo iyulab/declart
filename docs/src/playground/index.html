@@ -289,6 +289,7 @@
       <option value="tier">Tier — Maslow's Hierarchy</option>
       <option value="hierarchy_org">Hierarchy (org_chart) — Engineering Division</option>
       <option value="hierarchy_fishbone">Hierarchy (fishbone) — Website Performance</option>
+      <option value="hierarchy_mind_map">Hierarchy (mind_map) — Machine Learning</option>
       <option value="matrix">Matrix — Eisenhower Matrix</option>
       <option value="hub_spoke">Hub-and-Spoke — Cloud Architecture</option>
       <option value="venn">Venn — Skills Overlap</option>
@@ -489,6 +490,38 @@ label = "Database"
 [[nodes]]
 label = "Slow queries"
 parent = "Database"
+`,
+
+  hierarchy_mind_map: `kind = "hierarchy"
+view = "mind_map"
+title = "Machine Learning"
+
+[[nodes]]
+label = "ML Concepts"
+
+[[nodes]]
+label = "Supervised"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Unsupervised"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Reinforcement"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Classification"
+parent = "Supervised"
+
+[[nodes]]
+label = "Regression"
+parent = "Supervised"
+
+[[nodes]]
+label = "Clustering"
+parent = "Unsupervised"
 `,
 
   matrix: `kind = "matrix"

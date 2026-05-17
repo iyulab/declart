@@ -3,7 +3,7 @@ use crate::model::{
     Item, ItemsDiagram, OrgChartDiagram, OrgChartNode,
     FlowDiagram, FlowView, TierDiagram,
 };
-use super::{cycle, fishbone, funnel, org_chart, process, pyramid, swimlane, theme::Theme};
+use super::{cycle, fishbone, funnel, mind_map, org_chart, process, pyramid, swimlane, theme::Theme};
 
 pub(crate) fn render_flow(d: &FlowDiagram, theme: &Theme) -> String {
     if d.view == FlowView::Swimlane {
@@ -27,24 +27,25 @@ pub(crate) fn render_tier(d: &TierDiagram, theme: &Theme) -> String {
     pyramid::render(&items_data, theme)
 }
 
+fn resolve_nodes(d: &HierarchyDiagram) -> OrgChartDiagram {
+    OrgChartDiagram {
+        title: d.title.clone(),
+        nodes: d.nodes.iter().map(|n| OrgChartNode {
+            label: n.label.clone(),
+            parent: n.parent.as_ref().map(|p| {
+                d.nodes.iter()
+                    .find(|other| other.id.as_deref() == Some(p.as_str()))
+                    .map(|other| other.label.clone())
+                    .unwrap_or_else(|| p.clone())
+            }),
+        }).collect(),
+    }
+}
+
 pub(crate) fn render_hierarchy(d: &HierarchyDiagram, theme: &Theme) -> String {
     match d.view {
-        HierarchyView::OrgChart => {
-            let data = OrgChartDiagram {
-                title: d.title.clone(),
-                nodes: d.nodes.iter().map(|n| OrgChartNode {
-                    label: n.label.clone(),
-                    // Resolve parent by id first, then fall back to label
-                    parent: n.parent.as_ref().map(|p| {
-                        d.nodes.iter()
-                            .find(|other| other.id.as_deref() == Some(p.as_str()))
-                            .map(|other| other.label.clone())
-                            .unwrap_or_else(|| p.clone())
-                    }),
-                }).collect(),
-            };
-            org_chart::render(&data, theme)
-        }
+        HierarchyView::OrgChart => org_chart::render(&resolve_nodes(d), theme),
+        HierarchyView::MindMap  => mind_map::render(&resolve_nodes(d), theme),
         HierarchyView::Fishbone => {
             let effect = d.effect.clone().or_else(|| d.title.clone()).unwrap_or_default();
             let root_labels: Vec<&str> = d.nodes.iter()

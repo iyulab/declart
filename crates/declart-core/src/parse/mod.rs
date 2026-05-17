@@ -223,18 +223,19 @@ fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartE
         None => if root_count == 1 { HierarchyView::OrgChart } else { HierarchyView::Fishbone },
         Some("org_chart") => HierarchyView::OrgChart,
         Some("fishbone") => HierarchyView::Fishbone,
+        Some("mind_map") => HierarchyView::MindMap,
         Some(other) => return Err(DeclartError::InvalidValue {
             field: "view".to_string(),
             value: other.to_string(),
-            hint: "Valid view values for hierarchy: org_chart, fishbone".to_string(),
+            hint: "Valid view values for hierarchy: org_chart, fishbone, mind_map".to_string(),
         }),
     };
     match view {
-        HierarchyView::OrgChart if root_count != 1 =>
+        HierarchyView::OrgChart | HierarchyView::MindMap if root_count != 1 =>
             return Err(DeclartError::InvalidValue {
                 field: "parent".to_string(),
                 value: format!("{root_count} root nodes"),
-                hint: "org_chart view requires exactly one root node".to_string(),
+                hint: "org_chart and mind_map views require exactly one root node".to_string(),
             }),
         HierarchyView::Fishbone if root_count < 2 =>
             return Err(DeclartError::TooFewItems { kind: "hierarchy/fishbone", min: 2, got: root_count }),
