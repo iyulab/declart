@@ -20,14 +20,15 @@ Declart v0.16+ uses a two-level structure:
 
 | kind | views | Notes |
 |------|-------|-------|
-| `flow` | `process` (default), `cycle`, `funnel` | `view` optional — defaults to `process` |
+| `flow` | `process` (default), `cycle`, `funnel`, `swimlane` | `view` optional — defaults to `process`. `swimlane` requires an `actor` per item |
 | `tier` | `pyramid` (default) | Ranked levels — `view` optional |
-| `hierarchy` | `org_chart`, `fishbone` | `view` optional — auto-selected by root count |
+| `hierarchy` | `org_chart`, `fishbone`, `mind_map` | `view` optional — `org_chart`/`fishbone` auto-selected by root count; `mind_map` must be explicit |
 | `timeline` | — | No view field |
 | `matrix` | — | No view field |
 | `hub_spoke` | — | No view field |
 | `venn` | — | No view field |
 | `comparison` | — | No view field |
+| `state` | — | No view field. States + directed transitions |
 
 ## Workflow
 
@@ -370,6 +371,113 @@ Performance = "★★★★★"
 
 ---
 
+### Swimlane — Cross-actor process flows
+
+**Prompt**: *"Generate a Declart swimlane diagram for an order-processing flow across Customer, System, and Payment Gateway. Use kind = 'flow' and view = 'swimlane'. Each item needs an `actor`."*
+
+```toml
+kind = "flow"
+view = "swimlane"
+title = "Order Processing"
+
+[[items]]
+actor = "Customer"
+label = "Place Order"
+
+[[items]]
+actor = "System"
+label = "Check Inventory"
+
+[[items]]
+actor = "Payment Gateway"
+label = "Process Payment"
+
+[[items]]
+actor = "System"
+label = "Confirm Order"
+```
+
+> **Rule**: every item requires an `actor`; at least 2 distinct actors. Items are grouped into horizontal lanes by actor, ordered top→down. `actor` is ignored by all other flow views.
+
+---
+
+### Mind Map — Radial topic exploration
+
+**Prompt**: *"Create a Declart mind map for Machine Learning concepts. Use kind = 'hierarchy' and view = 'mind_map' with a single root."*
+
+```toml
+kind = "hierarchy"
+view = "mind_map"
+title = "Machine Learning"
+
+[[nodes]]
+label = "ML Concepts"
+
+[[nodes]]
+label = "Supervised"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Unsupervised"
+parent = "ML Concepts"
+
+[[nodes]]
+label = "Classification"
+parent = "Supervised"
+```
+
+> **Rule**: exactly one root node. `mind_map` must be set explicitly (never auto-selected). The root is centered; its subtree radiates outward. Use for learning maps, brainstorms, topic exploration.
+
+---
+
+### State — Lifecycle states and transitions
+
+**Prompt**: *"Generate a Declart state diagram for an order lifecycle. Use kind = 'state' with states and directed transitions. Mark the start state with role = 'initial' and end states with role = 'terminal'."*
+
+```toml
+kind = "state"
+title = "Order Lifecycle"
+
+[[states]]
+id = "pending"
+label = "Pending"
+role = "initial"
+
+[[states]]
+id = "processing"
+label = "Processing"
+
+[[states]]
+id = "done"
+label = "Completed"
+role = "terminal"
+
+[[states]]
+id = "cancelled"
+label = "Cancelled"
+role = "terminal"
+
+[[transitions]]
+from = "pending"
+to = "processing"
+trigger = "Order Received"
+
+[[transitions]]
+from = "processing"
+to = "done"
+trigger = "Payment OK"
+
+[[transitions]]
+from = "processing"
+to = "cancelled"
+trigger = "Payment Failed"
+type = "exception"
+```
+
+> **Rule**: at least 2 states. At most one `role = "initial"`; multiple `"terminal"` allowed. Reference states in `from`/`to` by `id` (preferred) or `label`. `trigger` is optional (unconditional transition); `type = "exception"` marks error paths. Self-loops (`from` = `to`) are valid.
+
+---
+
 ## Tips for LLMs
 
 | Rule | Detail |
@@ -378,16 +486,18 @@ Performance = "★★★★★"
 | `view` is optional | Omit to use the default; include to declare intent explicitly |
 | No unknown fields | Don't add `color`, `style`, or other keys not in the spec |
 | `emphasis` values | Only `"primary"` or `"secondary"` |
-| Flow views | `kind = "flow"` + `view`: `process` (default), `cycle`, `funnel` |
+| Flow views | `kind = "flow"` + `view`: `process` (default), `cycle`, `funnel`, `swimlane` |
+| Swimlane actors | `view = "swimlane"` requires an `actor` on every item; ≥2 distinct actors |
 | Tier views | `kind = "tier"` + `view`: `pyramid` (default and only) |
 | Hierarchy nodes | `label` must be unique; `parent` references `id` (preferred) or `label` of another node |
 | Hierarchy `id` | Add `id = "key"` to nodes for stable `parent` references that survive label renames |
-| Hierarchy auto-select | 1 root → `org_chart`; 2+ roots → `fishbone` (or set `view` explicitly) |
+| Hierarchy views | `org_chart`, `fishbone`, `mind_map`. 1 root → `org_chart`; 2+ roots → `fishbone` (auto). `mind_map` must be explicit |
 | Fishbone `effect` | Rendered as the spine-end effect label; falls back to `title` if omitted |
 | Matrix quadrants | Always exactly 4 `[[quadrants]]` entries |
 | Timeline dates | ISO 8601: `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` |
 | Venn sets | Only 2 or 3 sets supported |
 | Comparison cells | Column label in each row must match an existing `[[columns]]` label |
+| State roles | At most one `role = "initial"`; multiple `"terminal"` allowed. `from`/`to` reference state `id` or `label` |
 
 ## Validating LLM Output
 
