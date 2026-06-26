@@ -9,6 +9,42 @@
 
 Declart is a **prose diagram** library: diagrams that belong in blog posts, reports, documentation, and slide decks — not in codebases. You describe the structure. The engine handles layout, typography, spacing, and styling.
 
+<table>
+<tr>
+<td width="50%" valign="top">
+
+```toml
+kind = "matrix"
+title = "Eisenhower Matrix"
+x_axis = "Importance"
+y_axis = "Urgency"
+
+[[quadrants]]
+label = "Do First"
+
+[[quadrants]]
+label = "Schedule"
+
+[[quadrants]]
+label = "Delegate"
+
+[[quadrants]]
+label = "Eliminate"
+```
+
+</td>
+<td width="50%" valign="top">
+
+<img src="assets/eisenhower-matrix.png" alt="Eisenhower Matrix rendered by Declart" width="100%">
+
+</td>
+</tr>
+</table>
+
+That declaration on the left renders the diagram on the right. No colors, coordinates, or fonts — the engine decides how it looks.
+
+**[📖 Documentation & Spec](https://iyulab.github.io/declart/)** · **[🛝 Live Playground](https://iyulab.github.io/declart/playground/index.html)** — edit a declaration and watch it render in your browser.
+
 ## Why Declart
 
 **Mermaid for engineers. Declart for writers.**
@@ -33,6 +69,8 @@ These are anchors. Every future design decision must be consistent with them.
 3. **Beauty is the engine's responsibility.** Users should never need design skill to produce a publishable diagram.
 4. **LLM-first.** The declaration format must be the simplest possible thing a language model can generate correctly and a human can review at a glance.
 5. **One representation per diagram.** Each `kind + view` pair has exactly one valid schema. No aliases, structural variants, or flags that change interpretation. Two declarations expressing the same diagram are byte-for-byte identical except for whitespace.
+
+> **This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated here. Changes to this document require deliberate revision, not drift.
 
 ## Kind and View
 
@@ -96,7 +134,7 @@ This is the boundary that prevents kind proliferation. Layout variants, visual a
 
 Anchored on the categories PowerPoint SmartArt established, prioritizing what existing diagram-as-code tools leave uncovered.
 
-- **Flow** (`kind = "flow"`) — process steps, PDCA loops, conversion funnels; views: `process`, `cycle`, `funnel`
+- **Flow** (`kind = "flow"`) — process steps, PDCA loops, conversion funnels, swimlanes; views: `process`, `cycle`, `funnel`, `swimlane`
 - **Tier** (`kind = "tier"`) — ranked levels, priority pyramids; view: `pyramid`
 - **Hierarchy** (`kind = "hierarchy"`) — org charts, fishbone cause-and-effect; views: `org_chart`, `fishbone`
 - **Matrix** (`kind = "matrix"`) — 2×2 grids with two axes
@@ -104,8 +142,9 @@ Anchored on the categories PowerPoint SmartArt established, prioritizing what ex
 - **Venn** (`kind = "venn"`) — overlapping set intersections
 - **Timeline** (`kind = "timeline"`) — date-anchored events
 - **Comparison** (`kind = "comparison"`) — item × criteria evaluation table
+- **State** (`kind = "state"`) — system lifecycle as named states and directed transitions
 
-Additional kinds (Roadmap, Swimlane, etc.) may be considered after the core kinds stabilize.
+Additional kinds (Roadmap, etc.) may be considered after the core kinds stabilize.
 
 ### Output
 
@@ -132,30 +171,19 @@ Explicit boundaries that protect focus:
 - **No WYSIWYG editing.** Declart is source-first. Visual editors are not part of the project.
 - **No PowerPoint round-trip.** Declart outputs embeddable SVG but does not read or write `.pptx` files.
 
-## Status
+## What's included
 
-**Current: v0.18.1** — fix `@iyulab/declart-web` npm package (missing `declart_wasm_bg.js`). 167 tests.
-
-| Capability | State |
-|------------|-------|
-| 8 diagram kinds (`flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`) + view layer | ✅ |
-| 4 built-in themes + user-defined TOML themes | ✅ |
-| TOML + JSON input (`parse_auto`) | ✅ |
-| CLI (`render`, `validate`, `init`, `watch`, `--format png`) | ✅ |
-| WASM bindings (`render`, `render_json`, `render_with_theme_toml`) | ✅ |
-| C ABI (`declart-ffi` + `declart.h`) | ✅ |
-| Node.js package (`@iyulab/declart`, CJS + ESM) | ✅ |
-| Browser/Bundler package (`@iyulab/declart-web`, ESM + WASM) | ✅ |
-| GitHub Releases binaries (Linux musl, macOS, Windows) | ✅ |
-| Interactive playground (live WASM, URL permalink, zoom/pan) | ✅ |
-| Spec site (mdBook + GitHub Actions CI) | ✅ (GitHub Pages: enable in repo Settings) |
-| LLM guide (prompt templates for all 8 kinds) | ✅ |
-| VS Code Extension (live preview, diagnostics, Markdown code blocks) | ✅ (.vsix) |
-| mdbook-declart preprocessor (inline SVG in mdBook) | ✅ |
+- **9 diagram kinds** — `flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`, `state` — with a semantic **view** layer on top.
+- **Theming** — 4 built-in themes plus user-defined TOML themes. No visual styling in source files.
+- **TOML and JSON input** — write declarations in either; the engine auto-detects the format.
+- **Multiple distributions** — CLI binary, Rust crate, WebAssembly, C ABI, and npm packages `@iyulab/declart` (Node.js) and `@iyulab/declart-web` (browser/bundler) (see [Distribution](#distribution)).
+- **Prebuilt binaries** — GitHub Releases for Linux (musl), macOS, and Windows.
+- **Interactive playground** — [live WASM editor](https://iyulab.github.io/declart/playground/index.html) with URL permalinks and zoom/pan.
+- **Spec site** — language-independent grammar specification, published at [iyulab.github.io/declart](https://iyulab.github.io/declart/).
+- **LLM guide** — prompt templates for generating every kind, so a model can produce valid declarations on the first try.
+- **Editor & docs tooling** — VS Code extension (live preview, diagnostics, Markdown code blocks) and an `mdbook-declart` preprocessor for inline SVG in mdBook.
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
-
-**This README is the design anchor.** All future implementation decisions must remain consistent with the principles, scope, and non-goals stated above. Changes to this document require deliberate revision, not drift.
 
 ## Browser / Vite
 
