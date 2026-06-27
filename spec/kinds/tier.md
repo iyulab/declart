@@ -1,6 +1,6 @@
 # Tier
 
-A tier diagram represents a ranked set of labeled items — levels differentiated by importance, abstraction, or priority. The `view` field determines how the tiers are rendered.
+A tier diagram represents an ordered set of labeled levels. The `view` field determines how the levels are rendered and what relationship they express: `pyramid` shows them as ranked layers (importance, abstraction, or priority), while `concentric` shows them as nested rings (containment and dependency — the "onion" model).
 
 ## Fields
 
@@ -21,11 +21,14 @@ A tier diagram represents a ranked set of labeled items — levels differentiate
 
 ## View values
 
-| value     | Meaning                                         | Min items | Max items |
-|-----------|-------------------------------------------------|-----------|-----------|
-| `pyramid` | Stacked layers from apex (first) to base (last) | 1         | —         |
+| value        | Meaning                                                      | Min items | Max items |
+|--------------|--------------------------------------------------------------|-----------|-----------|
+| `pyramid`    | Stacked layers from apex (first) to base (last)              | 1         | —         |
+| `concentric` | Nested rings from core (first, innermost) to periphery (last) | 1         | —         |
 
 When `view` is omitted, the engine uses `pyramid`.
+
+In `concentric`, item order reads inner → outer: the first item is the innermost core (the contained center), each subsequent item a ring enclosing it. This expresses containment and outer-depends-on-inner relationships (architecture layers, stakeholder rings, product layers). The data structure is identical to `pyramid` — only the rendering and the relationship it conveys differ.
 
 ## Example
 
@@ -47,4 +50,24 @@ label = "Safety"
 
 [[items]]
 label = "Physiological"
+```
+
+## Example — concentric (onion)
+
+```declart
+kind = "tier"
+view = "concentric"
+title = "Clean Architecture Layers"
+
+[[items]]
+label = "Entities"
+
+[[items]]
+label = "Use Cases"
+
+[[items]]
+label = "Interface Adapters"
+
+[[items]]
+label = "Frameworks & Drivers"
 ```

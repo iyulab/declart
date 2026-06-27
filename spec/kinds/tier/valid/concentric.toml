@@ -1,0 +1,17 @@
+kind = "tier"
+view = "concentric"
+title = "Clean Architecture Layers"
+
+[[items]]
+label = "Entities"
+
+[[items]]
+label = "Use Cases"
+
+[[items]]
+label = "Interface Adapters"
+emphasis = "primary"
+
+[[items]]
+label = "Frameworks & Drivers"
+status = "warning"

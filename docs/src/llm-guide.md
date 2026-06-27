@@ -21,7 +21,7 @@ Declart v0.16+ uses a two-level structure:
 | kind | views | Notes |
 |------|-------|-------|
 | `flow` | `process` (default), `cycle`, `funnel`, `swimlane` | `view` optional — defaults to `process`. `swimlane` requires an `actor` per item |
-| `tier` | `pyramid` (default) | Ranked levels — `view` optional |
+| `tier` | `pyramid` (default), `concentric` | Ranked levels (`pyramid`) or nested rings / onion (`concentric`) — `view` optional |
 | `hierarchy` | `org_chart`, `fishbone`, `mind_map` | `view` optional — `org_chart`/`fishbone` auto-selected by root count; `mind_map` must be explicit |
 | `timeline` | — | No view field |
 | `matrix` | — | No view field |
@@ -68,6 +68,32 @@ label = "Safety"
 label = "Physiological"
 emphasis = "primary"
 ```
+
+---
+
+### Tier (Concentric) — Nested layers, onion model
+
+**Prompt**: *"Generate a Declart diagram of Clean Architecture as nested layers. Use kind = 'tier' and view = 'concentric', listing items from the innermost core outward."*
+
+```toml
+kind = "tier"
+view = "concentric"
+title = "Clean Architecture Layers"
+
+[[items]]
+label = "Entities"
+
+[[items]]
+label = "Use Cases"
+
+[[items]]
+label = "Interface Adapters"
+
+[[items]]
+label = "Frameworks & Drivers"
+```
+
+> **Rule**: item order reads inner → outer. The first item is the innermost core; each later item is a ring enclosing it. Use `concentric` for containment / dependency (architecture layers, stakeholder rings); use `pyramid` for ranking / priority.
 
 ---
 

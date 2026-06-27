@@ -1,6 +1,6 @@
 [package]
 name = "declart-core"
-version = "0.19.0"
+version = "0.20.0"
 edition = "2021"
 description = "Declarative prose-diagram engine — parse TOML/JSON declarations and render SVG"
 license = "MIT"

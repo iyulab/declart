@@ -286,7 +286,8 @@
       <option value="flow_process">Flow (process) — Software Release Pipeline</option>
       <option value="flow_cycle">Flow (cycle) — PDCA</option>
       <option value="flow_funnel">Flow (funnel) — Marketing Conversion</option>
-      <option value="tier">Tier — Maslow's Hierarchy</option>
+      <option value="tier">Tier (pyramid) — Maslow's Hierarchy</option>
+      <option value="tier_concentric">Tier (concentric) — Clean Architecture</option>
       <option value="hierarchy_org">Hierarchy (org_chart) — Engineering Division</option>
       <option value="hierarchy_fishbone">Hierarchy (fishbone) — Website Performance</option>
       <option value="hierarchy_mind_map">Hierarchy (mind_map) — Machine Learning</option>
@@ -452,6 +453,25 @@ label = "Safety"
 
 [[items]]
 label = "Physiological"
+`,
+
+  tier_concentric: `kind = "tier"
+view = "concentric"
+title = "Clean Architecture Layers"
+
+[[items]]
+label = "Entities"
+
+[[items]]
+label = "Use Cases"
+
+[[items]]
+label = "Interface Adapters"
+emphasis = "primary"
+
+[[items]]
+label = "Frameworks & Drivers"
+status = "warning"
 `,
 
   hierarchy_org: `kind = "hierarchy"

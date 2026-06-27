@@ -68,7 +68,11 @@ pub struct FlowDiagram {
 /// View variant for a Tier diagram.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TierView {
+    /// Stacked layers from apex (first) to base (last).
     Pyramid,
+    /// Nested concentric rings from core (first, innermost) to periphery (last, outermost) —
+    /// expresses containment/dependency (onion model). Same data structure as `Pyramid`.
+    Concentric,
 }
 
 /// Model for Tier diagrams — ranked levels rendered as stacked layers.

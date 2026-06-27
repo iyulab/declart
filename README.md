@@ -135,7 +135,7 @@ This is the boundary that prevents kind proliferation. Layout variants, visual a
 Anchored on the categories PowerPoint SmartArt established, prioritizing what existing diagram-as-code tools leave uncovered.
 
 - **Flow** (`kind = "flow"`) — process steps, PDCA loops, conversion funnels, swimlanes; views: `process`, `cycle`, `funnel`, `swimlane`
-- **Tier** (`kind = "tier"`) — ranked levels, priority pyramids; view: `pyramid`
+- **Tier** (`kind = "tier"`) — ranked levels, priority pyramids, nested onion layers; views: `pyramid`, `concentric`
 - **Hierarchy** (`kind = "hierarchy"`) — org charts, fishbone cause-and-effect, mind maps; views: `org_chart`, `fishbone`, `mind_map`
 - **Matrix** (`kind = "matrix"`) — 2×2 grids with two axes; optional item classification into quadrants (BCG growth-share, Gartner Magic Quadrant)
 - **Hub-and-Spoke** (`kind = "hub_spoke"`) — radial connections from a center

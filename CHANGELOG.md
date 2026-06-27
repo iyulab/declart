@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.20.0
+
+`concentric` view for `tier` — nested rings (onion model) for containment and dependency.
+
+- **`tier` gains `view = "concentric"`** (new): renders the ordered item list as nested concentric rings instead of a pyramid. Item order reads inner → outer — the first item is the innermost core, each subsequent item a ring enclosing it. Expresses containment / outer-depends-on-inner relationships (architecture layers, stakeholder rings, product layers).
+- **Same data structure as `pyramid`**: no new kind, no new schema. `concentric` is a rendering intent over the identical ordered-item model. `emphasis` (primary ring outline / secondary tint) and `status` (corner markers) work exactly as in `pyramid`.
+- **Rendering**: core = apex color (dark), periphery = base color (light); labels stacked in the upper hemisphere, shrunk-to-fit and truncated when a band is too tight (no leader lines, which would cross rings).
+- **Docs & playground**: `spec/kinds/tier.md`, the LLM guide, `docs/src/introduction.md`, `README.md`, and a new `Tier (concentric)` playground example all cover the view.
+- **Tests**: concentric renderer + tier dispatch + parse coverage added; spec-suite gains a concentric valid example. All core unit + spec-suite pass; clippy clean.
+
 ## v0.19.0
 
 Common `status` semantic attribute — qualitative "traffic-light" health signal for reports.

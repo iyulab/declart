@@ -1,4 +1,5 @@
 pub(crate) mod comparison;
+pub(crate) mod concentric;
 pub(crate) mod cycle;
 pub(crate) mod fishbone;
 pub(crate) mod flow;

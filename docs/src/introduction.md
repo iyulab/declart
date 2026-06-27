@@ -63,7 +63,7 @@ let svg = render(&diagram, &DEFAULT_THEME)?;
 | Kind | Views |
 |------|-------|
 | `flow` | `process` (default), `cycle`, `funnel`, `swimlane` |
-| `tier` | `pyramid` (default) |
+| `tier` | `pyramid` (default), `concentric` |
 | `hierarchy` | `org_chart` (auto), `fishbone` (auto), `mind_map` |
 | `timeline` | — |
 | `matrix` | — |

@@ -169,10 +169,11 @@ fn validate_tier(raw: raw::RawTierDiagram) -> Result<Diagram, DeclartError> {
     if raw.items.is_empty() { return Err(DeclartError::EmptyItems); }
     let view = match raw.view.as_deref() {
         None | Some("pyramid") => TierView::Pyramid,
+        Some("concentric") => TierView::Concentric,
         Some(other) => return Err(DeclartError::InvalidValue {
             field: "view".to_string(),
             value: other.to_string(),
-            hint: "Valid view values for tier: pyramid".to_string(),
+            hint: "Valid view values for tier: pyramid, concentric".to_string(),
         }),
     };
     let items = parse_items(raw.items)?;
@@ -669,9 +670,20 @@ mod tests {
     }
 
     #[test]
+    fn parse_tier_explicit_view_concentric() {
+        let input = "kind = \"tier\"\nview = \"concentric\"\n\n[[items]]\nlabel = \"Core\"\n\n[[items]]\nlabel = \"Outer\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Tier(d) = diagram else { panic!("expected Tier") };
+        assert_eq!(d.view, TierView::Concentric);
+        assert_eq!(d.items.len(), 2);
+    }
+
+    #[test]
     fn parse_tier_rejects_invalid_view() {
         let input = "kind = \"tier\"\nview = \"cycle\"\n\n[[items]]\nlabel = \"A\"\n";
-        assert!(parse(input).is_err());
+        let err = parse(input).unwrap_err();
+        // Hint should mention both supported views so the migration path is clear.
+        assert!(format!("{err}").contains("concentric"), "invalid-view hint should list concentric");
     }
 
     #[test]

@@ -1,9 +1,9 @@
 use crate::model::{
     FishboneCause, FishboneDiagram, HierarchyDiagram, HierarchyView,
     Item, ItemsDiagram, OrgChartDiagram, OrgChartNode,
-    FlowDiagram, FlowView, TierDiagram,
+    FlowDiagram, FlowView, TierDiagram, TierView,
 };
-use super::{cycle, fishbone, funnel, mind_map, org_chart, process, pyramid, swimlane, theme::Theme};
+use super::{concentric, cycle, fishbone, funnel, mind_map, org_chart, process, pyramid, swimlane, theme::Theme};
 
 pub(crate) fn render_flow(d: &FlowDiagram, theme: &Theme) -> String {
     if d.view == FlowView::Swimlane {
@@ -25,7 +25,10 @@ pub(crate) fn render_flow(d: &FlowDiagram, theme: &Theme) -> String {
 
 pub(crate) fn render_tier(d: &TierDiagram, theme: &Theme) -> String {
     let items_data = ItemsDiagram { title: d.title.clone(), items: d.items.clone() };
-    pyramid::render(&items_data, theme)
+    match d.view {
+        TierView::Pyramid => pyramid::render(&items_data, theme),
+        TierView::Concentric => concentric::render(&items_data, theme),
+    }
 }
 
 fn resolve_nodes(d: &HierarchyDiagram) -> OrgChartDiagram {
@@ -70,5 +73,36 @@ pub(crate) fn render_hierarchy(d: &HierarchyDiagram, theme: &Theme) -> String {
             let data = FishboneDiagram { title: None, effect, causes };
             fishbone::render(&data, theme)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{Item, TierDiagram, TierView};
+    use crate::render::DEFAULT_THEME;
+
+    fn tier(view: TierView) -> TierDiagram {
+        TierDiagram {
+            title: None,
+            view,
+            items: vec![
+                Item { label: "Core".to_string(), emphasis: None, status: None },
+                Item { label: "Outer".to_string(), emphasis: None, status: None },
+            ],
+        }
+    }
+
+    #[test]
+    fn render_tier_pyramid_uses_polygons() {
+        let svg = render_tier(&tier(TierView::Pyramid), &DEFAULT_THEME);
+        assert!(svg.contains("<polygon"), "pyramid view should render trapezoid polygons");
+    }
+
+    #[test]
+    fn render_tier_concentric_uses_circles() {
+        let svg = render_tier(&tier(TierView::Concentric), &DEFAULT_THEME);
+        assert!(svg.contains("<circle"), "concentric view should render nested circles");
+        assert!(!svg.contains("<polygon"), "concentric view should not render pyramid polygons");
     }
 }
