@@ -136,8 +136,8 @@ Anchored on the categories PowerPoint SmartArt established, prioritizing what ex
 
 - **Flow** (`kind = "flow"`) — process steps, PDCA loops, conversion funnels, swimlanes; views: `process`, `cycle`, `funnel`, `swimlane`
 - **Tier** (`kind = "tier"`) — ranked levels, priority pyramids; view: `pyramid`
-- **Hierarchy** (`kind = "hierarchy"`) — org charts, fishbone cause-and-effect; views: `org_chart`, `fishbone`
-- **Matrix** (`kind = "matrix"`) — 2×2 grids with two axes
+- **Hierarchy** (`kind = "hierarchy"`) — org charts, fishbone cause-and-effect, mind maps; views: `org_chart`, `fishbone`, `mind_map`
+- **Matrix** (`kind = "matrix"`) — 2×2 grids with two axes; optional item classification into quadrants (BCG growth-share, Gartner Magic Quadrant)
 - **Hub-and-Spoke** (`kind = "hub_spoke"`) — radial connections from a center
 - **Venn** (`kind = "venn"`) — overlapping set intersections
 - **Timeline** (`kind = "timeline"`) — date-anchored events
@@ -174,6 +174,7 @@ Explicit boundaries that protect focus:
 ## What's included
 
 - **9 diagram kinds** — `flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`, `state` — with a semantic **view** layer on top.
+- **Semantic item attributes** — `emphasis` (importance) and `status` (`success`/`normal`/`warning`/`critical` health signal), declared as meaning, not styling. The `status` marker is dual-encoded by **color and shape** (circle/triangle/diamond) so it reads in monochrome and for colorblind readers.
 - **Theming** — 4 built-in themes plus user-defined TOML themes. No visual styling in source files.
 - **TOML and JSON input** — write declarations in either; the engine auto-detects the format.
 - **Multiple distributions** — CLI binary, Rust crate, WebAssembly, C ABI, and npm packages `@iyulab/declart` (Node.js) and `@iyulab/declart-web` (browser/bundler) (see [Distribution](#distribution)).

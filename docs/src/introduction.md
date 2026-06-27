@@ -72,6 +72,18 @@ let svg = render(&diagram, &DEFAULT_THEME)?;
 | `comparison` | — |
 | `state` | — |
 
+## Semantic item attributes
+
+Items carry *meaning*, not styling. Two optional attributes are shared across kinds:
+
+- **`emphasis`** — `primary` / `secondary` (importance).
+- **`status`** — `success` / `normal` / `warning` / `critical` (health signal). Rendered as a corner
+  marker dual-encoded by **color and shape** (circle / triangle / diamond) so it reads in monochrome
+  and for colorblind readers. Supported on `flow`, `tier`, `hub_spoke`, and `matrix` items.
+
+`matrix` additionally supports classifying items into quadrants (BCG / Gartner style) via an optional
+`[[items]]` array with a `quadrant` position. See the [schema](schema.md) and per-kind pages.
+
 ## Design Philosophy
 
 See [Principles](principles.md) for the full design rationale. The key idea: declarations express *what* exists, not *how* it looks. The engine owns visual decisions.
