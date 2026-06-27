@@ -99,7 +99,7 @@ The test: *"What is the relationship between these items?"* If the answer change
 | Kind | Relationship | Decision question |
 |------|-------------|-------------------|
 | `flow` | Sequential stages | Do items pass through stages? |
-| `tier` | Ranked levels | Are items ranked by importance or abstraction? |
+| `tier` | Ordered levels | Are items ranked layers (pyramid) or nested rings (onion)? |
 | `hierarchy` | Parent-child tree | Do items have explicit parent references? |
 | `timeline` | Temporal position | Do items have dates? |
 | `matrix` | Two-axis position | Are items placed in a 2×2 grid? |
