@@ -2,6 +2,12 @@
 name = "declart-cli"
 version = "0.19.0"
 edition = "2021"
+description = "Declart CLI — render declarative prose diagrams to SVG/PNG (binary name: declart)"
+license = "MIT"
+repository = "https://github.com/iyulab/declart"
+readme = "../../README.md"
+keywords = ["diagram", "svg", "cli", "declarative", "visualization"]
+categories = ["command-line-utilities", "visualization"]
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/declart-v{ version }-{ target }.tar.gz"
@@ -17,7 +23,7 @@ name = "declart"
 path = "src/main.rs"
 
 [dependencies]
-declart-core = { path = "../declart-core" }
+declart-core = { path = "../declart-core", version = "0.19.0" }
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 resvg = { version = "0.47.0", default-features = false, features = ["text", "system-fonts"] }

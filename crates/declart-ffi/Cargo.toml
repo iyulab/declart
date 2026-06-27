@@ -5,6 +5,8 @@ edition = "2021"
 description = "C ABI bindings for Declart — produces .dll/.so/.dylib for use from Python, C#, Node.js, and other languages"
 license = "MIT"
 repository = "https://github.com/iyulab/declart"
+# Primary distribution is prebuilt shared libraries (GitHub Releases), not crates.io.
+publish = false
 
 [lib]
 crate-type = ["cdylib"]
