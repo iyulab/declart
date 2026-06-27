@@ -1,6 +1,6 @@
 {
   "name": "rehype-declart",
-  "version": "0.18.1",
+  "version": "0.19.0",
   "description": "rehype plugin to render <pre><code class=\"language-declart\"> blocks as SVG diagrams",
   "keywords": [
     "rehype",

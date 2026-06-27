@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.19.0
 
 Common `status` semantic attribute — qualitative "traffic-light" health signal for reports.
 
