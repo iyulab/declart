@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch: {}
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -31,17 +32,25 @@ jobs:
       # Publishes in dependency order: declart-core first, then the crates that
       # depend on it. wasm/ffi are publish=false (distributed via npm / binaries).
       # Each publish is idempotent (skips a version already on crates.io) so a
-      # re-run after a partial failure is safe.
+      # re-run after a partial failure is safe. Triggered by tag push, or manually
+      # via workflow_dispatch (version is read from declart-core/Cargo.toml).
       - name: Publish crates
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="$(grep -m1 '^version' crates/declart-core/Cargo.toml | sed -E 's/.*"(.*)".*/\1/')"
+          fi
           echo "Publishing version ${VERSION}"
 
+          # crates.io's API rejects requests without a User-Agent, so always send one.
+          UA="declart-ci (https://github.com/iyulab/declart)"
+
           is_published() {
-            curl -s "https://crates.io/api/v1/crates/$1/${VERSION}" \
+            curl -s -H "User-Agent: ${UA}" "https://crates.io/api/v1/crates/$1/${VERSION}" \
               | grep -q "\"num\":\"${VERSION}\""
           }
 
