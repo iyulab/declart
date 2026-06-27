@@ -51,6 +51,15 @@ pub(crate) struct Typography {
     pub(crate) label_size_min: f32,
 }
 
+/// Marker colors for the semantic `status` attribute. `normal` has no color — it renders
+/// no marker (the unmarked baseline), so only the three notable states need a color.
+#[derive(Debug, Clone)]
+pub(crate) struct StatusColors {
+    pub(crate) success: Color,
+    pub(crate) warning: Color,
+    pub(crate) critical: Color,
+}
+
 /// Visual theme for rendering. Pass `&DEFAULT_THEME` or `&MONOCHROME_THEME` to [`render`](crate::render::render),
 /// or use [`Theme::by_name`] to resolve a theme by its string name, or [`Theme::from_toml`] to
 /// load a custom theme from a TOML string.
@@ -62,6 +71,7 @@ pub struct Theme {
     pub(crate) text: TextColors,
     pub(crate) typography: Typography,
     pub(crate) title_color: Color,
+    pub(crate) status: StatusColors,
 }
 
 impl Theme {
@@ -123,6 +133,24 @@ impl Theme {
                 label_size_min: typo.and_then(|t| t.label_size_min).unwrap_or(10.0),
             },
             title_color: parse_hex("colors.title", &c.title)?,
+            status: {
+                let s = config.status.as_ref();
+                let default = &DEFAULT_THEME.status;
+                StatusColors {
+                    success: match s.and_then(|s| s.success.as_deref()) {
+                        Some(hex) => parse_hex("status.success", hex)?,
+                        None => default.success,
+                    },
+                    warning: match s.and_then(|s| s.warning.as_deref()) {
+                        Some(hex) => parse_hex("status.warning", hex)?,
+                        None => default.warning,
+                    },
+                    critical: match s.and_then(|s| s.critical.as_deref()) {
+                        Some(hex) => parse_hex("status.critical", hex)?,
+                        None => default.critical,
+                    },
+                }
+            },
         })
     }
 }
@@ -131,6 +159,14 @@ impl Theme {
 struct ThemeConfig {
     colors: ThemeColors,
     typography: Option<ThemeTypography>,
+    status: Option<ThemeStatus>,
+}
+
+#[derive(serde::Deserialize)]
+struct ThemeStatus {
+    success: Option<String>,
+    warning: Option<String>,
+    critical: Option<String>,
 }
 
 #[derive(serde::Deserialize)]
@@ -182,6 +218,11 @@ pub static DEFAULT_THEME: Theme = Theme {
         label_size_min: 10.0,
     },
     title_color: Color::new(26, 58, 92),
+    status: StatusColors {
+        success: Color::new(46, 125, 50),   // green #2E7D32
+        warning: Color::new(237, 108, 2),   // amber #ED6C02
+        critical: Color::new(198, 40, 40),  // red #C62828
+    },
 };
 
 /// Dark-to-light gray theme with no color hues.
@@ -202,6 +243,13 @@ pub static MONOCHROME_THEME: Theme = Theme {
         label_size_min: 10.0,
     },
     title_color: Color::new(40, 40, 40),
+    // Hueless theme: status encoded by increasing darkness (success light → critical near-black).
+    // Color alone is weak here; glyph dual-encoding for accessibility is tracked as follow-up.
+    status: StatusColors {
+        success: Color::new(158, 158, 158),  // light gray
+        warning: Color::new(90, 90, 90),     // mid-dark gray
+        critical: Color::new(26, 26, 26),    // near-black
+    },
 };
 
 /// Colorblind-safe theme based on the Okabe-Ito palette (Blue → Sky blue).
@@ -224,6 +272,12 @@ pub static ACCESSIBLE_THEME: Theme = Theme {
         label_size_min: 10.0,
     },
     title_color: Color::new(0, 114, 178),
+    // Okabe-Ito palette: distinguishable under deuteranopia/protanopia.
+    status: StatusColors {
+        success: Color::new(0, 158, 115),    // bluish green #009E73
+        warning: Color::new(230, 159, 0),    // orange #E69F00
+        critical: Color::new(213, 94, 0),    // vermillion #D55E00
+    },
 };
 
 /// Warm terracotta-to-peach gradient. Suitable for consulting and marketing decks.
@@ -244,6 +298,11 @@ pub static WARM_THEME: Theme = Theme {
         label_size_min: 10.0,
     },
     title_color: Color::new(139, 37, 0),
+    status: StatusColors {
+        success: Color::new(91, 140, 90),   // fern green #5B8C5A
+        warning: Color::new(217, 142, 4),   // ochre #D98E04
+        critical: Color::new(178, 58, 46),  // brick red #B23A2E
+    },
 };
 
 #[cfg(test)]

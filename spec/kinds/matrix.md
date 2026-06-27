@@ -18,6 +18,7 @@ A two-by-two matrix diagram. Used for prioritization, strategy frameworks, and c
 |----------|----------|--------|-------------------------------------------------------------------------|
 | label    | yes      | string | Text displayed in the quadrant                                          |
 | emphasis | no       | string | `"primary"` or `"secondary"`. See schema.                               |
+| status   | no       | string | `"success"`, `"normal"`, `"warning"`, or `"critical"`. See schema.      |
 | position | no       | string | Explicit cell: `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"` |
 
 ## Quadrant order

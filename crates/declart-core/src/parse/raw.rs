@@ -12,6 +12,7 @@ pub struct KindProbe {
 pub struct RawFlowItem {
     pub label: String,
     pub emphasis: Option<String>,
+    pub status: Option<String>,
     pub actor: Option<String>,
 }
 
@@ -54,6 +55,7 @@ pub struct RawMatrixDiagram {
 pub struct RawItem {
     pub label: String,
     pub emphasis: Option<String>,
+    pub status: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -61,6 +63,7 @@ pub struct RawItem {
 pub struct RawQuadrant {
     pub label: String,
     pub emphasis: Option<String>,
+    pub status: Option<String>,
     pub position: Option<String>,
 }
 

@@ -2,7 +2,7 @@ mod raw;
 
 use crate::error::DeclartError;
 use crate::model::{
-    ComparisonCell, ComparisonDiagram, Diagram, Emphasis,
+    ComparisonCell, ComparisonDiagram, Diagram, Emphasis, Status,
     FlowDiagram, FlowItem, FlowView,
     TierDiagram, TierView,
     HierarchyDiagram, HierarchyNode, HierarchyView,
@@ -74,17 +74,34 @@ fn parse_emphasis(s: Option<&str>) -> Result<Option<Emphasis>, DeclartError> {
     }
 }
 
+fn parse_status(s: Option<&str>) -> Result<Option<Status>, DeclartError> {
+    match s {
+        None => Ok(None),
+        Some("success") => Ok(Some(Status::Success)),
+        Some("normal") => Ok(Some(Status::Normal)),
+        Some("warning") => Ok(Some(Status::Warning)),
+        Some("critical") => Ok(Some(Status::Critical)),
+        Some(other) => Err(DeclartError::InvalidValue {
+            field: "status".to_string(),
+            value: other.to_string(),
+            hint: "Valid values are: success, normal, warning, critical".to_string(),
+        }),
+    }
+}
+
 fn parse_items(raw_items: Vec<raw::RawItem>) -> Result<Vec<Item>, DeclartError> {
     raw_items.into_iter().map(|item| {
         let emphasis = parse_emphasis(item.emphasis.as_deref())?;
-        Ok(Item { label: item.label, emphasis })
+        let status = parse_status(item.status.as_deref())?;
+        Ok(Item { label: item.label, emphasis, status })
     }).collect()
 }
 
 fn parse_flow_items(raw_items: Vec<raw::RawFlowItem>) -> Result<Vec<FlowItem>, DeclartError> {
     raw_items.into_iter().map(|item| {
         let emphasis = parse_emphasis(item.emphasis.as_deref())?;
-        Ok(FlowItem { label: item.label, emphasis, actor: item.actor })
+        let status = parse_status(item.status.as_deref())?;
+        Ok(FlowItem { label: item.label, emphasis, status, actor: item.actor })
     }).collect()
 }
 
@@ -286,7 +303,11 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
                     hint: "Duplicate quadrant position".to_string(),
                 });
             }
-            slots[slot] = Some(Item { label: q.label, emphasis: parse_emphasis(q.emphasis.as_deref())? });
+            slots[slot] = Some(Item {
+                label: q.label,
+                emphasis: parse_emphasis(q.emphasis.as_deref())?,
+                status: parse_status(q.status.as_deref())?,
+            });
         }
         slots.into_iter().map(|s| s.unwrap()).collect::<Vec<Item>>()
     } else {
@@ -294,7 +315,11 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
         raw.quadrants
             .into_iter()
             .map(|q| -> Result<Item, DeclartError> {
-                Ok(Item { label: q.label, emphasis: parse_emphasis(q.emphasis.as_deref())? })
+                Ok(Item {
+                    label: q.label,
+                    emphasis: parse_emphasis(q.emphasis.as_deref())?,
+                    status: parse_status(q.status.as_deref())?,
+                })
             })
             .collect::<Result<Vec<Item>, DeclartError>>()?
     };
@@ -642,6 +667,129 @@ mod tests {
             let input = format!("kind = \"{kind}\"\n\n[[items]]\nlabel = \"A\"\n");
             assert!(parse(&input).is_err(), "kind '{kind}' should be rejected");
         }
+    }
+
+    #[test]
+    fn parse_flow_item_status_values() {
+        use crate::model::Status;
+        let input = r#"
+kind = "flow"
+
+[[items]]
+label = "Build"
+status = "success"
+
+[[items]]
+label = "Deploy"
+status = "critical"
+
+[[items]]
+label = "Review"
+status = "warning"
+
+[[items]]
+label = "Idle"
+status = "normal"
+
+[[items]]
+label = "Untracked"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Flow(d) = diagram else { panic!("expected Flow") };
+        assert_eq!(d.items[0].status, Some(Status::Success));
+        assert_eq!(d.items[1].status, Some(Status::Critical));
+        assert_eq!(d.items[2].status, Some(Status::Warning));
+        assert_eq!(d.items[3].status, Some(Status::Normal));
+        assert_eq!(d.items[4].status, None);
+    }
+
+    #[test]
+    fn parse_flow_status_orthogonal_to_emphasis() {
+        use crate::model::{Emphasis, Status};
+        let input = r#"
+kind = "flow"
+
+[[items]]
+label = "Critical Path"
+emphasis = "primary"
+status = "critical"
+
+[[items]]
+label = "Other"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Flow(d) = diagram else { panic!() };
+        assert_eq!(d.items[0].emphasis, Some(Emphasis::Primary));
+        assert_eq!(d.items[0].status, Some(Status::Critical));
+    }
+
+    #[test]
+    fn parse_flow_rejects_invalid_status() {
+        let input = "kind = \"flow\"\n\n[[items]]\nlabel = \"A\"\nstatus = \"green\"\n\n[[items]]\nlabel = \"B\"\n";
+        let err = parse(input).unwrap_err();
+        assert!(err.to_string().contains("status"), "error should mention status");
+    }
+
+    #[test]
+    fn parse_tier_item_status() {
+        use crate::model::Status;
+        let input = "kind = \"tier\"\n\n[[items]]\nlabel = \"Top\"\nstatus = \"critical\"\n\n[[items]]\nlabel = \"Base\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Tier(d) = diagram else { panic!("expected Tier") };
+        assert_eq!(d.items[0].status, Some(Status::Critical));
+        assert_eq!(d.items[1].status, None);
+    }
+
+    #[test]
+    fn parse_hub_spoke_spoke_status() {
+        use crate::model::Status;
+        let input = "kind = \"hub_spoke\"\ncenter = \"Core\"\n\n[[spokes]]\nlabel = \"Auth\"\nstatus = \"warning\"\n\n[[spokes]]\nlabel = \"DB\"\nstatus = \"success\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::HubSpoke(d) = diagram else { panic!("expected HubSpoke") };
+        assert_eq!(d.spokes[0].status, Some(Status::Warning));
+        assert_eq!(d.spokes[1].status, Some(Status::Success));
+    }
+
+    #[test]
+    fn parse_matrix_quadrant_status() {
+        use crate::model::Status;
+        let input = r#"
+kind = "matrix"
+x_axis = "Likelihood"
+y_axis = "Impact"
+
+[[quadrants]]
+label = "Critical Risk"
+position = "top-right"
+status = "critical"
+
+[[quadrants]]
+label = "Monitor"
+position = "top-left"
+
+[[quadrants]]
+label = "Low"
+position = "bottom-left"
+status = "success"
+
+[[quadrants]]
+label = "Watch"
+position = "bottom-right"
+status = "warning"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Matrix(d) = diagram else { panic!("expected Matrix") };
+        // position reorders to [top-left, top-right, bottom-left, bottom-right]
+        assert_eq!(d.quadrants[0].status, None);                    // Monitor (top-left)
+        assert_eq!(d.quadrants[1].status, Some(Status::Critical));  // Critical Risk (top-right)
+        assert_eq!(d.quadrants[2].status, Some(Status::Success));   // Low (bottom-left)
+        assert_eq!(d.quadrants[3].status, Some(Status::Warning));   // Watch (bottom-right)
+    }
+
+    #[test]
+    fn parse_tier_rejects_invalid_status() {
+        let input = "kind = \"tier\"\n\n[[items]]\nlabel = \"Top\"\nstatus = \"bogus\"\n";
+        assert!(parse(input).is_err(), "invalid status value should be rejected");
     }
 
     #[test]

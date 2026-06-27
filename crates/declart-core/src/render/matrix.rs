@@ -1,5 +1,5 @@
 use crate::model::{Emphasis, MatrixDiagram};
-use crate::render::{font, svg::SvgBuilder, theme::Theme};
+use crate::render::{font, status, svg::SvgBuilder, theme::Theme};
 
 const CANVAS_SIZE: f32 = 500.0;
 const TITLE_AREA: f32 = 50.0;
@@ -80,6 +80,9 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
             font_size = (font_size * cell_w / text_w).max(theme.typography.label_size_min);
         }
         builder.text_weighted(cx, cy, &quadrant.label, &text_color.to_hex(), font_size, bold);
+
+        // Marker inset from the cell's top-right corner (x2, y1).
+        status::draw_marker(&mut builder, &quadrant.status, *x2, *y1, theme);
     }
 
     // Axis divider lines
@@ -140,10 +143,10 @@ mod tests {
             x_axis: "Importance".to_string(),
             y_axis: "Urgency".to_string(),
             quadrants: vec![
-                Item { label: "Do First".to_string(), emphasis: None },
-                Item { label: "Schedule".to_string(), emphasis: None },
-                Item { label: "Delegate".to_string(), emphasis: None },
-                Item { label: "Eliminate".to_string(), emphasis: None },
+                Item { label: "Do First".to_string(), emphasis: None, status: None },
+                Item { label: "Schedule".to_string(), emphasis: None, status: None },
+                Item { label: "Delegate".to_string(), emphasis: None, status: None },
+                Item { label: "Eliminate".to_string(), emphasis: None, status: None },
             ],
         }
     }
@@ -192,15 +195,33 @@ mod tests {
             x_axis: "X".to_string(),
             y_axis: "Y".to_string(),
             quadrants: vec![
-                Item { label: "Primary".to_string(), emphasis: Some(Emphasis::Primary) },
-                Item { label: "Q2".to_string(), emphasis: None },
-                Item { label: "Q3".to_string(), emphasis: None },
-                Item { label: "Q4".to_string(), emphasis: None },
+                Item { label: "Primary".to_string(), emphasis: Some(Emphasis::Primary), status: None },
+                Item { label: "Q2".to_string(), emphasis: None, status: None },
+                Item { label: "Q3".to_string(), emphasis: None, status: None },
+                Item { label: "Q4".to_string(), emphasis: None, status: None },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.contains("font-weight=\"bold\""), "primary quadrant should be bold");
         assert!(svg.contains("stroke-width=\"3.0\""), "primary quadrant should have stroke");
+    }
+
+    #[test]
+    fn render_quadrant_status_emits_marker() {
+        use crate::model::Status;
+        let d = MatrixDiagram {
+            title: None,
+            x_axis: "X".to_string(),
+            y_axis: "Y".to_string(),
+            quadrants: vec![
+                Item { label: "Q1".to_string(), emphasis: None, status: Some(Status::Critical) },
+                Item { label: "Q2".to_string(), emphasis: None, status: None },
+                Item { label: "Q3".to_string(), emphasis: None, status: None },
+                Item { label: "Q4".to_string(), emphasis: None, status: None },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains(&DEFAULT_THEME.status.critical.to_hex()), "a quadrant with status should render a marker");
     }
 
     #[test]
@@ -212,10 +233,10 @@ mod tests {
             x_axis: long_label.to_string(),
             y_axis: long_label.to_string(),
             quadrants: vec![
-                Item { label: "Q1".to_string(), emphasis: None },
-                Item { label: "Q2".to_string(), emphasis: None },
-                Item { label: "Q3".to_string(), emphasis: None },
-                Item { label: "Q4".to_string(), emphasis: None },
+                Item { label: "Q1".to_string(), emphasis: None, status: None },
+                Item { label: "Q2".to_string(), emphasis: None, status: None },
+                Item { label: "Q3".to_string(), emphasis: None, status: None },
+                Item { label: "Q4".to_string(), emphasis: None, status: None },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);

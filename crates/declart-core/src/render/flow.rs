@@ -12,6 +12,7 @@ pub(crate) fn render_flow(d: &FlowDiagram, theme: &Theme) -> String {
     let items: Vec<Item> = d.items.iter().map(|fi| Item {
         label: fi.label.clone(),
         emphasis: fi.emphasis.clone(),
+        status: fi.status.clone(),
     }).collect();
     let items_data = ItemsDiagram { title: d.title.clone(), items };
     match d.view {
@@ -62,7 +63,7 @@ pub(crate) fn render_hierarchy(d: &HierarchyDiagram, theme: &Theme) -> String {
                             (root_id.is_some() && Some(p) == root_id) || p == root_label
                         }).unwrap_or(false)
                     })
-                    .map(|n| Item { label: n.label.clone(), emphasis: None })
+                    .map(|n| Item { label: n.label.clone(), emphasis: None, status: None })
                     .collect();
                 FishboneCause { label: root_label.to_string(), items }
             }).collect();

@@ -7,11 +7,29 @@ pub enum Emphasis {
     Secondary,
 }
 
+/// Optional semantic condition of an item, orthogonal to [`Emphasis`].
+///
+/// Where `emphasis` expresses *importance*, `status` expresses *health/severity* — the
+/// "traffic-light" signal common in reports. The engine renders it as a small corner marker,
+/// not by recoloring the item, so an item can carry both an emphasis and a status at once.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Status {
+    /// Explicitly good / done — green marker.
+    Success,
+    /// Assessed as nominal — no marker (the unmarked baseline).
+    Normal,
+    /// Needs attention — amber marker.
+    Warning,
+    /// Failing / blocked / urgent — red marker.
+    Critical,
+}
+
 /// A labeled item with an optional emphasis hint. Used by Flow diagrams and as spokes/quadrants.
 #[derive(Debug, Clone)]
 pub struct Item {
     pub label: String,
     pub emphasis: Option<Emphasis>,
+    pub status: Option<Status>,
 }
 
 /// A labeled item in a flow diagram. `actor` is only used by the `swimlane` view.
@@ -19,6 +37,7 @@ pub struct Item {
 pub struct FlowItem {
     pub label: String,
     pub emphasis: Option<Emphasis>,
+    pub status: Option<Status>,
     pub actor: Option<String>,
 }
 
@@ -268,10 +287,12 @@ mod tests {
                 Item {
                     label: "Top".to_string(),
                     emphasis: None,
+                    status: None,
                 },
                 Item {
                     label: "Bottom".to_string(),
                     emphasis: Some(Emphasis::Primary),
+                    status: None,
                 },
             ],
         };
@@ -290,6 +311,7 @@ mod tests {
                 .map(|i| Item {
                     label: format!("Q{}", i + 1),
                     emphasis: None,
+                    status: None,
                 })
                 .collect(),
         };
@@ -305,6 +327,7 @@ mod tests {
             items: vec![FlowItem {
                 label: "Plan".to_string(),
                 emphasis: None,
+                status: None,
                 actor: None,
             }],
         };
@@ -317,6 +340,7 @@ mod tests {
         let fi = FlowItem {
             label: "Buy".to_string(),
             emphasis: None,
+            status: None,
             actor: Some("Customer".to_string()),
         };
         assert_eq!(fi.actor.as_deref(), Some("Customer"));
@@ -331,11 +355,13 @@ mod tests {
                 FlowItem {
                     label: "A".to_string(),
                     emphasis: None,
+                    status: None,
                     actor: Some("X".to_string()),
                 },
                 FlowItem {
                     label: "B".to_string(),
                     emphasis: None,
+                    status: None,
                     actor: Some("Y".to_string()),
                 },
             ],
@@ -352,6 +378,7 @@ mod tests {
             items: vec![Item {
                 label: "Top".to_string(),
                 emphasis: None,
+                status: None,
             }],
         };
         assert_eq!(d.view, TierView::Pyramid);

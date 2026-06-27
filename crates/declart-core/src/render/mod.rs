@@ -11,6 +11,7 @@ pub(crate) mod org_chart;
 pub(crate) mod process;
 pub(crate) mod pyramid;
 pub(crate) mod state;
+pub(crate) mod status;
 pub(crate) mod swimlane;
 mod svg;
 pub mod theme;

@@ -1,5 +1,5 @@
 use crate::model::{Emphasis, ItemsDiagram};
-use crate::render::{font, svg::SvgBuilder, theme::Theme};
+use crate::render::{font, status, svg::SvgBuilder, theme::Theme};
 
 const CANVAS_W: f32 = 600.0;
 const STAGE_HEIGHT: f32 = 60.0;
@@ -86,6 +86,8 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             font_size,
             is_bold,
         );
+
+        status::draw_marker(&mut builder, &item.status, CENTER_X + top_w / 2.0, top_y, theme);
     }
 
     builder.build(&theme.background.to_hex())
@@ -101,7 +103,7 @@ mod tests {
         ItemsDiagram {
             title: Some("Funnel".to_string()),
             items: (0..n)
-                .map(|i| Item { label: format!("Stage {}", i + 1), emphasis: None })
+                .map(|i| Item { label: format!("Stage {}", i + 1), emphasis: None, status: None })
                 .collect(),
         }
     }

@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use crate::model::{Emphasis, HubSpokeDiagram};
-use crate::render::{font, svg::SvgBuilder, theme::Theme};
+use crate::render::{font, status, svg::SvgBuilder, theme::Theme};
 
 const HUB_W: f32 = 140.0;
 const HUB_H: f32 = 55.0;
@@ -116,6 +116,8 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
             spoke.label.clone()
         };
         builder.text_weighted(sx, sy, &spoke_display, &text_color.to_hex(), fs, bold);
+
+        status::draw_marker(&mut builder, &spoke.status, sx + SPOKE_W / 2.0, sy - SPOKE_H / 2.0, theme);
     }
 
     // Draw hub node on top
@@ -155,7 +157,7 @@ mod tests {
             title: title.map(String::from),
             center: "Hub".to_string(),
             spokes: (0..n)
-                .map(|i| Item { label: format!("Spoke {}", i + 1), emphasis: None })
+                .map(|i| Item { label: format!("Spoke {}", i + 1), emphasis: None, status: None })
                 .collect(),
         }
     }
@@ -200,8 +202,8 @@ mod tests {
             title: None,
             center: "Hub".to_string(),
             spokes: vec![
-                Item { label: "Primary".to_string(), emphasis: Some(Emphasis::Primary) },
-                Item { label: "Normal".to_string(), emphasis: None },
+                Item { label: "Primary".to_string(), emphasis: Some(Emphasis::Primary), status: None },
+                Item { label: "Normal".to_string(), emphasis: None, status: None },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
@@ -234,13 +236,28 @@ mod tests {
     }
 
     #[test]
+    fn render_spoke_status_emits_marker() {
+        use crate::model::Status;
+        let d = HubSpokeDiagram {
+            title: None,
+            center: "Core".to_string(),
+            spokes: vec![
+                Item { label: "Auth".to_string(), emphasis: None, status: Some(Status::Critical) },
+                Item { label: "DB".to_string(), emphasis: None, status: None },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains(&DEFAULT_THEME.status.critical.to_hex()), "a spoke with status should render a marker");
+    }
+
+    #[test]
     fn render_secondary_emphasis_has_no_stroke() {
         let d = HubSpokeDiagram {
             title: None,
             center: "Hub".to_string(),
             spokes: vec![
-                Item { label: "Secondary".to_string(), emphasis: Some(Emphasis::Secondary) },
-                Item { label: "Normal".to_string(), emphasis: None },
+                Item { label: "Secondary".to_string(), emphasis: Some(Emphasis::Secondary), status: None },
+                Item { label: "Normal".to_string(), emphasis: None, status: None },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);

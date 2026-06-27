@@ -17,6 +17,7 @@ A flow diagram represents an ordered list of labeled items. The `view` field det
 |------------|----------|--------|-------------------------------------------|
 | `label`    | yes      | string | Text displayed in the item                |
 | `emphasis` | no       | string | `"primary"` or `"secondary"`. See schema. |
+| `status`   | no       | string | `"success"`, `"normal"`, `"warning"`, or `"critical"` — health/severity signal, orthogonal to `emphasis`. See schema. |
 
 ## View values
 
@@ -87,4 +88,31 @@ label = "Check"
 
 [[items]]
 label = "Act"
+```
+
+## Status example
+
+`status` adds a traffic-light health signal per step. It is orthogonal to `emphasis`, so a step can
+be both the most important (`primary`) and in trouble (`critical`).
+
+```declart
+kind = "flow"
+title = "Release Pipeline Health"
+
+[[items]]
+label = "Build"
+status = "success"
+
+[[items]]
+label = "Test"
+status = "warning"
+
+[[items]]
+label = "Deploy"
+emphasis = "primary"
+status = "critical"
+
+[[items]]
+label = "Monitor"
+status = "normal"
 ```

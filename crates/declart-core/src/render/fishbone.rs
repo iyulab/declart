@@ -181,7 +181,7 @@ mod tests {
                 .map(|i| FishboneCause {
                     label: format!("Cause {}", i + 1),
                     items: if with_items && i == 0 {
-                        vec![Item { label: "Sub 1".to_string(), emphasis: None }]
+                        vec![Item { label: "Sub 1".to_string(), emphasis: None, status: None }]
                     } else {
                         vec![]
                     },

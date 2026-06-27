@@ -1,5 +1,5 @@
 use crate::model::{Emphasis, ItemsDiagram};
-use crate::render::{font, svg::SvgBuilder, theme::Theme};
+use crate::render::{font, status, svg::SvgBuilder, theme::Theme};
 
 const BOX_HEIGHT: f32 = 60.0;
 const BOX_MIN_WIDTH: f32 = 100.0;
@@ -94,6 +94,8 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let center_x = box_left + box_width / 2.0;
         let center_y = box_top + BOX_HEIGHT / 2.0;
         builder.text_weighted(center_x, center_y, &display_label, &text_color.to_hex(), font_size, is_bold);
+
+        status::draw_marker(&mut builder, &item.status, box_right, box_top, theme);
     }
 
     builder.build(&theme.background.to_hex())
@@ -134,7 +136,7 @@ mod tests {
         ItemsDiagram {
             title: title.map(String::from),
             items: (0..n)
-                .map(|i| Item { label: format!("Step {}", i + 1), emphasis: None })
+                .map(|i| Item { label: format!("Step {}", i + 1), emphasis: None, status: None })
                 .collect(),
         }
     }
@@ -170,5 +172,31 @@ mod tests {
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.contains("Step 1"));
         assert!(!svg.contains("Step 2"));
+    }
+
+    #[test]
+    fn status_critical_emits_marker() {
+        use crate::model::Status;
+        let d = ItemsDiagram {
+            title: None,
+            items: vec![
+                Item { label: "Deploy".to_string(), emphasis: None, status: Some(Status::Critical) },
+                Item { label: "Idle".to_string(), emphasis: None, status: None },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(
+            svg.contains(&DEFAULT_THEME.status.critical.to_hex()),
+            "marker should use the theme's critical color"
+        );
+    }
+
+    #[test]
+    fn status_absent_renders_no_marker() {
+        let d = make_diagram(3, None);
+        let svg = render(&d, &DEFAULT_THEME);
+        // No status colors should appear when no item declares status.
+        assert!(!svg.contains(&DEFAULT_THEME.status.critical.to_hex()));
+        assert!(!svg.contains(&DEFAULT_THEME.status.success.to_hex()));
     }
 }

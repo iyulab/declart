@@ -1,6 +1,6 @@
 use crate::model::FlowDiagram;
 use crate::render::theme::Theme;
-use super::{font, svg::SvgBuilder};
+use super::{font, status, svg::SvgBuilder};
 
 const LANE_WIDTH: f32 = 180.0;
 const STEP_HEIGHT: f32 = 56.0;
@@ -100,6 +100,8 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
         };
         b.text_weighted(lane_cx, box_y + STEP_HEIGHT / 2.0, &label, &text_col.to_hex(), font_size, is_bold);
 
+        status::draw_marker(&mut b, &item.status, box_x + step_width, box_y, theme);
+
         // Arrow to next step
         if let Some(next) = d.items.get(i + 1) {
             let next_actor = next.actor.as_deref().unwrap_or("");
@@ -145,6 +147,7 @@ mod tests {
                 actor: Some(actor.to_string()),
                 label: label.to_string(),
                 emphasis: None,
+                status: None,
             }).collect(),
         }
     }

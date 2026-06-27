@@ -1,0 +1,24 @@
+kind = "matrix"
+title = "Risk Assessment"
+x_axis = "Likelihood"
+y_axis = "Impact"
+
+[[quadrants]]
+label = "Critical Risk"
+position = "top-right"
+status = "critical"
+
+[[quadrants]]
+label = "Mitigate"
+position = "top-left"
+status = "warning"
+
+[[quadrants]]
+label = "Accept"
+position = "bottom-left"
+status = "success"
+
+[[quadrants]]
+label = "Monitor"
+position = "bottom-right"
+status = "normal"

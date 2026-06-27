@@ -1,5 +1,5 @@
 use crate::model::{Emphasis, ItemsDiagram};
-use crate::render::{font, svg::SvgBuilder, theme::Theme};
+use crate::render::{font, status, svg::SvgBuilder, theme::Theme};
 
 const CANVAS_BASE_W: f32 = 600.0;
 const LAYER_HEIGHT: f32 = 60.0;
@@ -133,6 +133,11 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
             builder.text_weighted(CENTER_X, center_y, &label, &text_color.to_hex(), font_size, is_bold);
         }
+
+        // Marker on the layer's right edge at its vertical center (trapezoid apex is too narrow
+        // for a corner marker; the right-edge midpoint stays inside every layer).
+        let marker_cx = CENTER_X + mid_width / 2.0 - status::STATUS_MARKER_R - 2.0;
+        status::draw_marker_at(&mut builder, &item.status, marker_cx, center_y, theme);
     }
 
     builder.build(&theme.background.to_hex())
@@ -165,7 +170,7 @@ mod tests {
         ItemsDiagram {
             title: title.map(String::from),
             items: (0..n)
-                .map(|i| Item { label: format!("Layer {}", i), emphasis: None })
+                .map(|i| Item { label: format!("Layer {}", i), emphasis: None, status: None })
                 .collect(),
         }
     }
@@ -210,6 +215,20 @@ mod tests {
     }
 
     #[test]
+    fn render_layer_status_emits_marker() {
+        use crate::model::Status;
+        let d = ItemsDiagram {
+            title: None,
+            items: vec![
+                Item { label: "Apex".to_string(), emphasis: None, status: Some(Status::Warning) },
+                Item { label: "Base".to_string(), emphasis: None, status: None },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains(&DEFAULT_THEME.status.warning.to_hex()), "a tier layer with status should render a marker");
+    }
+
+    #[test]
     fn render_long_apex_label_uses_leader_line() {
         let d = ItemsDiagram {
             title: None,
@@ -217,6 +236,7 @@ mod tests {
                 .map(|i| Item {
                     label: if i == 0 { "Self-Actualization".to_string() } else { format!("Layer {}", i) },
                     emphasis: None,
+                    status: None,
                 })
                 .collect(),
         };
@@ -240,6 +260,7 @@ mod tests {
                 .map(|i| Item {
                     label: if i == 0 { long_label.to_string() } else { format!("L{}", i) },
                     emphasis: None,
+                    status: None,
                 })
                 .collect(),
         };

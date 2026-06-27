@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use crate::model::{Emphasis, ItemsDiagram};
-use crate::render::{font, svg::SvgBuilder, theme::Theme};
+use crate::render::{font, status, svg::SvgBuilder, theme::Theme};
 
 const NODE_W: f32 = 110.0;
 const NODE_H: f32 = 50.0;
@@ -144,6 +144,8 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
 
         let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
         builder.text_weighted(nx, ny, &display_label, &text_color.to_hex(), font_size, is_bold);
+
+        status::draw_marker(&mut builder, &item.status, nx + NODE_W / 2.0, ny - NODE_H / 2.0, theme);
     }
 
     builder.build(&theme.background.to_hex())
@@ -159,7 +161,7 @@ mod tests {
         ItemsDiagram {
             title: title.map(String::from),
             items: (0..n)
-                .map(|i| Item { label: format!("Step {}", i + 1), emphasis: None })
+                .map(|i| Item { label: format!("Step {}", i + 1), emphasis: None, status: None })
                 .collect(),
         }
     }

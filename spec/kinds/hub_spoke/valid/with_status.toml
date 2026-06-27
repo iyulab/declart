@@ -1,0 +1,20 @@
+kind = "hub_spoke"
+title = "Service Health"
+center = "API Gateway"
+
+[[spokes]]
+label = "Auth Service"
+status = "success"
+
+[[spokes]]
+label = "Payment Service"
+emphasis = "primary"
+status = "critical"
+
+[[spokes]]
+label = "Search Service"
+status = "warning"
+
+[[spokes]]
+label = "Cache"
+status = "normal"

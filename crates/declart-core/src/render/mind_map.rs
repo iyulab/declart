@@ -170,6 +170,7 @@ fn compute_max_depth(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn assign_positions(
     idx: usize,
     depth: u32,

@@ -478,6 +478,41 @@ type = "exception"
 
 ---
 
+### Status signals — health / severity per item
+
+**Prompt**: *"Generate a Declart flow showing a release pipeline where each step has a health status. Use the `status` field with values success / warning / critical / normal. `status` is orthogonal to `emphasis`."*
+
+```toml
+kind = "flow"
+title = "Release Pipeline Health"
+
+[[items]]
+label = "Build"
+status = "success"
+
+[[items]]
+label = "Test"
+status = "warning"
+
+[[items]]
+label = "Deploy"
+emphasis = "primary"
+status = "critical"
+
+[[items]]
+label = "Monitor"
+status = "normal"
+```
+
+> **Rule**: `status` ∈ `success` / `normal` / `warning` / `critical`. It is the "traffic-light"
+> signal common in reports, and is **orthogonal to `emphasis`** — an item can be both `primary` and
+> `critical`. The engine renders a corner marker dual-encoded by color **and** shape
+> (success=circle, warning=triangle, critical=diamond), so it reads in monochrome and for colorblind
+> users. `normal` and omitted `status` render no marker. Supported on `flow`, `tier`,
+> `hub_spoke`, and `matrix` items. Declaring `status` on other kinds is a parse error.
+
+---
+
 ## Tips for LLMs
 
 | Rule | Detail |
@@ -486,6 +521,7 @@ type = "exception"
 | `view` is optional | Omit to use the default; include to declare intent explicitly |
 | No unknown fields | Don't add `color`, `style`, or other keys not in the spec |
 | `emphasis` values | Only `"primary"` or `"secondary"` |
+| `status` values | Only `"success"`, `"normal"`, `"warning"`, `"critical"`. Orthogonal to `emphasis`. Supported on `flow`, `tier`, `hub_spoke`, `matrix` |
 | Flow views | `kind = "flow"` + `view`: `process` (default), `cycle`, `funnel`, `swimlane` |
 | Swimlane actors | `view = "swimlane"` requires an `actor` on every item; ≥2 distinct actors |
 | Tier views | `kind = "tier"` + `view`: `pyramid` (default and only) |

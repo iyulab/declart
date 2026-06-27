@@ -297,6 +297,7 @@
       <option value="comparison">Comparison — Framework Analysis</option>
       <option value="flow_swimlane">Flow (swimlane) — Order Processing</option>
       <option value="state">State — Order Lifecycle</option>
+      <option value="flow_status">Flow (status) — Release Pipeline Health</option>
     </select>
   </label>
   <label>
@@ -410,6 +411,27 @@ label = "Intent"
 
 [[items]]
 label = "Conversion"
+`,
+
+  flow_status: `kind = "flow"
+title = "Release Pipeline Health"
+
+[[items]]
+label = "Build"
+status = "success"
+
+[[items]]
+label = "Test"
+status = "warning"
+
+[[items]]
+label = "Deploy"
+emphasis = "primary"
+status = "critical"
+
+[[items]]
+label = "Monitor"
+status = "normal"
 `,
 
   tier: `kind = "tier"

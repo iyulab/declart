@@ -17,6 +17,7 @@ A hub-and-spoke diagram. A central node radiates connections to surrounding spok
 |----------|----------|---------|-------------------------------------------|
 | label    | yes      | string  | Text displayed in the spoke node          |
 | emphasis | no       | string  | `"primary"` or `"secondary"`. See schema. |
+| status   | no       | string  | `"success"`, `"normal"`, `"warning"`, or `"critical"`. See schema. |
 
 ## Rendering rules
 

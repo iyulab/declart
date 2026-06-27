@@ -1,0 +1,14 @@
+kind = "tier"
+title = "Capability Maturity"
+
+[[items]]
+label = "Optimizing"
+status = "success"
+
+[[items]]
+label = "Managed"
+status = "normal"
+
+[[items]]
+label = "Initial"
+status = "warning"

@@ -6,7 +6,7 @@ Rules that apply to every Declart declaration file.
 
 | Field | Type   | Description                          |
 |-------|--------|--------------------------------------|
-| kind  | string | One of: `flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison` |
+| kind  | string | One of: `flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`, `state` |
 
 ## Optional fields
 
@@ -38,3 +38,26 @@ The engine decides visual representation. Omitting `emphasis` means default weig
 
 - `primary`: white outline stroke + bold text
 - `secondary`: lighter color tint
+
+## Status (shared optional item field)
+
+A semantic condition signal — the "traffic-light" state common in reports and dashboards.
+`status` is **orthogonal to `emphasis`**: `emphasis` expresses *importance*, `status` expresses
+*health / severity*. An item may carry both at once.
+
+| Value      | Meaning                                  |
+|------------|------------------------------------------|
+| `success`  | Explicitly good / done                   |
+| `normal`   | Assessed as nominal (the unmarked baseline) |
+| `warning`  | Needs attention                          |
+| `critical` | Failing / blocked / urgent               |
+
+The engine decides visual representation — you declare meaning, not color. The current engine
+renders a small corner marker, dual-encoded by **both color and shape** so it remains readable in
+monochrome and under color-vision deficiency: `success` = circle, `warning` = triangle,
+`critical` = diamond. The marker stays visually independent of `emphasis`. `normal` and omitted
+`status` render no marker. Marker colors come from the active theme's status palette (the
+`accessible` theme uses a colorblind-safe Okabe-Ito palette).
+
+Supported on items of: `flow` (process / cycle / funnel / swimlane), `tier`, `hub_spoke`, `matrix`
+(quadrants). Like `emphasis`, declaring it on a kind that does not support it is a parse error.

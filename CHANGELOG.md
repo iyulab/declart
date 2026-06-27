@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+Common `status` semantic attribute — qualitative "traffic-light" health signal for reports.
+
+- **`status` item field** (new): `success` / `normal` / `warning` / `critical`. Orthogonal to `emphasis` — an item can be both `primary` and `critical`. Supported on `flow` (process/cycle/funnel/swimlane), `tier`, `hub_spoke`, and `matrix` (quadrants). Declaring it on other kinds is a parse error.
+- **Dual-encoded marker**: rendered as a small corner marker encoded by **both color and shape** (success=circle, warning=triangle, critical=diamond) so it stays readable in monochrome and under color-vision deficiency. `normal` and omitted `status` render no marker. The marker is visually independent of `emphasis`.
+- **Theme status palettes**: all four built-in themes define a status palette; `accessible` uses colorblind-safe Okabe-Ito colors. Custom TOML themes accept an optional `[status]` section (falls back to the default palette).
+- **Docs & playground**: `spec/schema.md`, `spec/kinds/{flow,tier,hub_spoke,matrix}.md`, the LLM guide, and a new playground example all cover `status`.
+- **Code quality**: resolved the remaining `too_many_arguments` clippy warning in `mind_map.rs`.
+- **Tests**: 172 core unit + 20 spec-suite pass; clippy clean.
+
 ## v0.17.1
 
 Documentation and code quality improvements:

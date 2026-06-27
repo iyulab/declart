@@ -1,0 +1,19 @@
+kind = "flow"
+title = "Release Pipeline Health"
+
+[[items]]
+label = "Build"
+status = "success"
+
+[[items]]
+label = "Test"
+status = "warning"
+
+[[items]]
+label = "Deploy"
+emphasis = "primary"
+status = "critical"
+
+[[items]]
+label = "Monitor"
+status = "normal"

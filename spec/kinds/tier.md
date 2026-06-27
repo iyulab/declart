@@ -17,6 +17,7 @@ A tier diagram represents a ranked set of labeled items — levels differentiate
 |------------|----------|--------|-------------------------------------------|
 | `label`    | yes      | string | Text displayed in the tier level          |
 | `emphasis` | no       | string | `"primary"` or `"secondary"`. See schema. |
+| `status`   | no       | string | `"success"`, `"normal"`, `"warning"`, or `"critical"`. See schema. |
 
 ## View values
 

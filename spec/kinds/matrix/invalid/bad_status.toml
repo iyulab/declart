@@ -1,0 +1,16 @@
+kind = "matrix"
+x_axis = "X"
+y_axis = "Y"
+
+[[quadrants]]
+label = "A"
+status = "danger"
+
+[[quadrants]]
+label = "B"
+
+[[quadrants]]
+label = "C"
+
+[[quadrants]]
+label = "D"

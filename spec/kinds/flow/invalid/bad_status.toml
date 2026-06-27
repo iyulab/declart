@@ -1,0 +1,8 @@
+kind = "flow"
+
+[[items]]
+label = "A"
+status = "green"
+
+[[items]]
+label = "B"
