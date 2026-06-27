@@ -298,6 +298,7 @@
       <option value="flow_swimlane">Flow (swimlane) — Order Processing</option>
       <option value="state">State — Order Lifecycle</option>
       <option value="flow_status">Flow (status) — Release Pipeline Health</option>
+      <option value="matrix_items">Matrix (items) — BCG Growth-Share</option>
     </select>
   </label>
   <label>
@@ -562,6 +563,47 @@ label = "Delegate"
 
 [[quadrants]]
 label = "Eliminate"
+`,
+
+  matrix_items: `kind = "matrix"
+title = "BCG Growth-Share Matrix"
+x_axis = "Market Share"
+y_axis = "Market Growth"
+
+[[quadrants]]
+label = "Stars"
+position = "top-right"
+
+[[quadrants]]
+label = "Question Marks"
+position = "top-left"
+
+[[quadrants]]
+label = "Cash Cows"
+position = "bottom-right"
+
+[[quadrants]]
+label = "Dogs"
+position = "bottom-left"
+
+[[items]]
+label = "Product A"
+quadrant = "top-right"
+status = "success"
+
+[[items]]
+label = "Product B"
+quadrant = "top-left"
+status = "warning"
+
+[[items]]
+label = "Product C"
+quadrant = "bottom-left"
+status = "critical"
+
+[[items]]
+label = "Product D"
+quadrant = "bottom-right"
 `,
 
   hub_spoke: `kind = "hub_spoke"

@@ -149,6 +149,40 @@ position = "bottom-left"
 
 > **Note**: Use `position` to explicitly place quadrants. Valid values: `top-left`, `top-right`, `bottom-left`, `bottom-right`.
 
+**Item placement (BCG / Gartner)**: add an optional `[[items]]` array to classify items into
+quadrants. Each item needs a `quadrant` (one of the four positions) and may carry `emphasis`/`status`.
+Assignment is by category, never coordinates. Max 6 items per quadrant.
+
+```toml
+kind = "matrix"
+title = "BCG Growth-Share Matrix"
+x_axis = "Market Share"
+y_axis = "Market Growth"
+
+[[quadrants]]
+label = "Stars"
+position = "top-right"
+[[quadrants]]
+label = "Question Marks"
+position = "top-left"
+[[quadrants]]
+label = "Cash Cows"
+position = "bottom-right"
+[[quadrants]]
+label = "Dogs"
+position = "bottom-left"
+
+[[items]]
+label = "Product A"
+quadrant = "top-right"
+status = "success"
+
+[[items]]
+label = "Product B"
+quadrant = "bottom-left"
+status = "critical"
+```
+
 ---
 
 ### Hub-and-Spoke — Central concept with related items
@@ -530,6 +564,7 @@ status = "normal"
 | Hierarchy views | `org_chart`, `fishbone`, `mind_map`. 1 root → `org_chart`; 2+ roots → `fishbone` (auto). `mind_map` must be explicit |
 | Fishbone `effect` | Rendered as the spine-end effect label; falls back to `title` if omitted |
 | Matrix quadrants | Always exactly 4 `[[quadrants]]` entries |
+| Matrix items | Optional `[[items]]` with `quadrant` (position) to classify into quadrants (BCG/Gartner). Max 6 per quadrant |
 | Timeline dates | ISO 8601: `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` |
 | Venn sets | Only 2 or 3 sets supported |
 | Comparison cells | Column label in each row must match an existing `[[columns]]` label |

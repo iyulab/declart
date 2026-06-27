@@ -324,12 +324,50 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
             .collect::<Result<Vec<Item>, DeclartError>>()?
     };
 
+    // Parse optional items classified into quadrants.
+    const MAX_ITEMS_PER_QUADRANT: usize = 6;
+    let mut per_quadrant = [0usize; 4];
+    let mut items = Vec::with_capacity(raw.items.len());
+    for raw_item in raw.items {
+        let slot = position_slot(&raw_item.quadrant)?;
+        per_quadrant[slot] += 1;
+        if per_quadrant[slot] > MAX_ITEMS_PER_QUADRANT {
+            return Err(DeclartError::InvalidValue {
+                field: "items".to_string(),
+                value: format!("{} items in one quadrant", per_quadrant[slot]),
+                hint: "A matrix quadrant supports at most 6 items for legibility".to_string(),
+            });
+        }
+        items.push(crate::model::MatrixItem {
+            label: raw_item.label,
+            emphasis: parse_emphasis(raw_item.emphasis.as_deref())?,
+            status: parse_status(raw_item.status.as_deref())?,
+            quadrant: slot,
+        });
+    }
+
     Ok(Diagram::Matrix(MatrixDiagram {
         title: raw.title,
         x_axis: raw.x_axis,
         y_axis: raw.y_axis,
         quadrants,
+        items,
     }))
+}
+
+/// Maps a quadrant position name to its slot index 0–3 ([TL, TR, BL, BR]).
+fn position_slot(pos: &str) -> Result<usize, DeclartError> {
+    match pos {
+        "top-left" => Ok(0),
+        "top-right" => Ok(1),
+        "bottom-left" => Ok(2),
+        "bottom-right" => Ok(3),
+        other => Err(DeclartError::InvalidValue {
+            field: "quadrant".to_string(),
+            value: other.to_string(),
+            hint: "Valid values: top-left, top-right, bottom-left, bottom-right".to_string(),
+        }),
+    }
 }
 
 fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
@@ -1104,16 +1142,119 @@ position = "bottom-left"
     }
 
     #[test]
-    fn parse_matrix_rejects_items_field() {
+    fn parse_matrix_items_placed_into_quadrants() {
+        use crate::model::Status;
+        let input = r#"
+kind = "matrix"
+x_axis = "Market Share"
+y_axis = "Growth"
+
+[[quadrants]]
+label = "Stars"
+position = "top-right"
+
+[[quadrants]]
+label = "Question Marks"
+position = "top-left"
+
+[[quadrants]]
+label = "Cash Cows"
+position = "bottom-right"
+
+[[quadrants]]
+label = "Dogs"
+position = "bottom-left"
+
+[[items]]
+label = "Product A"
+quadrant = "top-right"
+status = "success"
+
+[[items]]
+label = "Product B"
+quadrant = "top-right"
+emphasis = "primary"
+
+[[items]]
+label = "Product C"
+quadrant = "bottom-left"
+status = "critical"
+"#;
+        let diagram = parse(input).unwrap();
+        let Diagram::Matrix(d) = diagram else { panic!("expected Matrix") };
+        assert_eq!(d.items.len(), 3);
+        // top-right = slot 1, bottom-left = slot 2
+        assert_eq!(d.items[0].quadrant, 1);
+        assert_eq!(d.items[0].status, Some(Status::Success));
+        assert_eq!(d.items[2].quadrant, 2);
+        assert_eq!(d.items[2].status, Some(Status::Critical));
+    }
+
+    #[test]
+    fn parse_matrix_item_rejects_bad_quadrant() {
         let input = r#"
 kind = "matrix"
 x_axis = "X"
 y_axis = "Y"
 
+[[quadrants]]
+label = "A"
+[[quadrants]]
+label = "B"
+[[quadrants]]
+label = "C"
+[[quadrants]]
+label = "D"
+
 [[items]]
-label = "Q1"
+label = "X"
+quadrant = "middle"
 "#;
-        assert!(parse(input).is_err());
+        assert!(parse(input).is_err(), "invalid quadrant position should be rejected");
+    }
+
+    #[test]
+    fn parse_matrix_item_requires_quadrant_field() {
+        // An item without `quadrant` is rejected (deny_unknown_fields + required field).
+        let input = r#"
+kind = "matrix"
+x_axis = "X"
+y_axis = "Y"
+
+[[quadrants]]
+label = "A"
+[[quadrants]]
+label = "B"
+[[quadrants]]
+label = "C"
+[[quadrants]]
+label = "D"
+
+[[items]]
+label = "orphan"
+"#;
+        assert!(parse(input).is_err(), "matrix item must declare a quadrant");
+    }
+
+    #[test]
+    fn parse_matrix_rejects_too_many_items_per_quadrant() {
+        let mut input = String::from("kind = \"matrix\"\nx_axis = \"X\"\ny_axis = \"Y\"\n");
+        for label in ["A", "B", "C", "D"] {
+            input.push_str(&format!("[[quadrants]]\nlabel = \"{label}\"\n"));
+        }
+        for i in 0..7 {
+            input.push_str(&format!("[[items]]\nlabel = \"I{i}\"\nquadrant = \"top-left\"\n"));
+        }
+        assert!(parse(&input).is_err(), "more than 6 items in one quadrant should be rejected");
+    }
+
+    #[test]
+    fn parse_matrix_without_items_still_works() {
+        // Backward compatibility: label-only quadrants, no items.
+        let input = "kind = \"matrix\"\nx_axis = \"X\"\ny_axis = \"Y\"\n\n[[quadrants]]\nlabel = \"Q1\"\n\n[[quadrants]]\nlabel = \"Q2\"\n\n[[quadrants]]\nlabel = \"Q3\"\n\n[[quadrants]]\nlabel = \"Q4\"\n";
+        let diagram = parse(input).unwrap();
+        let Diagram::Matrix(d) = diagram else { panic!() };
+        assert!(d.items.is_empty());
     }
 
     #[test]

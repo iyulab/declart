@@ -1,0 +1,19 @@
+kind = "matrix"
+x_axis = "X"
+y_axis = "Y"
+
+[[quadrants]]
+label = "A"
+
+[[quadrants]]
+label = "B"
+
+[[quadrants]]
+label = "C"
+
+[[quadrants]]
+label = "D"
+
+[[items]]
+label = "Misplaced"
+quadrant = "center"

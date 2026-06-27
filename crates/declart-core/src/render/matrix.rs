@@ -1,4 +1,4 @@
-use crate::model::{Emphasis, MatrixDiagram};
+use crate::model::{Emphasis, MatrixDiagram, MatrixItem};
 use crate::render::{font, status, svg::SvgBuilder, theme::Theme};
 
 const CANVAS_SIZE: f32 = 500.0;
@@ -72,16 +72,59 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
         );
 
         let cx = (x1 + x2) / 2.0;
-        let cy = (y1 + y2) / 2.0;
-        let cell_w = (x2 - x1) * 0.85;
-        let mut font_size = theme.typography.label_size;
-        let text_w = font::measure_text(&quadrant.label, font_size);
-        if text_w > cell_w && cell_w > 0.0 {
-            font_size = (font_size * cell_w / text_w).max(theme.typography.label_size_min);
-        }
-        builder.text_weighted(cx, cy, &quadrant.label, &text_color.to_hex(), font_size, bold);
+        let cell_items: Vec<&MatrixItem> =
+            diagram.items.iter().filter(|it| it.quadrant == idx).collect();
 
-        // Marker inset from the cell's top-right corner (x2, y1).
+        if cell_items.is_empty() {
+            // Label-only quadrant: centered label (backward-compatible behavior).
+            let cy = (y1 + y2) / 2.0;
+            let cell_w = (x2 - x1) * 0.85;
+            let mut font_size = theme.typography.label_size;
+            let text_w = font::measure_text(&quadrant.label, font_size);
+            if text_w > cell_w && cell_w > 0.0 {
+                font_size = (font_size * cell_w / text_w).max(theme.typography.label_size_min);
+            }
+            builder.text_weighted(cx, cy, &quadrant.label, &text_color.to_hex(), font_size, bold);
+        } else {
+            // Quadrant with items: label becomes a top header, items listed below.
+            let header_w = (x2 - x1) * 0.9;
+            let mut header_fs = theme.typography.label_size;
+            let htw = font::measure_text(&quadrant.label, header_fs);
+            if htw > header_w && header_w > 0.0 {
+                header_fs = (header_fs * header_w / htw).max(theme.typography.label_size_min);
+            }
+            let header_label = if font::measure_text(&quadrant.label, header_fs) > header_w {
+                font::truncate_text(&quadrant.label, header_fs, header_w)
+            } else {
+                quadrant.label.clone()
+            };
+            builder.text_weighted(cx, y1 + 18.0, &header_label, &text_color.to_hex(), header_fs, true);
+
+            let items_top = y1 + 36.0;
+            let items_bottom = y2 - 10.0;
+            let step = (items_bottom - items_top) / cell_items.len() as f32;
+            let item_fs_base = (theme.typography.label_size - 2.0).max(theme.typography.label_size_min);
+            let avail = (x2 - x1) * 0.65;
+            for (k, it) in cell_items.iter().enumerate() {
+                let row_y = items_top + step * (k as f32 + 0.5);
+                let mut fs = item_fs_base;
+                let tw = font::measure_text(&it.label, fs);
+                if tw > avail && avail > 0.0 {
+                    fs = (fs * avail / tw).max(theme.typography.label_size_min);
+                }
+                let label = if font::measure_text(&it.label, fs) > avail {
+                    font::truncate_text(&it.label, fs, avail)
+                } else {
+                    it.label.clone()
+                };
+                let is_bold = matches!(&it.emphasis, Some(Emphasis::Primary));
+                builder.text_weighted(cx, row_y, &label, &text_color.to_hex(), fs, is_bold);
+                // Status marker in a left-margin column, aligned to the item row.
+                status::draw_marker_at(&mut builder, &it.status, *x1 + 12.0, row_y, theme);
+            }
+        }
+
+        // Quadrant-level status marker, inset from the cell's top-right corner (x2, y1).
         status::draw_marker(&mut builder, &quadrant.status, *x2, *y1, theme);
     }
 
@@ -148,6 +191,7 @@ mod tests {
                 Item { label: "Delegate".to_string(), emphasis: None, status: None },
                 Item { label: "Eliminate".to_string(), emphasis: None, status: None },
             ],
+            items: vec![],
         }
     }
 
@@ -200,6 +244,7 @@ mod tests {
                 Item { label: "Q3".to_string(), emphasis: None, status: None },
                 Item { label: "Q4".to_string(), emphasis: None, status: None },
             ],
+            items: vec![],
         };
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.contains("font-weight=\"bold\""), "primary quadrant should be bold");
@@ -219,9 +264,35 @@ mod tests {
                 Item { label: "Q3".to_string(), emphasis: None, status: None },
                 Item { label: "Q4".to_string(), emphasis: None, status: None },
             ],
+            items: vec![],
         };
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.contains(&DEFAULT_THEME.status.critical.to_hex()), "a quadrant with status should render a marker");
+    }
+
+    #[test]
+    fn render_items_placed_in_quadrants() {
+        use crate::model::{MatrixItem, Status};
+        let d = MatrixDiagram {
+            title: None,
+            x_axis: "Share".to_string(),
+            y_axis: "Growth".to_string(),
+            quadrants: vec![
+                Item { label: "Question Marks".to_string(), emphasis: None, status: None },
+                Item { label: "Stars".to_string(), emphasis: None, status: None },
+                Item { label: "Dogs".to_string(), emphasis: None, status: None },
+                Item { label: "Cash Cows".to_string(), emphasis: None, status: None },
+            ],
+            items: vec![
+                MatrixItem { label: "Product A".to_string(), emphasis: None, status: Some(Status::Success), quadrant: 1 },
+                MatrixItem { label: "Product B".to_string(), emphasis: None, status: None, quadrant: 2 },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains("Product A"), "placed item label should appear");
+        assert!(svg.contains("Product B"));
+        assert!(svg.contains("Stars"), "quadrant header should still appear");
+        assert!(svg.contains(&DEFAULT_THEME.status.success.to_hex()), "item status marker should render");
     }
 
     #[test]
@@ -238,6 +309,7 @@ mod tests {
                 Item { label: "Q3".to_string(), emphasis: None, status: None },
                 Item { label: "Q4".to_string(), emphasis: None, status: None },
             ],
+            items: vec![],
         };
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.starts_with("<svg"), "should produce valid SVG");

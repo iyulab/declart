@@ -1,0 +1,44 @@
+kind = "matrix"
+title = "BCG Growth-Share Matrix"
+x_axis = "Market Share"
+y_axis = "Market Growth"
+
+[[quadrants]]
+label = "Stars"
+position = "top-right"
+
+[[quadrants]]
+label = "Question Marks"
+position = "top-left"
+
+[[quadrants]]
+label = "Cash Cows"
+position = "bottom-right"
+
+[[quadrants]]
+label = "Dogs"
+position = "bottom-left"
+
+[[items]]
+label = "Product A"
+quadrant = "top-right"
+status = "success"
+
+[[items]]
+label = "Product B"
+quadrant = "top-right"
+emphasis = "primary"
+
+[[items]]
+label = "Product C"
+quadrant = "top-left"
+status = "warning"
+
+[[items]]
+label = "Product D"
+quadrant = "bottom-right"
+
+[[items]]
+label = "Product E"
+quadrant = "bottom-left"
+status = "critical"

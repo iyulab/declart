@@ -48,6 +48,18 @@ pub struct RawMatrixDiagram {
     pub y_axis: String,
     #[serde(default)]
     pub quadrants: Vec<RawQuadrant>,
+    #[serde(default)]
+    pub items: Vec<RawMatrixItem>,
+}
+
+/// An item classified into a matrix quadrant. `quadrant` references a quadrant by position name.
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawMatrixItem {
+    pub label: String,
+    pub emphasis: Option<String>,
+    pub status: Option<String>,
+    pub quadrant: String,
 }
 
 #[derive(Deserialize, Debug)]

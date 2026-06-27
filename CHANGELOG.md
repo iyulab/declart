@@ -8,8 +8,9 @@ Common `status` semantic attribute — qualitative "traffic-light" health signal
 - **Dual-encoded marker**: rendered as a small corner marker encoded by **both color and shape** (success=circle, warning=triangle, critical=diamond) so it stays readable in monochrome and under color-vision deficiency. `normal` and omitted `status` render no marker. The marker is visually independent of `emphasis`.
 - **Theme status palettes**: all four built-in themes define a status palette; `accessible` uses colorblind-safe Okabe-Ito colors. Custom TOML themes accept an optional `[status]` section (falls back to the default palette).
 - **Docs & playground**: `spec/schema.md`, `spec/kinds/{flow,tier,hub_spoke,matrix}.md`, the LLM guide, and a new playground example all cover `status`.
+- **Matrix item placement** (new): `matrix` gains an optional `[[items]]` array to classify items into quadrants (BCG growth-share, Gartner Magic Quadrant). Each item declares `quadrant` by position (`top-left`/`top-right`/`bottom-left`/`bottom-right`) and may carry `emphasis`/`status`. Assignment is by category, never coordinates. Max 6 items per quadrant. Label-only matrices are unchanged (backward compatible); when a quadrant has items its label renders as a header.
 - **Code quality**: resolved the remaining `too_many_arguments` clippy warning in `mind_map.rs`.
-- **Tests**: 172 core unit + 20 spec-suite pass; clippy clean.
+- **Tests**: 177 core unit + 20 spec-suite pass; clippy clean.
 
 ## v0.17.1
 

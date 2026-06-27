@@ -107,6 +107,17 @@ pub struct HierarchyDiagram {
     pub nodes: Vec<HierarchyNode>,
 }
 
+/// An item placed inside a matrix quadrant. `quadrant` is the slot index 0–3
+/// ([top-left, top-right, bottom-left, bottom-right]) — a category, never coordinates.
+#[derive(Debug, Clone)]
+pub struct MatrixItem {
+    pub label: String,
+    pub emphasis: Option<Emphasis>,
+    pub status: Option<Status>,
+    /// Slot index 0–3 of the owning quadrant.
+    pub quadrant: usize,
+}
+
 /// Model for the Matrix 2×2 kind.
 #[derive(Debug, Clone)]
 pub struct MatrixDiagram {
@@ -115,6 +126,8 @@ pub struct MatrixDiagram {
     pub y_axis: String,
     /// Exactly 4 quadrants: [top-left, top-right, bottom-left, bottom-right].
     pub quadrants: Vec<Item>,
+    /// Optional items classified into quadrants (BCG/Gartner style). Empty for label-only matrices.
+    pub items: Vec<MatrixItem>,
 }
 
 /// Model for the Hub-and-Spoke kind.
@@ -314,6 +327,7 @@ mod tests {
                     status: None,
                 })
                 .collect(),
+            items: vec![],
         };
         assert_eq!(d.quadrants.len(), 4);
         assert_eq!(d.x_axis, "Effort");
