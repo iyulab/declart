@@ -42,7 +42,7 @@ enum Commands {
     },
     /// Print a starter TOML declaration for a diagram kind
     Init {
-        /// Diagram kind: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison
+        /// Diagram kind: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison, state
         kind: String,
     },
     /// Watch a file and re-render on every change
@@ -102,8 +102,9 @@ fn run() -> Result<()> {
         Commands::Init { kind } => {
             let template = init_template(&kind).with_context(|| {
                 format!(
-                    "unknown kind `{}`\n  = hint: Available kinds: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison",
-                    kind
+                    "unknown kind `{}`\n  = hint: Available kinds: {}",
+                    kind,
+                    declart_core::KINDS.join(", ")
                 )
             })?;
             print!("{}", template);
@@ -329,37 +330,56 @@ label = "End"
             r#"kind = "comparison"
 title = "My Comparison"
 
-[[rows]]
-label = "Option A"
-
-[[rows]]
-label = "Option B"
-
 [[columns]]
 label = "Criterion 1"
 
 [[columns]]
 label = "Criterion 2"
 
-[[cells]]
-row = "Option A"
-column = "Criterion 1"
-value = "★★★"
+[[rows]]
+label = "Option A"
+"Criterion 1" = "★★★"
+"Criterion 2" = "★★"
 
-[[cells]]
-row = "Option A"
-column = "Criterion 2"
-value = "★★"
+[[rows]]
+label = "Option B"
+"Criterion 1" = "★★"
+"Criterion 2" = "★★★★"
+"#,
+        ),
+        "state" => Some(
+            r#"kind = "state"
+title = "My Lifecycle"
 
-[[cells]]
-row = "Option B"
-column = "Criterion 1"
-value = "★★"
+[[states]]
+id = "draft"
+label = "Draft"
+role = "initial"
 
-[[cells]]
-row = "Option B"
-column = "Criterion 2"
-value = "★★★★"
+[[states]]
+id = "review"
+label = "In Review"
+
+[[states]]
+id = "done"
+label = "Published"
+role = "terminal"
+
+[[transitions]]
+from = "draft"
+to = "review"
+trigger = "Submit"
+
+[[transitions]]
+from = "review"
+to = "draft"
+trigger = "Changes requested"
+type = "exception"
+
+[[transitions]]
+from = "review"
+to = "done"
+trigger = "Approve"
 "#,
         ),
         _ => None,
@@ -388,4 +408,17 @@ fn warn_hierarchy_auto_view(diagram: &Diagram, content: &str) {
 fn has_explicit_view(content: &str) -> bool {
     // Simple text scan: TOML `view = ` or JSON `"view":` or `"view" :`
     content.contains("view =") || content.contains("\"view\":")  || content.contains("\"view\" :")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_kind_has_a_valid_init_template() {
+        for kind in declart_core::KINDS {
+            let template = init_template(kind).unwrap_or_else(|| panic!("no init template for `{kind}`"));
+            declart_core::parse(template).unwrap_or_else(|e| panic!("init template for `{kind}` is invalid: {e}"));
+        }
+    }
 }

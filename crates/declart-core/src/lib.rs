@@ -42,5 +42,5 @@ pub use model::{
     HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram,
     TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet,
 };
-pub use parse::{parse, parse_auto, parse_json};
+pub use parse::{parse, parse_auto, parse_json, KINDS};
 pub use render::{render, render_opts, ACCESSIBLE_THEME, WARM_THEME};

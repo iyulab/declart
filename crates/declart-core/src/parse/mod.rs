@@ -33,6 +33,13 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
     }
 }
 
+/// Every diagram kind the parser accepts, in documentation order.
+///
+/// Front ends (CLI hints, WASM `kinds()`) read this list instead of keeping their own copy.
+pub const KINDS: &[&str] = &[
+    "flow", "tier", "hierarchy", "timeline", "matrix", "hub_spoke", "venn", "comparison", "state",
+];
+
 pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
     let probe: raw::KindProbe = serde_json::from_str(input)?;
     match probe.kind.as_str() {
@@ -616,7 +623,8 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
 #[cfg(test)]
 mod tests {
     use crate::model::{Diagram, FlowView, TierView, HierarchyView, StateRole};
-    use super::{parse, parse_auto, parse_json};
+    use super::{parse, parse_auto, parse_json, KINDS};
+    use crate::error::DeclartError;
 
     // --- flow tests ---
 
@@ -1030,6 +1038,17 @@ label = "Methods"
     fn parse_matrix_smoke() {
         let input = "kind = \"matrix\"\nx_axis = \"X\"\ny_axis = \"Y\"\n\n[[quadrants]]\nlabel = \"Q1\"\n\n[[quadrants]]\nlabel = \"Q2\"\n\n[[quadrants]]\nlabel = \"Q3\"\n\n[[quadrants]]\nlabel = \"Q4\"\n";
         assert!(parse(input).is_ok());
+    }
+
+    #[test]
+    fn every_listed_kind_is_dispatched() {
+        for kind in KINDS {
+            let err = parse(&format!("kind = \"{kind}\"
+")).err();
+            assert!(!matches!(err, Some(DeclartError::UnknownKind(_))), "`{kind}` is in KINDS but not dispatched by parse");
+            let err = parse_json(&format!("{{\"kind\":\"{kind}\"}}")).err();
+            assert!(!matches!(err, Some(DeclartError::UnknownKind(_))), "`{kind}` is in KINDS but not dispatched by parse_json");
+        }
     }
 
     #[test]

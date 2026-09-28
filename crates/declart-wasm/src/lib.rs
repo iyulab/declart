@@ -69,7 +69,7 @@ pub fn themes() -> String {
 /// Returns a comma-separated list of supported diagram kind names.
 #[wasm_bindgen]
 pub fn kinds() -> String {
-    "flow,tier,hierarchy,timeline,matrix,hub_spoke,venn,comparison".to_string()
+    declart_core::KINDS.join(",")
 }
 
 #[cfg(test)]
@@ -148,6 +148,7 @@ title      = "#003087"
         assert!(k.contains("hierarchy"));
         assert!(k.contains("timeline"));
         assert!(k.contains("comparison"));
+        assert!(k.contains("state"));
     }
 
     #[test]
