@@ -318,6 +318,11 @@ date = "2024-01-01"
 label = "Start"
 
 [[events]]
+start = "2024-02"
+end = "2024-05"
+label = "Build phase"
+
+[[events]]
 date = "2024-06-01"
 label = "Milestone"
 

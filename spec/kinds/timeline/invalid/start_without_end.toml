@@ -1,0 +1,9 @@
+kind = "timeline"
+
+[[events]]
+start = "2024-01"
+label = "Open-ended"
+
+[[events]]
+date = "2024-06"
+label = "Later"

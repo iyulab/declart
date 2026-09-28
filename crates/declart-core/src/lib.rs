@@ -28,6 +28,7 @@
 //! println!("{}", svg);
 //! ```
 
+mod date;
 mod error;
 mod model;
 pub(crate) mod parse;
@@ -40,7 +41,7 @@ pub use model::{
     TierDiagram, TierView,
     HierarchyDiagram, HierarchyNode, HierarchyView,
     HubSpokeDiagram, Item, ItemsDiagram, MatrixDiagram,
-    TimelineDiagram, TimelineEvent, VennDiagram, VennIntersection, VennSet,
+    TimelineDiagram, TimelineEvent, TimelineWhen, VennDiagram, VennIntersection, VennSet,
 };
 pub use parse::{parse, parse_auto, parse_json, KINDS};
 pub use render::{render, render_opts, ACCESSIBLE_THEME, WARM_THEME};

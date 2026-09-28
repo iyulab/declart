@@ -1,0 +1,7 @@
+{
+  "kind": "timeline",
+  "events": [
+    { "date": "2024-01-15", "label": "Kickoff" },
+    { "start": "2024-02", "end": "2024-04", "label": "Private Beta" }
+  ]
+}

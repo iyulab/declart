@@ -1,0 +1,15 @@
+kind = "timeline"
+title = "Product Roadmap 2024"
+
+[[events]]
+date = "2024-01-15"
+label = "Kickoff"
+
+[[events]]
+start = "2024-02"
+end = "2024-04"
+label = "Private Beta"
+
+[[events]]
+date = "2024-07-01"
+label = "GA Launch"

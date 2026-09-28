@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.21.0
+
+Timeline periods — qualitative roadmaps with milestones and phases on one time axis.
+
+- **`timeline` events can be periods** (new): an event declares either `date` (a milestone, unchanged) or `start` + `end` (a period). Periods render as bars below the axis with the label inside (or beside a short bar) and the date range underneath; overlapping periods stack into separate rows, non-overlapping ones share a row. The axis spans through the latest period end.
+- **Inclusive period ends**: a partial `end` covers its whole year/month — `start = "2024-02"`, `end = "2024-03"` runs through March 31. `end` before `start` is a validation error.
+- **Stricter dates**: timeline dates must be real calendar dates — `2024-13` and `2024-02-30` are now rejected (they were previously accepted and mispositioned).
+- **Breaking (Rust API)**: `TimelineEvent.date: String` is replaced by `TimelineEvent.when: TimelineWhen` (`Point(date)` / `Span { start, end }`). TOML/JSON declarations using `date` are unaffected, and point-only timelines render byte-identically.
+- **Every kind listed everywhere**: `declart_core::KINDS` is the single list of kinds; the CLI `init` hint, the unknown-kind error, and the WASM/Node `kinds()` now include `state` (previously omitted). `declart init state` is new, and `declart init comparison` now prints a valid declaration.
+- **README**: the `state` kind's boundary against engineering state machines is stated explicitly, and the CLI usage examples name the files the CLI actually writes.
+- **Docs & playground**: `spec/kinds/timeline.md` (fields, inclusive dates, rendering), `spec/kinds/state.md` (scope), the LLM guide, the README decision table (now with `state`), and the playground timeline example cover the changes.
+
 ## v0.20.0
 
 `concentric` view for `tier` — nested rings (onion model) for containment and dependency.

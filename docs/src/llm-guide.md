@@ -259,7 +259,7 @@ label = "TypeScript"
 
 ---
 
-### Timeline — Date-anchored events
+### Timeline — Milestones and periods
 
 **Prompt**: *"Create a Declart timeline of 5 product launch milestones in 2024, using ISO dates."*
 
@@ -289,6 +289,33 @@ label = "v2 Plan"
 ```
 
 > **Rule**: dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. Partial forms are placed at the start of that year/month. Declart sorts events automatically.
+
+**Prompt**: *"Create a Declart roadmap for 2024 with a kickoff milestone, overlapping beta and pilot phases, and a GA launch."*
+
+```toml
+kind = "timeline"
+title = "Product Roadmap 2024"
+
+[[events]]
+date = "2024-01-15"
+label = "Kickoff"
+
+[[events]]
+start = "2024-02"
+end = "2024-04"
+label = "Private Beta"
+
+[[events]]
+start = "2024-03"
+end = "2024-09"
+label = "Enterprise Pilot"
+
+[[events]]
+date = "2024-07-01"
+label = "GA Launch"
+```
+
+> **Rule**: an event is a milestone (`date`) **or** a period (`start` + `end`) — never both. `end` is inclusive: `end = "2024-04"` runs through April 30. Periods render as bars below the axis and overlapping periods stack automatically. There are no dependency or progress fields — timeline is a qualitative roadmap, not a Gantt scheduler.
 
 ---
 
@@ -591,7 +618,8 @@ status = "normal"
 | Fishbone `effect` | Rendered as the spine-end effect label; falls back to `title` if omitted |
 | Matrix quadrants | Always exactly 4 `[[quadrants]]` entries |
 | Matrix items | Optional `[[items]]` with `quadrant` (position) to classify into quadrants (BCG/Gartner). Max 6 per quadrant |
-| Timeline dates | ISO 8601: `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` |
+| Timeline dates | ISO 8601: `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` (must be a real calendar date) |
+| Timeline periods | `date` for a milestone, or `start` + `end` for a period (inclusive end) — not both |
 | Venn sets | Only 2 or 3 sets supported |
 | Comparison cells | Column label in each row must match an existing `[[columns]]` label |
 | State roles | At most one `role = "initial"`; multiple `"terminal"` allowed. `from`/`to` reference state `id` or `label` |

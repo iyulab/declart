@@ -294,7 +294,7 @@
       <option value="matrix">Matrix — Eisenhower Matrix</option>
       <option value="hub_spoke">Hub-and-Spoke — Cloud Architecture</option>
       <option value="venn">Venn — Skills Overlap</option>
-      <option value="timeline">Timeline — Product Launch</option>
+      <option value="timeline">Timeline — Product Roadmap</option>
       <option value="comparison">Comparison — Framework Analysis</option>
       <option value="flow_swimlane">Flow (swimlane) — Order Processing</option>
       <option value="state">State — Order Lifecycle</option>
@@ -662,19 +662,26 @@ label = "UX Engineering"
 `,
 
   timeline: `kind = "timeline"
-title = "Product Launch History"
+title = "Product Roadmap 2024"
 
+# A milestone has one date; a period has start + end (inclusive).
 [[events]]
 date = "2024-01-15"
-label = "Alpha"
+label = "Kickoff"
 
 [[events]]
-date = "2024-04-01"
-label = "Beta"
+start = "2024-02"
+end = "2024-04"
+label = "Private Beta"
 
 [[events]]
-date = "2024-07-20"
-label = "Launch"
+start = "2024-03"
+end = "2024-09"
+label = "Enterprise Pilot"
+
+[[events]]
+date = "2024-07-01"
+label = "GA Launch"
 
 [[events]]
 date = "2024-12-01"

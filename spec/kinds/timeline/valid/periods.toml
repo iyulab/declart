@@ -1,0 +1,17 @@
+kind = "timeline"
+title = "Release Plan"
+
+[[events]]
+start = "2024-01"
+end = "2024-03"
+label = "Design"
+
+[[events]]
+start = "2024-03-15"
+end = "2024-03"
+label = "Review"
+
+[[events]]
+start = "2024"
+end = "2024"
+label = "Fiscal Year"

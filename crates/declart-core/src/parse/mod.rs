@@ -1,5 +1,6 @@
 mod raw;
 
+use crate::date::PartialDate;
 use crate::error::DeclartError;
 use crate::model::{
     ComparisonCell, ComparisonDiagram, Diagram, Emphasis, Status,
@@ -7,7 +8,7 @@ use crate::model::{
     TierDiagram, TierView,
     HierarchyDiagram, HierarchyNode, HierarchyView,
     HubSpokeDiagram, Item, MatrixDiagram,
-    TimelineDiagram, TimelineEvent,
+    TimelineDiagram, TimelineEvent, TimelineWhen,
     VennDiagram, VennIntersection, VennSet,
     StateDiagram, StateNode, StateRole, StateTransition, TransitionKind,
 };
@@ -402,40 +403,54 @@ fn validate_timeline(raw: raw::RawTimelineDiagram) -> Result<Diagram, DeclartErr
     if raw.events.len() < 2 {
         return Err(DeclartError::TooFewItems { kind: "timeline", min: 2, got: raw.events.len() });
     }
-    for event in &raw.events {
-        if normalize_date(&event.date).is_none() {
-            return Err(DeclartError::InvalidValue {
-                field: "date".to_string(),
-                value: event.date.clone(),
-                hint: "Date must be YYYY, YYYY-MM, or YYYY-MM-DD".to_string(),
-            });
-        }
-    }
-    let mut events: Vec<TimelineEvent> = raw
+    let mut events = raw
         .events
         .into_iter()
-        .map(|e| TimelineEvent { date: e.date, label: e.label })
-        .collect();
-    events.sort_by_key(|a| normalize_date(&a.date));
+        .map(validate_timeline_event)
+        .collect::<Result<Vec<_>, _>>()?;
+    events.sort_by_key(|(start_day, _)| *start_day);
+    let events = events.into_iter().map(|(_, event)| event).collect();
     Ok(Diagram::Timeline(TimelineDiagram { title: raw.title, events }))
 }
 
-/// Normalizes a partial date string to YYYY-MM-DD for sorting/computation.
-/// Accepts YYYY, YYYY-MM, or YYYY-MM-DD. Returns None for invalid input.
-pub(crate) fn normalize_date(s: &str) -> Option<String> {
-    let b = s.as_bytes();
-    match b.len() {
-        4 if b.iter().all(|c| c.is_ascii_digit()) => Some(format!("{}-01-01", s)),
-        7 if b[4] == b'-'
-            && b[..4].iter().all(|c| c.is_ascii_digit())
-            && b[5..].iter().all(|c| c.is_ascii_digit()) => Some(format!("{}-01", s)),
-        10 if b[4] == b'-'
-            && b[7] == b'-'
-            && b[..4].iter().all(|c| c.is_ascii_digit())
-            && b[5..7].iter().all(|c| c.is_ascii_digit())
-            && b[8..].iter().all(|c| c.is_ascii_digit()) => Some(s.to_string()),
-        _ => None,
-    }
+/// Validates one event and returns it with its start day (the sort key).
+fn validate_timeline_event(e: raw::RawTimelineEvent) -> Result<(i64, TimelineEvent), DeclartError> {
+    const SHAPE_HINT: &str = "Each event needs either `date` (a milestone) or both `start` and `end` (a period)";
+    let raw::RawTimelineEvent { date, start, end, label } = e;
+    let shape_error = |problem: &str| DeclartError::InvalidValue {
+        field: "events".to_string(),
+        value: format!("{label}: {problem}"),
+        hint: SHAPE_HINT.to_string(),
+    };
+    let when = match (date, start, end) {
+        (Some(date), None, None) => TimelineWhen::Point(date),
+        (None, Some(start), Some(end)) => TimelineWhen::Span { start, end },
+        (Some(_), _, _) => return Err(shape_error("`date` combined with `start`/`end`")),
+        (None, None, None) => return Err(shape_error("no date given")),
+        (None, _, _) => return Err(shape_error("`start` and `end` must be given together")),
+    };
+    let parse_date = |field: &str, value: &str| {
+        PartialDate::parse(value).ok_or_else(|| DeclartError::InvalidValue {
+            field: field.to_string(),
+            value: value.to_string(),
+            hint: "Date must be a valid YYYY, YYYY-MM, or YYYY-MM-DD".to_string(),
+        })
+    };
+    let start_day = match &when {
+        TimelineWhen::Point(date) => parse_date("date", date)?.start_day(),
+        TimelineWhen::Span { start, end } => {
+            let s = parse_date("start", start)?;
+            if parse_date("end", end)?.end_day_exclusive() <= s.start_day() {
+                return Err(DeclartError::InvalidValue {
+                    field: "end".to_string(),
+                    value: end.clone(),
+                    hint: format!("`end` must not be before `start` ({start})"),
+                });
+            }
+            s.start_day()
+        }
+    };
+    Ok((start_day, TimelineEvent { when, label }))
 }
 
 fn validate_hub_spoke(raw: raw::RawHubSpokeDiagram) -> Result<Diagram, DeclartError> {
@@ -622,7 +637,7 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::model::{Diagram, FlowView, TierView, HierarchyView, StateRole};
+    use crate::model::{Diagram, FlowView, TierView, HierarchyView, StateRole, TimelineWhen};
     use super::{parse, parse_auto, parse_json, KINDS};
     use crate::error::DeclartError;
 
@@ -1362,7 +1377,7 @@ label = "End"
         let diagram = parse(input).unwrap();
         let Diagram::Timeline(d) = diagram else { panic!("expected Timeline") };
         assert_eq!(d.events.len(), 2);
-        assert_eq!(d.events[0].date, "2023");
+        assert_eq!(d.events[0].when, TimelineWhen::Point("2023".into()));
     }
 
     #[test]
@@ -1401,9 +1416,102 @@ label = "First"
 "#;
         let diagram = parse(input).unwrap();
         let Diagram::Timeline(d) = diagram else { panic!() };
-        assert_eq!(d.events[0].date, "2022-01-01");
-        assert_eq!(d.events[1].date, "2023-06");
-        assert_eq!(d.events[2].date, "2025");
+        assert_eq!(d.events[0].when.start(), "2022-01-01");
+        assert_eq!(d.events[1].when.start(), "2023-06");
+        assert_eq!(d.events[2].when.start(), "2025");
+    }
+
+    // --- Timeline periods (start/end) ---
+
+    fn timeline(events: &str) -> Result<Diagram, DeclartError> {
+        parse(&format!("kind = \"timeline\"
+{events}"))
+    }
+
+    #[test]
+    fn parse_timeline_accepts_period_and_milestone() {
+        let d = timeline(r#"
+[[events]]
+start = "2024-02"
+end = "2024-03"
+label = "Beta"
+
+[[events]]
+date = "2024-01-15"
+label = "Alpha"
+"#).unwrap();
+        let Diagram::Timeline(d) = d else { panic!() };
+        assert_eq!(d.events[0].label, "Alpha", "events sort by start date");
+        assert_eq!(d.events[1].when, TimelineWhen::Span { start: "2024-02".into(), end: "2024-03".into() });
+    }
+
+    #[test]
+    fn parse_timeline_period_end_is_inclusive() {
+        // Same month, and an end coarser than a start inside it, are both valid periods.
+        assert!(timeline("[[events]]
+start = \"2024-03\"
+end = \"2024-03\"
+label = \"A\"
+[[events]]
+date = \"2025\"
+label = \"B\"
+").is_ok());
+        assert!(timeline("[[events]]
+start = \"2024-03-15\"
+end = \"2024-03\"
+label = \"A\"
+[[events]]
+date = \"2025\"
+label = \"B\"
+").is_ok());
+    }
+
+    #[test]
+    fn parse_timeline_rejects_end_before_start() {
+        let err = timeline("[[events]]
+start = \"2024-05\"
+end = \"2024-04-30\"
+label = \"A\"
+[[events]]
+date = \"2025\"
+label = \"B\"
+").unwrap_err();
+        assert!(err.to_string().contains("`end`"), "{err}");
+    }
+
+    #[test]
+    fn parse_timeline_rejects_invalid_event_shapes() {
+        let cases = [
+            ("date = \"2024\"
+start = \"2024\"
+end = \"2025\"", "combined"),
+            ("start = \"2024\"", "together"),
+            ("end = \"2024\"", "together"),
+            ("", "no date"),
+        ];
+        for (fields, expected) in cases {
+            let err = timeline(&format!("[[events]]
+{fields}
+label = \"A\"
+[[events]]
+date = \"2025\"
+label = \"B\"
+")).unwrap_err();
+            assert!(err.to_string().contains(expected), "`{fields}` → {err}");
+        }
+    }
+
+    #[test]
+    fn parse_timeline_rejects_out_of_range_dates() {
+        for bad in ["2024-13", "2024-02-30"] {
+            assert!(timeline(&format!("[[events]]
+date = \"{bad}\"
+label = \"A\"
+[[events]]
+date = \"2025\"
+label = \"B\"
+")).is_err(), "{bad}");
+        }
     }
 
     #[test]

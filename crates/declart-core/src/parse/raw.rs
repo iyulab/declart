@@ -128,7 +128,9 @@ pub struct RawTimelineDiagram {
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct RawTimelineEvent {
-    pub date: String,
+    pub date: Option<String>,
+    pub start: Option<String>,
+    pub end: Option<String>,
     pub label: String,
 }
 

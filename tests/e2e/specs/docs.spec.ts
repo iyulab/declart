@@ -22,7 +22,7 @@ test.describe('Docs site — page loading', () => {
   });
 
   test('all spec kind pages are reachable (HTTP 200)', async ({ page }) => {
-    const kinds = ['flow', 'tier', 'hierarchy', 'matrix', 'hub_spoke', 'venn', 'timeline', 'comparison'];
+    const kinds = ['flow', 'tier', 'hierarchy', 'matrix', 'hub_spoke', 'venn', 'timeline', 'comparison', 'state'];
     for (const kind of kinds) {
       const response = await page.request.get(`/kinds/${kind}.html`);
       expect(response.status(), `${kind}.html should return 200`).toBe(200);

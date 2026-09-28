@@ -1,0 +1,9 @@
+kind = "timeline"
+
+[[events]]
+date = "2024-02-30"
+label = "No such day"
+
+[[events]]
+date = "2024-06"
+label = "Later"

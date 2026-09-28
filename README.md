@@ -101,11 +101,12 @@ The test: *"What is the relationship between these items?"* If the answer change
 | `flow` | Sequential stages | Do items pass through stages? |
 | `tier` | Ordered levels | Are items ranked layers (pyramid) or nested rings (onion)? |
 | `hierarchy` | Parent-child tree | Do items have explicit parent references? |
-| `timeline` | Temporal position | Do items have dates? |
+| `timeline` | Temporal position | Do items have dates or date ranges (milestones, phases)? |
 | `matrix` | Two-axis position | Are items placed in a 2×2 grid? |
 | `hub_spoke` | Radial connection | Do items radiate from a center? |
 | `venn` | Set intersection | Are items overlapping groups? |
 | `comparison` | Criteria evaluation | Are items evaluated against columns? |
+| `state` | Named lifecycle | Do items move between named states? |
 
 ### Decision rule
 
@@ -140,11 +141,11 @@ Anchored on the categories PowerPoint SmartArt established, prioritizing what ex
 - **Matrix** (`kind = "matrix"`) — 2×2 grids with two axes; optional item classification into quadrants (BCG growth-share, Gartner Magic Quadrant)
 - **Hub-and-Spoke** (`kind = "hub_spoke"`) — radial connections from a center
 - **Venn** (`kind = "venn"`) — overlapping set intersections
-- **Timeline** (`kind = "timeline"`) — date-anchored events
+- **Timeline** (`kind = "timeline"`) — date-anchored milestones and periods (qualitative roadmaps)
 - **Comparison** (`kind = "comparison"`) — item × criteria evaluation table
 - **State** (`kind = "state"`) — system lifecycle as named states and directed transitions
 
-Additional kinds (Roadmap, etc.) may be considered after the core kinds stabilize.
+Roadmaps are covered by `timeline` periods (`start` + `end`); precise Gantt scheduling (dependencies, progress, resources) stays out of scope.
 
 ### Output
 

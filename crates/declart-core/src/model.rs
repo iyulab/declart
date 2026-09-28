@@ -163,10 +163,31 @@ pub struct VennDiagram {
     pub intersections: Vec<VennIntersection>,
 }
 
+/// When a timeline event happens: a single date (milestone) or an inclusive period.
+///
+/// Dates are `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` strings exactly as declared.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TimelineWhen {
+    /// A milestone at one date.
+    Point(String),
+    /// A period from `start` through `end`, both inclusive at their own precision.
+    Span { start: String, end: String },
+}
+
+impl TimelineWhen {
+    /// The date the event begins — the point itself, or the period start.
+    pub fn start(&self) -> &str {
+        match self {
+            TimelineWhen::Point(date) => date,
+            TimelineWhen::Span { start, .. } => start,
+        }
+    }
+}
+
 /// A single event on a timeline.
 #[derive(Debug, Clone)]
 pub struct TimelineEvent {
-    pub date: String,
+    pub when: TimelineWhen,
     pub label: String,
 }
 
