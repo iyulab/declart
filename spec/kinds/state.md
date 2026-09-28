@@ -3,6 +3,18 @@
 A state diagram represents a system's lifecycle as a set of named states and directed
 transitions between them.
 
+## Scope
+
+`state` is a **named lifecycle for prose** — the diagram that explains how an order, a ticket, or a
+deployment moves through its stages in a report or design document. It is not an executable state
+machine notation:
+
+- No guards, entry/exit actions, or internal transitions — `trigger` is a display label only.
+- No nested (composite), parallel (orthogonal), or history states.
+- Transitions connect only declared states; layout is chosen by the engine.
+
+If a diagram needs any of the above, use an engineering tool such as Mermaid, D2, or PlantUML.
+
 ## Fields
 
 | Field         | Required | Type              | Description                              |

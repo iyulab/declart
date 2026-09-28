@@ -49,7 +49,7 @@ That declaration on the left renders the diagram on the right. No colors, coordi
 
 **Mermaid for engineers. Declart for writers.**
 
-If you need technical diagrams — ERD, sequence, class diagrams, state machines — use Mermaid. It handles those better.
+If you need technical diagrams — ERD, sequence, class diagrams, full state machines with guards, actions, or nested states — use Mermaid. It handles those better.
 
 Declart solves a different problem: the diagram you sketch on a whiteboard to explain an idea in a blog post, report, or slide deck. The kind that should take seconds to write and look consistent without any design decisions.
 
@@ -164,8 +164,8 @@ Additional kinds (Roadmap, etc.) may be considered after the core kinds stabiliz
 
 Explicit boundaries that protect focus:
 
-- **Not for engineering diagrams.** Flowcharts, sequence diagrams, ER diagrams, state machines — use Mermaid, D2, or PlantUML. Declart is for prose, not code.
-- **Not a free-form drawing tool.** No arbitrary node-edge graphs. Declart renders declared structure, not drawn shapes.
+- **Not for engineering diagrams.** Flowcharts, sequence diagrams, ER diagrams, executable state machines (guards, entry/exit actions, nested or parallel states) — use Mermaid, D2, or PlantUML. Declart is for prose, not code. The `state` kind is a small named lifecycle for explaining a system in a document: labeled states, optional triggers, and nothing a runtime would need.
+- **Not a free-form drawing tool.** No arbitrary node-edge graphs. Declart renders declared structure, not drawn shapes. Even `state` transitions only connect states you declared, and the engine chooses the layout.
 - **No pixel-level control.** No positions, no per-element colors, no font overrides in source.
 - **Not interactive.** Declart produces static visuals. Animation and interactivity are out of scope.
 - **No WYSIWYG editing.** Declart is source-first. Visual editors are not part of the project.
@@ -262,7 +262,7 @@ Render to SVG:
 
 ```bash
 declart render maslow.toml
-# writes hierarchy.svg
+# writes maslow.svg
 ```
 
 Validate without rendering:
@@ -275,14 +275,14 @@ Export to PNG:
 
 ```bash
 declart render maslow.toml --format png
-# writes hierarchy.png
+# writes maslow.png
 ```
 
 Watch and auto-rebuild on changes:
 
 ```bash
 declart watch maslow.toml
-# watches maslow.toml, rewrites hierarchy.svg on every save
+# watches maslow.toml, rewrites maslow.svg on every save
 # use --format png for PNG output
 ```
 
