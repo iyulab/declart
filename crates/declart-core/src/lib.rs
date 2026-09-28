@@ -4,7 +4,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! declart-core = "0.17"
+//! declart-core = "0.21"
 //! ```
 //!
 //! ```rust,no_run
