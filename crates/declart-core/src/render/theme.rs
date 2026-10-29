@@ -22,9 +22,20 @@ impl Color {
         }
     }
 
-    pub(crate) fn is_dark(&self) -> bool {
-        let lum = 0.299 * self.r as f32 + 0.587 * self.g as f32 + 0.114 * self.b as f32;
-        lum < 128.0
+    /// WCAG 2 relative luminance (0 = black, 1 = white).
+    pub(crate) fn relative_luminance(&self) -> f32 {
+        fn channel(v: u8) -> f32 {
+            let c = v as f32 / 255.0;
+            if c <= 0.039_28 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) }
+        }
+        0.2126 * channel(self.r) + 0.7152 * channel(self.g) + 0.0722 * channel(self.b)
+    }
+
+    /// WCAG 2 contrast ratio between two colors (1–21).
+    pub(crate) fn contrast(&self, other: &Color) -> f32 {
+        let (a, b) = (self.relative_luminance(), other.relative_luminance());
+        let (hi, lo) = if a >= b { (a, b) } else { (b, a) };
+        (hi + 0.05) / (lo + 0.05)
     }
 }
 
@@ -104,6 +115,21 @@ impl Theme {
         Theme { backdrop: false, ..self.clone() }
     }
 
+    /// The text color for a label drawn on `fill`: whichever of the theme's two text colors
+    /// contrasts more with it — or, when even that one falls short of WCAG AA for body text
+    /// (4.5:1), plain white or black, whichever contrasts more. Mid-tone fills in a gradient are
+    /// where the theme's colors fall short.
+    pub(crate) fn text_on(&self, fill: &Color) -> Color {
+        const AA: f32 = 4.5;
+        let (on_dark, on_light) = (self.text.on_dark, self.text.on_light);
+        let best = if on_dark.contrast(fill) >= on_light.contrast(fill) { on_dark } else { on_light };
+        if best.contrast(fill) >= AA {
+            return best;
+        }
+        let (white, black) = (Color::new(255, 255, 255), Color::new(0, 0, 0));
+        if white.contrast(fill) >= black.contrast(fill) { white } else { black }
+    }
+
     /// The backdrop fill, or `None` when the backdrop is transparent.
     pub(crate) fn backdrop_fill(&self) -> Option<String> {
         self.backdrop.then(|| self.background.to_hex())
@@ -112,6 +138,8 @@ impl Theme {
     /// Parses a TOML string into a custom `Theme`.
     ///
     /// The TOML must contain a `[colors]` section with all six color fields in `#RRGGBB` format.
+    /// A label uses whichever of `on_dark` / `on_light` contrasts more with its fill, or plain
+    /// white or black when neither reaches WCAG AA (4.5:1).
     /// An optional `[typography]` section can override font sizes (defaults: title=18, label=14, min=10).
     ///
     /// ```toml
@@ -428,15 +456,6 @@ label="Bottom""#).unwrap();
     }
 
     #[test]
-    fn is_dark_boundary() {
-        // lum = 0.299*127 + 0.587*127 + 0.114*127 ≈ 127 < 128 → dark
-        let dark = Color::new(127, 127, 127);
-        assert!(dark.is_dark());
-        // lum = 0.299*128 + 0.587*128 + 0.114*128 ≈ 128 → not dark
-        let light = Color::new(128, 128, 128);
-        assert!(!light.is_dark());
-    }
-    #[test]
     fn without_backdrop_keeps_colors_and_drops_the_fill() {
         let clear = DARK_THEME.without_backdrop();
         assert_eq!(DARK_THEME.backdrop_fill().as_deref(), Some("#121A24"));
@@ -448,12 +467,38 @@ label="Bottom""#).unwrap();
     #[test]
     fn dark_theme_text_reads_on_its_surface() {
         // Title and on-dark text sit on the dark surface; on-light text sits on the light apex.
-        assert!(DARK_THEME.background.is_dark());
-        assert!(!DARK_THEME.title_color.is_dark());
-        assert!(!DARK_THEME.layers.apex.is_dark());
-        assert!(DARK_THEME.layers.base.is_dark());
-        assert!(DARK_THEME.text.on_light.is_dark());
+        assert!(DARK_THEME.title_color.contrast(&DARK_THEME.background) >= 4.5);
+        assert!(DARK_THEME.text.on_light.contrast(&DARK_THEME.layers.apex) >= 4.5);
+        assert!(DARK_THEME.text.on_dark.contrast(&DARK_THEME.layers.base) >= 4.5);
         assert!(Theme::names().contains(&"dark"));
         assert_eq!(Theme::by_name("dark").name, "dark");
+    }
+    #[test]
+    fn text_on_meets_aa_on_every_gradient_step_of_every_theme() {
+        for theme in [&DEFAULT_THEME, &MONOCHROME_THEME, &ACCESSIBLE_THEME, &WARM_THEME, &DARK_THEME] {
+            for i in 0..=20 {
+                let fill = theme.layers.apex.interpolate(&theme.layers.base, i as f32 / 20.0);
+                let text = theme.text_on(&fill);
+                // Pure white or black reaches 4.5:1 on any fill except a narrow mid-gray band
+                // (about #777); the gradients here stay clear of it.
+                assert!(text.contrast(&fill) >= 4.5, "{} step {}: {} on {} = {:.2}",
+                    theme.name, i, text.to_hex(), fill.to_hex(), text.contrast(&fill));
+            }
+        }
+    }
+
+    #[test]
+    fn text_on_keeps_the_theme_colors_where_they_suffice() {
+        assert_eq!(DEFAULT_THEME.text_on(&DEFAULT_THEME.layers.apex).to_hex(), DEFAULT_THEME.text.on_dark.to_hex());
+        assert_eq!(DEFAULT_THEME.text_on(&DEFAULT_THEME.layers.base).to_hex(), DEFAULT_THEME.text.on_light.to_hex());
+    }
+
+    #[test]
+    fn contrast_matches_wcag_reference_values() {
+        let white = Color::new(255, 255, 255);
+        let black = Color::new(0, 0, 0);
+        assert!((white.contrast(&black) - 21.0).abs() < 0.01);
+        // #767676 on white is the classic 4.54:1 boundary gray.
+        assert!((Color::new(0x76, 0x76, 0x76).contrast(&white) - 4.54).abs() < 0.01);
     }
 }

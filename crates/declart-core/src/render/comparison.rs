@@ -38,10 +38,10 @@ pub fn render(diagram: &ComparisonDiagram, theme: &Theme) -> String {
     }
 
     let header_bg = theme.layers.apex;
-    let header_fg = if header_bg.is_dark() { theme.text.on_dark } else { theme.text.on_light };
+    let header_fg = theme.text_on(&header_bg);
 
     let row_hdr_bg = theme.layers.apex.interpolate(&theme.layers.base, 0.3);
-    let row_hdr_fg = if row_hdr_bg.is_dark() { theme.text.on_dark } else { theme.text.on_light };
+    let row_hdr_fg = theme.text_on(&row_hdr_bg);
 
     let even_bg = theme.layers.base.interpolate(&theme.background, 0.5);
     let odd_bg = theme.background;
@@ -111,7 +111,7 @@ pub fn render(diagram: &ComparisonDiagram, theme: &Theme) -> String {
             let cx = table_left + ROW_HEADER_W + ci as f32 * cell_w;
             let ry = table_top + COL_HEADER_H + ri as f32 * ROW_H;
             let cell_bg = if ri % 2 == 0 { even_bg } else { odd_bg };
-            let text_fg = if cell_bg.is_dark() { theme.text.on_dark } else { theme.text.on_light };
+            let text_fg = theme.text_on(&cell_bg);
             let label = font::truncate_text(&cell.value, CELL_FONT, cell_w - 12.0);
             builder.text(cx + cell_w / 2.0, ry + ROW_H / 2.0, &label, &text_fg.to_hex(), CELL_FONT);
         }

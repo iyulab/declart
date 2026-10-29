@@ -90,7 +90,7 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
             theme.layers.base.to_hex()
         };
         let node_color = if is_root { &theme.layers.apex } else { &theme.layers.base };
-        let text_color = if node_color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+        let text_color = &theme.text_on(node_color);
 
         builder.polygon_stroked(
             &[(x, y), (x + NODE_W, y), (x + NODE_W, y + NODE_H), (x, y + NODE_H)],

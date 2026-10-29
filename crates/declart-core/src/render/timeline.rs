@@ -221,7 +221,7 @@ fn draw_guides(builder: &mut SvgBuilder, bars: &[Bar], theme: &Theme, axis_y: f3
 
 fn draw_bars(builder: &mut SvgBuilder, bars: &[Bar], theme: &Theme, band_top: f32) {
     let fill = theme.layers.apex.interpolate(&theme.layers.base, 0.35);
-    let on_fill = if fill.is_dark() { theme.text.on_dark } else { theme.text.on_light };
+    let on_fill = theme.text_on(&fill);
     for bar in bars {
         let top = band_top + bar.lane as f32 * LANE_HEIGHT;
         let w = bar.x1 - bar.x0;

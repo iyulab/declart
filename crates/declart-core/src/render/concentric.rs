@@ -74,7 +74,7 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let label = font::truncate_text(&item.label, font_size, available);
 
         let color = layer_color(i, &item.emphasis);
-        let text_color = if color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+        let text_color = &theme.text_on(&color);
         let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
         builder.text_weighted(CENTER_X, label_y, &label, &text_color.to_hex(), font_size, is_bold);
 

@@ -86,7 +86,7 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
         } else {
             theme.layers.base.interpolate(&theme.background, 0.35)
         };
-        let text_color = if fill.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+        let text_color = &theme.text_on(&fill);
         let bold = depth == 1;
 
         builder.rect_rounded(
@@ -116,7 +116,7 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
     let root = &nodes[root_idx];
     let (rx, ry) = positions[root_idx];
     let fill = theme.layers.apex;
-    let text_color = if fill.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+    let text_color = &theme.text_on(&fill);
     builder.circle_stroked(rx, ry, ROOT_R, &fill.to_hex(), &theme.background.to_hex(), 3.0);
     let available = ROOT_R * 1.6;
     let mut fs = theme.typography.label_size;

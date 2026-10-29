@@ -55,7 +55,7 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
         let lane_cx = PADDING + col as f32 * LANE_WIDTH + LANE_WIDTH / 2.0;
         let t = if num_actors > 1 { col as f32 / (num_actors - 1) as f32 } else { 0.0 };
         let bg = theme.layers.apex.interpolate(&theme.layers.base, t);
-        let text_col = if bg.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+        let text_col = &theme.text_on(&bg);
         b.rect_rounded(PADDING + col as f32 * LANE_WIDTH, header_top,
                        LANE_WIDTH, HEADER_HEIGHT, 0,
                        &bg.to_hex(), "none", 0.0);
@@ -79,7 +79,7 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
             Some(crate::model::Emphasis::Secondary) => base_color.interpolate(&theme.background, 0.35),
             _ => base_color,
         };
-        let text_col = if box_color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+        let text_col = &theme.text_on(&box_color);
         let (stroke_color, stroke_width) = match &item.emphasis {
             Some(crate::model::Emphasis::Primary) => (theme.background.to_hex(), 3.0_f32),
             _ => (theme.layers.apex.to_hex(), 1.0_f32),

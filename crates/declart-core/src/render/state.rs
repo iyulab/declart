@@ -75,7 +75,7 @@ pub(crate) fn render(d: &StateDiagram, theme: &Theme) -> String {
         let is_terminal = matches!(state.role, Some(StateRole::Terminal));
         let t = if n > 1 { i as f32 / (n - 1) as f32 } else { 0.0 };
         let fill = theme.layers.apex.interpolate(&theme.layers.base, t);
-        let text_col = if fill.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+        let text_col = &theme.text_on(&fill);
 
         // Terminal: outer ring
         if is_terminal {

@@ -54,11 +54,7 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             Some(Emphasis::Secondary) => base_color.interpolate(&theme.layers.base, 0.3),
             _ => base_color,
         };
-        let text_color = if box_color.is_dark() {
-            &theme.text.on_dark
-        } else {
-            &theme.text.on_light
-        };
+        let text_color = &theme.text_on(&box_color);
         let (stroke_color, stroke_width) = match &item.emphasis {
             Some(Emphasis::Primary) => (theme.background.to_hex(), 3.0_f32),
             _ => ("none".to_string(), 0.0_f32),

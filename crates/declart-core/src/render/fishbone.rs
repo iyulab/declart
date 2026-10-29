@@ -69,7 +69,7 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
         &theme.layers.apex.to_hex(),
         "none",
     );
-    let effect_text_color = if theme.layers.apex.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+    let effect_text_color = &theme.text_on(&theme.layers.apex);
     let mut efs = theme.typography.label_size;
     let etw = font::measure_text(&diagram.effect, efs);
     let eavail = EFFECT_BOX_W * 0.85;
@@ -96,8 +96,8 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
     // Each cause connects to the spine at a "foot" point on the spine
     let cause_color = theme.layers.apex.interpolate(&theme.layers.base, 0.35);
     let sub_color = theme.layers.apex.interpolate(&theme.layers.base, 0.65);
-    let text_color = if cause_color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
-    let sub_text_color = if sub_color.is_dark() { &theme.text.on_dark } else { &theme.text.on_light };
+    let text_color = &theme.text_on(&cause_color);
+    let sub_text_color = &theme.text_on(&sub_color);
 
     for (i, cause) in diagram.causes.iter().enumerate() {
         let above = i % 2 == 0;
