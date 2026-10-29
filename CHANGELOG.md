@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Hangul, CJK and other wide characters are measured at their drawn width**: the bundled font has no glyph for them, so they were measured with the font's `.notdef` advance — narrower than the one-em width the viewer's fallback font draws. A long Korean label was therefore neither shrunk nor truncated enough and spilled out of its box over the neighbouring arrow. East Asian wide and fullwidth characters (UAX #11 `W`/`F`) without a glyph now count as one em, so shrink-to-fit and truncation keep them inside the box in every kind. Latin, Greek and Cyrillic labels measure exactly as before.
+
 ## v0.21.0
 
 Timeline periods — qualitative roadmaps with milestones and phases on one time axis.

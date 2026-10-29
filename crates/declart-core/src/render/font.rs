@@ -12,11 +12,41 @@ fn font() -> &'static fontdue::Font {
 }
 
 /// Returns the advance width of `text` rendered at `font_size` points.
+///
+/// The bundled font covers Latin, Greek and Cyrillic only. A character it has no glyph
+/// for is drawn by the viewer with a fallback font, so its `.notdef` advance says nothing
+/// about the drawn width. East Asian wide and fullwidth characters (Hangul, CJK ideographs,
+/// kana, fullwidth forms) are measured as one em — the advance every CJK font gives them.
 pub fn measure_text(text: &str, font_size: f32) -> f32 {
     let f = font();
     text.chars()
-        .map(|c| f.metrics(c, font_size).advance_width)
+        .map(|c| {
+            if f.lookup_glyph_index(c) == 0 && is_wide(c) {
+                font_size
+            } else {
+                f.metrics(c, font_size).advance_width
+            }
+        })
         .sum()
+}
+
+/// East Asian Width `W` / `F` blocks (UAX #11) — the characters fonts draw one em wide.
+fn is_wide(c: char) -> bool {
+    matches!(c as u32,
+        0x1100..=0x115F       // Hangul Jamo initial consonants
+        | 0x2E80..=0x303E     // CJK radicals, Kangxi, ideographic description, CJK symbols
+        | 0x3041..=0x33FF     // Hiragana, Katakana, Bopomofo, compatibility Jamo, CJK compatibility
+        | 0x3400..=0x4DBF     // CJK Extension A
+        | 0x4E00..=0x9FFF     // CJK Unified Ideographs
+        | 0xA000..=0xA4CF     // Yi
+        | 0xA960..=0xA97F     // Hangul Jamo Extended-A
+        | 0xAC00..=0xD7A3     // Hangul syllables
+        | 0xF900..=0xFAFF     // CJK compatibility ideographs
+        | 0xFE30..=0xFE4F     // CJK compatibility forms
+        | 0xFF00..=0xFF60     // Fullwidth forms
+        | 0xFFE0..=0xFFE6     // Fullwidth signs
+        | 0x20000..=0x3FFFD   // CJK Extensions B and beyond
+    )
 }
 
 /// Returns `text` truncated to fit within `max_width` at `font_size`, appending "…" if needed.
@@ -58,6 +88,34 @@ mod tests {
         let small = measure_text("Hello", 10.0);
         let large = measure_text("Hello", 20.0);
         assert!(large > small, "larger font size should measure wider");
+    }
+
+    #[test]
+    fn hangul_and_cjk_measure_one_em_each() {
+        // The bundled font has no glyph for these; the viewer's fallback font draws them one em wide.
+        assert_eq!(measure_text("가", 10.0), 10.0);
+        assert_eq!(measure_text("漢字", 10.0), 20.0);
+        assert_eq!(measure_text("カナ", 12.0), 24.0);
+        assert_eq!(measure_text("Ａ", 10.0), 10.0);
+    }
+
+    #[test]
+    fn mixed_label_adds_latin_advances_to_wide_ems() {
+        let latin = measure_text("AI ", 10.0);
+        assert!((measure_text("AI 모델", 10.0) - (latin + 20.0)).abs() < 1e-4);
+    }
+
+    #[test]
+    fn long_hangul_label_truncates_to_its_drawn_width() {
+        let label = "사용자가 업로드한 문서를 정제하고 청크로 나누는 전처리 단계";
+        let result = truncate_text(label, 13.2, 258.0);
+        assert!(result.ends_with('…'), "expected ellipsis, got: {}", result);
+        // Every kept syllable costs one em; the drawn width must stay within the box.
+        let drawn: f32 = result
+            .chars()
+            .map(|c| if c == ' ' || c == '…' { measure_text(&c.to_string(), 13.2) } else { 13.2 })
+            .sum();
+        assert!(drawn <= 258.0 + 0.5, "drawn width {} exceeds 258", drawn);
     }
 
     #[test]
