@@ -172,8 +172,9 @@ pub struct RawComparisonDiagram {
 #[derive(Deserialize, Debug)]
 pub struct RawComparisonRow {
     pub label: String,
+    /// Ordered so validation reports the same unknown key on every run.
     #[serde(flatten)]
-    pub cells: std::collections::HashMap<String, String>,
+    pub cells: std::collections::BTreeMap<String, String>,
 }
 
 #[derive(Deserialize, Debug)]

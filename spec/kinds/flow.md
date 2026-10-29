@@ -34,7 +34,7 @@ When `view` is omitted, the engine uses `process`.
 
 ## Long labels
 
-In the `process` view a label that does not fit on one line is wrapped onto as many lines as the box holds (at most three) — at spaces, and between characters for Chinese and Japanese text without spaces. The label shrinks toward the theme's minimum label size only when wrapping alone is not enough, and only a label that still overflows at that size is truncated with `…` on its last line. Hangul, CJK and other fullwidth characters are measured one em wide.
+In the `process` and `swimlane` views a label that does not fit on one line — even shrunk to 85% of the label size — is wrapped onto as many lines as the box holds (at most three) — at spaces, and between characters for Chinese and Japanese text without spaces. The label shrinks toward the theme's minimum label size only when wrapping alone is not enough, and only a label that still overflows at that size is truncated with `…` on its last line. Hangul, CJK and other fullwidth characters are measured one em wide.
 
 ## Swimlane item fields
 

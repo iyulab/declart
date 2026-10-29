@@ -30,6 +30,12 @@ pub fn measure_text(text: &str, font_size: f32) -> f32 {
         .sum()
 }
 
+/// A wide character a line may break before or after — every one but Hangul, whose words
+/// are separated by spaces.
+fn breaks_between(c: char) -> bool {
+    is_wide(c) && !matches!(c as u32, 0x1100..=0x115F | 0x3130..=0x318F | 0xA960..=0xA97F | 0xAC00..=0xD7A3)
+}
+
 /// East Asian Width `W` / `F` blocks (UAX #11) — the characters fonts draw one em wide.
 fn is_wide(c: char) -> bool {
     matches!(c as u32,
@@ -78,10 +84,14 @@ pub const LINE_HEIGHT: f32 = 1.2;
 /// Most lines a label is set on before it is truncated.
 const MAX_LINES: usize = 3;
 
+/// Smallest fraction of the label size a label is shrunk to stay on one line before it wraps.
+const ONE_LINE_SHRINK: f32 = 0.85;
+
 /// Size step tried between `font_size` and `min_size`.
 const SIZE_STEP: f32 = 0.5;
 
 /// Fits `text` into a `max_width` × `max_height` box: one line at `font_size` when it fits,
+/// or one line shrunk in proportion when that keeps at least 85% of `font_size`;
 /// otherwise wrapped onto as many lines as the box holds (at most three), shrinking toward
 /// `min_size` only when wrapping alone is not enough. At `min_size` the last line that fits
 /// is truncated with "…". Returns the lines and the size they are set at.
@@ -92,10 +102,16 @@ pub fn fit_lines(
     max_width: f32,
     max_height: f32,
 ) -> (Vec<String>, f32) {
-    if max_width <= 0.0 || measure_text(text, font_size) <= max_width {
+    let width = measure_text(text, font_size);
+    if max_width <= 0.0 || width <= max_width {
         return (vec![text.to_string()], font_size);
     }
     let min_size = min_size.min(font_size);
+    // A label that needs only a slight shrink stays on one line.
+    let one_line_size = font_size * max_width / width;
+    if one_line_size >= (font_size * ONE_LINE_SHRINK).max(min_size) {
+        return (vec![text.to_string()], one_line_size);
+    }
     let mut size = font_size;
     loop {
         let room = lines_that_fit(size, max_height);
@@ -122,7 +138,8 @@ fn lines_that_fit(font_size: f32, max_height: f32) -> usize {
     n.clamp(1, MAX_LINES)
 }
 
-/// Greedy wrap at spaces and around wide characters (CJK text breaks between characters).
+/// Greedy wrap at spaces, and between characters of Chinese and Japanese text written without
+/// spaces. Korean is written with spaces between words, so Hangul breaks at spaces only.
 /// A word wider than `max_width` on its own is broken between characters.
 fn wrap(text: &str, font_size: f32, max_width: f32) -> Vec<String> {
     let mut lines: Vec<String> = Vec::new();
@@ -153,14 +170,15 @@ fn wrap(text: &str, font_size: f32, max_width: f32) -> Vec<String> {
 }
 
 /// Splits `text` into units that may start a new line: a word with its trailing spaces,
-/// or a single wide character (with the spaces after it).
+/// or a single character that breaks on its own (with the spaces after it).
 fn break_tokens(text: &str) -> Vec<String> {
     let mut tokens: Vec<String> = Vec::new();
     let mut cur = String::new();
     for c in text.chars() {
-        let wide = is_wide(c);
-        let ends_with_space = cur.ends_with(' ');
-        if !cur.is_empty() && (wide || (ends_with_space && c != ' ') || cur.chars().last().is_some_and(is_wide) && c != ' ') {
+        let after_space = cur.ends_with(' ') && c != ' ';
+        let around_breakable = c != ' '
+            && (breaks_between(c) || cur.chars().last().is_some_and(breaks_between));
+        if !cur.is_empty() && (after_space || around_breakable) {
             tokens.push(std::mem::take(&mut cur));
         }
         cur.push(c);
@@ -181,6 +199,14 @@ mod tests {
     }
 
     #[test]
+    fn fit_lines_shrinks_slightly_rather_than_wrap() {
+        let w = measure_text("Receive Confirmation", 14.0);
+        let (lines, size) = fit_lines("Receive Confirmation", 14.0, 10.0, w * 0.92, 40.0);
+        assert_eq!(lines, vec!["Receive Confirmation".to_string()]);
+        assert!((size - 14.0 * 0.92).abs() < 1e-3, "{}", size);
+    }
+
+    #[test]
     fn fit_lines_wraps_before_shrinking() {
         let (lines, size) = fit_lines("Collect requirements from every stakeholder", 14.0, 10.0, 160.0, 44.0);
         assert_eq!(size, 14.0, "two lines fit at full size: {:?}", lines);
@@ -197,6 +223,18 @@ mod tests {
         assert!(lines.iter().all(|l| measure_text(l, size) <= 229.5), "{:?} at {}", lines, size);
         assert!(lines.len() as f32 * size * LINE_HEIGHT <= 44.0 + 1e-3);
         assert_eq!(lines.join(" "), label, "the whole label is kept");
+    }
+
+    #[test]
+    fn fit_lines_keeps_korean_words_whole() {
+        let label = "최고 기술 책임자 및 연구 개발 총괄";
+        let (lines, _) = fit_lines(label, 14.0, 10.0, 115.0, 44.0);
+        let words: Vec<&str> = label.split(' ').collect();
+        for line in &lines {
+            for w in line.split(' ') {
+                assert!(words.contains(&w), "word broken: {:?} in {:?}", w, lines);
+            }
+        }
     }
 
     #[test]

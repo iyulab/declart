@@ -90,7 +90,7 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
         let center_x = box_left + box_width / 2.0;
         let center_y = box_top + BOX_HEIGHT / 2.0;
-        builder.text_lines(center_x, center_y, &lines, &text_color.to_hex(), font_size, is_bold);
+        builder.text_lines(center_x, center_y, &lines, &text_color.to_hex(), font_size, Some(is_bold));
 
         status::draw_marker(&mut builder, &item.status, box_right, box_top, theme);
     }

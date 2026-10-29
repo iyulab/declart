@@ -105,7 +105,8 @@ impl SvgBuilder {
     }
 
     /// Sets `lines` centred on (`x`, `y`) — one `<text>` with a `<tspan>` per line, the block
-    /// centred vertically. A single line is written exactly as [`Self::text_weighted`] writes it.
+    /// centred vertically. `weight` is `None` for text that carries no `font-weight`. A single
+    /// line is written exactly as [`Self::text`] / [`Self::text_weighted`] write it.
     pub fn text_lines(
         &mut self,
         x: f32,
@@ -113,14 +114,21 @@ impl SvgBuilder {
         lines: &[String],
         fill: &str,
         font_size: f32,
-        bold: bool,
+        weight: Option<bool>,
     ) {
         if lines.len() <= 1 {
             let line = lines.first().map(String::as_str).unwrap_or("");
-            self.text_weighted(x, y, line, fill, font_size, bold);
+            match weight {
+                Some(bold) => self.text_weighted(x, y, line, fill, font_size, bold),
+                None => self.text(x, y, line, fill, font_size),
+            }
             return;
         }
-        let weight = if bold { "bold" } else { "normal" };
+        let weight = match weight {
+            Some(true) => r#" font-weight="bold""#,
+            Some(false) => r#" font-weight="normal""#,
+            None => "",
+        };
         let line_height = font_size * crate::render::font::LINE_HEIGHT;
         let first_dy = -(lines.len() as f32 - 1.0) / 2.0 * line_height;
         let spans: String = lines
@@ -132,7 +140,7 @@ impl SvgBuilder {
             })
             .collect();
         self.elements.push(format!(
-            r#"<text x="{:.1}" y="{:.1}" fill="{}" font-size="{:.1}" font-family="Noto Sans, sans-serif" font-weight="{}" text-anchor="middle" dominant-baseline="middle">{}</text>"#,
+            r#"<text x="{:.1}" y="{:.1}" fill="{}" font-size="{:.1}" font-family="Noto Sans, sans-serif"{} text-anchor="middle" dominant-baseline="middle">{}</text>"#,
             x, y, fill, font_size, weight, spans
         ));
     }

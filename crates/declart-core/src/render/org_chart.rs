@@ -3,6 +3,8 @@ use crate::render::{font, svg::SvgBuilder, theme::Theme};
 
 const NODE_W: f32 = 120.0;
 const NODE_H: f32 = 40.0;
+/// Vertical room kept between a wrapped label and the node edge.
+const LABEL_INSET: f32 = 6.0;
 const H_GAP: f32 = 20.0;
 const V_GAP: f32 = 60.0;
 const PADDING: f32 = 20.0;
@@ -97,24 +99,21 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
             0.0,
         );
 
-        let available = NODE_W * 0.85;
-        let mut font_size = theme.typography.label_size;
-        let text_w = font::measure_text(&node.label, font_size);
-        if text_w > available {
-            font_size = (font_size * available / text_w).max(theme.typography.label_size_min);
-        }
-        let display = if font::measure_text(&node.label, font_size) > available {
-            font::truncate_text(&node.label, font_size, available)
-        } else {
-            node.label.clone()
-        };
+        let (lines, font_size) = font::fit_lines(
+            &node.label,
+            theme.typography.label_size,
+            theme.typography.label_size_min,
+            NODE_W * 0.85,
+            NODE_H - 2.0 * LABEL_INSET,
+        );
 
-        builder.text(
+        builder.text_lines(
             x + NODE_W / 2.0,
             y + NODE_H / 2.0,
-            &display,
+            &lines,
             &text_color.to_hex(),
             font_size,
+            None,
         );
     }
 

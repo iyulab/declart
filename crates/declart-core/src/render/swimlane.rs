@@ -4,6 +4,8 @@ use super::{font, status, svg::SvgBuilder};
 
 const LANE_WIDTH: f32 = 180.0;
 const STEP_HEIGHT: f32 = 56.0;
+/// Vertical room kept between a wrapped label and the step box edge.
+const LABEL_INSET: f32 = 8.0;
 const STEP_V_GAP: f32 = 36.0;
 const HEADER_HEIGHT: f32 = 40.0;
 const TITLE_AREA: f32 = 50.0;
@@ -87,18 +89,14 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
                        &box_color.to_hex(), &stroke_color, stroke_width);
 
         let is_bold = matches!(&item.emphasis, Some(crate::model::Emphasis::Primary));
-        let mut font_size = theme.typography.label_size;
-        let avail = step_width * 0.85;
-        let tw = font::measure_text(&item.label, font_size);
-        if tw > avail {
-            font_size = (font_size * avail / tw).max(theme.typography.label_size_min);
-        }
-        let label = if font::measure_text(&item.label, font_size) > avail {
-            font::truncate_text(&item.label, font_size, avail)
-        } else {
-            item.label.clone()
-        };
-        b.text_weighted(lane_cx, box_y + STEP_HEIGHT / 2.0, &label, &text_col.to_hex(), font_size, is_bold);
+        let (lines, font_size) = font::fit_lines(
+            &item.label,
+            theme.typography.label_size,
+            theme.typography.label_size_min,
+            step_width * 0.85,
+            STEP_HEIGHT - 2.0 * LABEL_INSET,
+        );
+        b.text_lines(lane_cx, box_y + STEP_HEIGHT / 2.0, &lines, &text_col.to_hex(), font_size, Some(is_bold));
 
         status::draw_marker(&mut b, &item.status, box_x + step_width, box_y, theme);
 

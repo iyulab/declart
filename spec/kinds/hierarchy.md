@@ -36,6 +36,10 @@ A hierarchy diagram represents a tree of labeled nodes connected by parent-child
 **fishbone:** 2–20 root nodes (cause categories); `effect` (or `title` if `effect` is omitted) is rendered as the effect label at the right end of the spine. Recommend 8 or fewer root nodes — 9+ cause categories on the same side of the spine may overlap.  
 **mind_map:** exactly one root node required. The root is placed at the center; its subtree radiates outward in all directions. Use for learning maps, brainstorm notes, and topic exploration.
 
+## Long labels
+
+In the `org_chart` view a node label that does not fit on one line — even shrunk to 85% of the label size — is wrapped onto the lines the node holds, shrinking toward the theme's minimum label size as needed; only a label that still overflows at that size is truncated with `…`. Hangul, CJK and other fullwidth characters are measured one em wide.
+
 ## Example — org_chart view (auto-selected)
 
 ```declart

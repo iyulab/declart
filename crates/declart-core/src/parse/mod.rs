@@ -526,15 +526,18 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
     let rows: Vec<String> = raw.rows.iter().map(|r| r.label.clone()).collect();
     let columns: Vec<String> = raw.columns.into_iter().map(|c| c.label).collect();
 
-    // Build cells from inline row data.
+    // Build cells from inline row data, in declared column order — the rendered output
+    // must not depend on map iteration order.
     let mut cells = Vec::new();
     for row in &raw.rows {
-        for (col_key, value) in &row.cells {
-            cells.push(ComparisonCell {
-                row: row.label.clone(),
-                column: col_key.clone(),
-                value: value.clone(),
-            });
+        for column in &columns {
+            if let Some(value) = row.cells.get(column) {
+                cells.push(ComparisonCell {
+                    row: row.label.clone(),
+                    column: column.clone(),
+                    value: value.clone(),
+                });
+            }
         }
     }
 
@@ -1559,6 +1562,18 @@ Ecosystem = "★★★"
         assert_eq!(d.rows.len(), 2);
         assert_eq!(d.columns.len(), 2);
         assert_eq!(d.cells.len(), 3); // React has 2 cells, Vue has 1
+    }
+
+    #[test]
+    fn comparison_cells_follow_declared_column_order() {
+        // Map iteration order once leaked into the rendered output; cells must come out
+        // in row order, then declared column order, on every parse.
+        for _ in 0..16 {
+            let Diagram::Comparison(d) = parse(VALID_COMPARISON).unwrap() else { panic!() };
+            let order: Vec<(&str, &str)> =
+                d.cells.iter().map(|c| (c.row.as_str(), c.column.as_str())).collect();
+            assert_eq!(order, vec![("React", "Performance"), ("React", "Ecosystem"), ("Vue", "Ecosystem")]);
+        }
     }
 
     #[test]
