@@ -87,7 +87,7 @@ function renderContent(content) {
 }
 
 function getTheme() {
-  // Theme can be injected via window.__DECLART_THEME__ (set by extension in cycle-111)
+  // Theme can be injected via window.__DECLART_THEME__ (set by the extension host)
   return window.__DECLART_THEME__ ?? 'default';
 }
 
