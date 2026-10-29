@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.22.0
+
+Diagrams that read in any language and sit on any page — wide-character measurement, wrapped labels, an accessible SVG, a transparent backdrop and a dark theme.
 
 - **Label text always meets WCAG AA contrast**: a label's color was picked by a brightness threshold, so on mid-tone fills in a gradient it could fall below 4.5:1 (white on `#5A7A9B` in the default theme was 4.48:1). The text color is now whichever of the theme's `on_dark` / `on_light` contrasts more with the fill, and plain white or black when neither reaches 4.5:1. Every built-in theme's gradient meets AA at every step; labels on mid-tone fills may turn black or white where they were navy or white.
 - **Transparent backdrop** (new): `--transparent` (CLI), `{ transparent: true }` (the fourth argument of `render`, `renderJson` and `renderWithThemeToml` in `@iyulab/declart` and `@iyulab/declart-web`), `Theme::without_backdrop()` (Rust) leave the full-size background rectangle out, so the page's own color shows through. The theme's background color still sets what emphasis rings, matrix axes and table stripes are derived from.
