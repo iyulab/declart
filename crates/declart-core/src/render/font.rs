@@ -72,9 +72,151 @@ pub fn truncate_text(text: &str, font_size: f32, max_width: f32) -> String {
     ELLIPSIS.to_string()
 }
 
+/// Line height as a multiple of the font size, for labels set on several lines.
+pub const LINE_HEIGHT: f32 = 1.2;
+
+/// Most lines a label is set on before it is truncated.
+const MAX_LINES: usize = 3;
+
+/// Size step tried between `font_size` and `min_size`.
+const SIZE_STEP: f32 = 0.5;
+
+/// Fits `text` into a `max_width` × `max_height` box: one line at `font_size` when it fits,
+/// otherwise wrapped onto as many lines as the box holds (at most three), shrinking toward
+/// `min_size` only when wrapping alone is not enough. At `min_size` the last line that fits
+/// is truncated with "…". Returns the lines and the size they are set at.
+pub fn fit_lines(
+    text: &str,
+    font_size: f32,
+    min_size: f32,
+    max_width: f32,
+    max_height: f32,
+) -> (Vec<String>, f32) {
+    if max_width <= 0.0 || measure_text(text, font_size) <= max_width {
+        return (vec![text.to_string()], font_size);
+    }
+    let min_size = min_size.min(font_size);
+    let mut size = font_size;
+    loop {
+        let room = lines_that_fit(size, max_height);
+        let lines = wrap(text, size, max_width);
+        if lines.len() <= room {
+            return (lines, size);
+        }
+        if size <= min_size {
+            let mut kept: Vec<String> = lines.into_iter().take(room).collect();
+            let consumed: usize = kept.iter().map(|l| l.chars().count()).sum();
+            let rest: String = text.chars().skip(consumed).collect();
+            if let Some(last) = kept.last_mut() {
+                let tail = format!("{}{}", last, rest.trim_start());
+                *last = truncate_text(&tail, size, max_width);
+            }
+            return (kept, size);
+        }
+        size = (size - SIZE_STEP).max(min_size);
+    }
+}
+
+fn lines_that_fit(font_size: f32, max_height: f32) -> usize {
+    let n = (max_height / (font_size * LINE_HEIGHT)).floor() as usize;
+    n.clamp(1, MAX_LINES)
+}
+
+/// Greedy wrap at spaces and around wide characters (CJK text breaks between characters).
+/// A word wider than `max_width` on its own is broken between characters.
+fn wrap(text: &str, font_size: f32, max_width: f32) -> Vec<String> {
+    let mut lines: Vec<String> = Vec::new();
+    let mut line = String::new();
+    for token in break_tokens(text) {
+        let candidate = format!("{}{}", line, token);
+        if line.is_empty() || measure_text(candidate.trim_end(), font_size) <= max_width {
+            line = candidate;
+        } else {
+            lines.push(line.trim_end().to_string());
+            line = token.trim_start().to_string();
+        }
+        // A single token can still be too wide: split it between characters.
+        while measure_text(line.trim_end(), font_size) > max_width && line.chars().count() > 1 {
+            let chars: Vec<char> = line.chars().collect();
+            let mut end = chars.len() - 1;
+            while end > 1 && measure_text(&chars[..end].iter().collect::<String>(), font_size) > max_width {
+                end -= 1;
+            }
+            lines.push(chars[..end].iter().collect());
+            line = chars[end..].iter().collect();
+        }
+    }
+    if !line.trim().is_empty() {
+        lines.push(line.trim_end().to_string());
+    }
+    lines
+}
+
+/// Splits `text` into units that may start a new line: a word with its trailing spaces,
+/// or a single wide character (with the spaces after it).
+fn break_tokens(text: &str) -> Vec<String> {
+    let mut tokens: Vec<String> = Vec::new();
+    let mut cur = String::new();
+    for c in text.chars() {
+        let wide = is_wide(c);
+        let ends_with_space = cur.ends_with(' ');
+        if !cur.is_empty() && (wide || (ends_with_space && c != ' ') || cur.chars().last().is_some_and(is_wide) && c != ' ') {
+            tokens.push(std::mem::take(&mut cur));
+        }
+        cur.push(c);
+    }
+    if !cur.is_empty() {
+        tokens.push(cur);
+    }
+    tokens
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fit_lines_keeps_a_fitting_label_on_one_line() {
+        assert_eq!(fit_lines("Plan", 14.0, 10.0, 200.0, 44.0), (vec!["Plan".to_string()], 14.0));
+    }
+
+    #[test]
+    fn fit_lines_wraps_before_shrinking() {
+        let (lines, size) = fit_lines("Collect requirements from every stakeholder", 14.0, 10.0, 160.0, 44.0);
+        assert_eq!(size, 14.0, "two lines fit at full size: {:?}", lines);
+        assert_eq!(lines.len(), 2);
+        assert!(lines.iter().all(|l| measure_text(l, size) <= 160.0));
+        assert_eq!(lines.join(" "), "Collect requirements from every stakeholder");
+    }
+
+    #[test]
+    fn fit_lines_sets_a_long_korean_label_whole_within_the_box() {
+        let label = "사용자가 업로드한 문서를 정제하고 청크로 나누는 전처리 단계";
+        let (lines, size) = fit_lines(label, 14.0, 10.0, 229.5, 44.0);
+        assert!(lines.len() >= 2, "{:?}", lines);
+        assert!(lines.iter().all(|l| measure_text(l, size) <= 229.5), "{:?} at {}", lines, size);
+        assert!(lines.len() as f32 * size * LINE_HEIGHT <= 44.0 + 1e-3);
+        assert_eq!(lines.join(" "), label, "the whole label is kept");
+    }
+
+    #[test]
+    fn fit_lines_breaks_cjk_without_spaces() {
+        let label = "自然言語処理モデルを用いた文書分類の前処理段階";
+        let (lines, size) = fit_lines(label, 14.0, 10.0, 120.0, 44.0);
+        assert!(lines.len() >= 2);
+        assert!(lines.iter().all(|l| measure_text(l, size) <= 120.0));
+        assert_eq!(lines.concat(), label);
+    }
+
+    #[test]
+    fn fit_lines_truncates_the_last_line_when_even_min_size_overflows() {
+        let label = "word ".repeat(60);
+        let (lines, size) = fit_lines(label.trim(), 14.0, 10.0, 80.0, 44.0);
+        assert_eq!(size, 10.0);
+        assert!(lines.len() as f32 * size * LINE_HEIGHT <= 44.0 + 1e-3);
+        assert!(lines.last().unwrap().ends_with('…'), "{:?}", lines);
+        assert!(lines.iter().all(|l| measure_text(l, size) <= 80.0 + 0.5));
+    }
 
     #[test]
     fn wider_text_measures_wider() {

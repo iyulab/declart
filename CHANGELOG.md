@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **`flow` (`process` view) wraps long labels instead of shrinking them**: a label wider than its box is set on up to three lines at full size, shrinks toward the minimum size only when the box cannot hold the wrapped lines, and is truncated with `…` only when it still overflows at that size — so a long label is shown whole where it used to be cut. Lines break at spaces, and between characters in Chinese and Japanese text written without spaces. Labels that fit on one line render exactly as before.
 - **Hangul, CJK and other wide characters are measured at their drawn width**: the bundled font has no glyph for them, so they were measured with the font's `.notdef` advance — narrower than the one-em width the viewer's fallback font draws. A long Korean label was therefore neither shrunk nor truncated enough and spilled out of its box over the neighbouring arrow. East Asian wide and fullwidth characters (UAX #11 `W`/`F`) without a glyph now count as one em, so shrink-to-fit and truncation keep them inside the box in every kind. Latin, Greek and Cyrillic labels measure exactly as before.
 
 ## v0.21.0

@@ -8,6 +8,8 @@ const PADDING: f32 = 20.0;
 const TITLE_AREA: f32 = 50.0;
 const ARROW_HEAD_SIZE: f32 = 12.0;
 const ARROW_SHAFT_HEIGHT: f32 = 4.0;
+/// Vertical room kept between a wrapped label and the box edge.
+const LABEL_INSET: f32 = 8.0;
 
 pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
     let n = diagram.items.len() as f32;
@@ -77,23 +79,18 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             stroke_width,
         );
 
-        let available_width = box_width * 0.85;
-        let mut font_size = theme.typography.label_size;
-        let text_width = font::measure_text(&item.label, font_size);
-        if text_width > available_width && available_width > 0.0 {
-            font_size = (font_size * available_width / text_width)
-                .max(theme.typography.label_size_min);
-        }
-        let display_label = if font::measure_text(&item.label, font_size) > available_width {
-            font::truncate_text(&item.label, font_size, available_width)
-        } else {
-            item.label.clone()
-        };
+        let (lines, font_size) = font::fit_lines(
+            &item.label,
+            theme.typography.label_size,
+            theme.typography.label_size_min,
+            box_width * 0.85,
+            BOX_HEIGHT - 2.0 * LABEL_INSET,
+        );
 
         let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
         let center_x = box_left + box_width / 2.0;
         let center_y = box_top + BOX_HEIGHT / 2.0;
-        builder.text_weighted(center_x, center_y, &display_label, &text_color.to_hex(), font_size, is_bold);
+        builder.text_lines(center_x, center_y, &lines, &text_color.to_hex(), font_size, is_bold);
 
         status::draw_marker(&mut builder, &item.status, box_right, box_top, theme);
     }
@@ -156,6 +153,24 @@ mod tests {
         assert!(svg.contains("Step 1"));
         assert!(svg.contains("Step 2"));
         assert!(svg.contains("Step 3"));
+    }
+
+    #[test]
+    fn long_label_wraps_whole_at_full_size() {
+        let d = ItemsDiagram {
+            title: None,
+            items: vec![
+                Item { label: "사용자가 업로드한 문서를 정제하고 청크로 나누는 전처리 단계".to_string(), emphasis: None, status: None },
+                Item { label: "색인".to_string(), emphasis: None, status: None },
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert_eq!(svg.matches("<tspan").count(), 2, "{}", svg);
+        assert!(svg.contains(">사용자가 업로드한 문서를 정제하고</tspan>"), "{}", svg);
+        assert!(svg.contains(">청크로 나누는 전처리 단계</tspan>"), "{}", svg);
+        assert!(!svg.contains('…'));
+        // A short label stays a single plain text element.
+        assert!(svg.contains(">색인</text>"));
     }
 
     #[test]
