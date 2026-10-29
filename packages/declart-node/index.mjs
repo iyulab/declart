@@ -8,5 +8,6 @@ export const render = declart.render;
 export const renderJson = declart.renderJson;
 export const renderWithThemeToml = declart.renderWithThemeToml;
 export const validate = declart.validate;
+export const describe = declart.describe;
 export const themes = declart.themes;
 export const kinds = declart.kinds;

@@ -3,11 +3,12 @@ import {
   render_json,
   render_with_theme_toml,
   validate,
+  describe,
   themes as wasmThemes,
   kinds as wasmKinds,
 } from './wasm/declart_wasm.js';
 
-export { validate };
+export { validate, describe };
 
 export function render(input, theme = 'default', width) {
   return wasmRender(input, theme, width ?? undefined);

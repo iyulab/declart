@@ -45,6 +45,17 @@ function validate(input) {
 }
 
 /**
+ * Returns a one-paragraph text equivalent of a TOML or JSON declaration — the text the
+ * rendered SVG carries as its `<desc>`. Use it as `alt` when the SVG is shown through `<img>`.
+ * @param {string} input - TOML or JSON declaration string
+ * @returns {string} Text equivalent
+ * @throws {Error} If the declaration is invalid
+ */
+function describe(input) {
+    return wasm.describe(input);
+}
+
+/**
  * Returns the list of supported theme names.
  * @returns {string[]}
  */
@@ -60,4 +71,4 @@ function kinds() {
     return wasm.kinds().split(',');
 }
 
-module.exports = { render, renderJson, renderWithThemeToml, validate, themes, kinds };
+module.exports = { render, renderJson, renderWithThemeToml, validate, describe, themes, kinds };

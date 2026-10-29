@@ -150,6 +150,7 @@ Roadmaps are covered by `timeline` periods (`start` + `end`); precise Gantt sche
 ### Output
 
 - **SVG is the primary output.** Vector-first, embeddable in documents, web, presentations, and PDFs.
+- **Every SVG is one accessible image**: `role="img"` on the root, the declaration's `title` (or the kind name) as `<title>`, and a text equivalent of the content in declaration order as `<desc>` — read by screen readers when the SVG is inlined. The same text comes from `describe()` for an `<img alt>`.
 - Other formats (PNG, PDF rasterization) are downstream concerns, not part of the core engine.
 
 ### Distribution
@@ -215,6 +216,15 @@ kind = "flow"
 [[items]]
 label = "Plan"
 `, 'default');
+```
+
+Showing the SVG through `<img>` hides its `<title>`/`<desc>` from assistive technology — give the image the same text as `alt`:
+
+```ts
+import { render, describe } from '@iyulab/declart-web';
+
+img.src = `data:image/svg+xml,${encodeURIComponent(render(source))}`;
+img.alt = describe(source); // e.g. "Process: Plan → Do → Check."
 ```
 
 > **Note:** `@iyulab/declart` is Node.js-only (`require('fs')` in the WASM glue). For browser environments always use `@iyulab/declart-web`.

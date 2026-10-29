@@ -60,6 +60,17 @@ pub fn validate(input: &str) -> Result<(), JsError> {
         .map_err(|e| JsError::new(&e.to_string()))
 }
 
+/// Returns a one-paragraph text equivalent of a TOML or JSON declaration — the same text the
+/// rendered SVG carries as `<desc>`. Use it as `alt` when the SVG is shown through `<img>`.
+///
+/// Returns a `JsError` with the parse/validation error message when the declaration is invalid.
+#[wasm_bindgen]
+pub fn describe(input: &str) -> Result<String, JsError> {
+    declart_core::parse_auto(input)
+        .map(|d| declart_core::describe(&d))
+        .map_err(|e| JsError::new(&e.to_string()))
+}
+
 /// Returns a comma-separated list of supported theme names.
 #[wasm_bindgen]
 pub fn themes() -> String {
@@ -96,6 +107,21 @@ mod tests {
         let input = "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
         let svg = render(input, "nonexistent", None).unwrap();
         assert!(svg.contains("<svg"));
+    }
+
+    #[test]
+    fn describe_matches_the_svg_desc() {
+        let input = "kind = \"flow\"
+[[items]]
+label = \"Upload\"
+[[items]]
+label = \"Index\"
+";
+        let text = describe(input).unwrap();
+        assert_eq!(text, "Process: Upload → Index.");
+        let svg = render(input, "default", None).unwrap();
+        assert!(svg.contains(&format!("<desc>{text}</desc>")), "{svg}");
+        assert!(svg.contains("role=\"img\""));
     }
 
     #[test]

@@ -42,11 +42,31 @@ pub fn render_opts(diagram: &Diagram, theme: &Theme, width: Option<u32>) -> Resu
         Diagram::Comparison(d) => comparison::render(d, theme),
         Diagram::State(d)      => state::render(d, theme),
     };
+    let svg = with_text_equivalent(svg, diagram);
     if let Some(w) = width {
         Ok(apply_width(svg, w))
     } else {
         Ok(svg)
     }
+}
+
+/// Marks the SVG as one image and gives it its accessible name and description — `role="img"`
+/// on the root, then `<title>` and `<desc>` as its first children, which SVG-AAM maps to the
+/// name and description without `id` references (several diagrams inlined in one page cannot
+/// collide).
+fn with_text_equivalent(svg: String, diagram: &Diagram) -> String {
+    let Some(open_end) = svg.find('>') else { return svg };
+    let title = svg::escape_xml(&crate::describe::accessible_name(diagram));
+    let desc = svg::escape_xml(&crate::describe::describe(diagram));
+    format!(
+        "{} role=\"img\">
+  <title>{}</title>
+  <desc>{}</desc>{}",
+        &svg[..open_end],
+        title,
+        desc,
+        &svg[open_end + 1..]
+    )
 }
 
 /// Rescales the outer SVG viewport to `target_w` pixels wide, preserving aspect ratio.

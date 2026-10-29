@@ -36,6 +36,15 @@ export function renderWithThemeToml(input: string, themeToml: string, width?: nu
 export function validate(input: string): void;
 
 /**
+ * Returns a one-paragraph text equivalent of a TOML or JSON declaration — the text the
+ * rendered SVG carries as its `<desc>`. Use it as `alt` when the SVG is shown through `<img>`.
+ * @param input - TOML or JSON declaration string
+ * @returns Text equivalent, e.g. `"Process: Upload → Parse → Index."`
+ * @throws If the declaration is invalid
+ */
+export function describe(input: string): string;
+
+/**
  * Returns the list of supported theme names.
  */
 export function themes(): string[];
