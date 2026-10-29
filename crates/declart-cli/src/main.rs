@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use declart_core::render::{Theme, ACCESSIBLE_THEME, DEFAULT_THEME, MONOCHROME_THEME, WARM_THEME};
+use declart_core::render::Theme;
 use declart_core::{Diagram, HierarchyView};
 use std::fs;
 use std::io::Write;
@@ -22,12 +22,15 @@ enum Commands {
         /// Output file [default: input with format extension]
         #[arg(short, long)]
         output: Option<PathBuf>,
-        /// Theme to use for rendering [default, monochrome, accessible, warm]
+        /// Theme to use for rendering [default, monochrome, accessible, warm, dark]
         #[arg(long, default_value = "default")]
         theme: String,
         /// Override canvas width in pixels (height scales proportionally)
         #[arg(long)]
         width: Option<u32>,
+        /// Leave the backdrop unpainted so the page shows through
+        #[arg(long)]
+        transparent: bool,
         /// Output format [svg, png]
         #[arg(long, default_value = "svg")]
         format: String,
@@ -52,12 +55,15 @@ enum Commands {
         /// Output file [default: input with format extension]
         #[arg(short, long)]
         output: Option<PathBuf>,
-        /// Theme to use for rendering [default, monochrome, accessible, warm]
+        /// Theme to use for rendering [default, monochrome, accessible, warm, dark]
         #[arg(long, default_value = "default")]
         theme: String,
         /// Override canvas width in pixels (height scales proportionally)
         #[arg(long)]
         width: Option<u32>,
+        /// Leave the backdrop unpainted so the page shows through
+        #[arg(long)]
+        transparent: bool,
         /// Output format [svg, png]
         #[arg(long, default_value = "svg")]
         format: String,
@@ -75,8 +81,8 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Render { input, output, theme: theme_name, width, format, stdout } => {
-            let theme = resolve_theme(&theme_name)?;
+        Commands::Render { input, output, theme: theme_name, width, transparent, format, stdout } => {
+            let theme = resolve_theme(&theme_name, transparent)?;
             let content = fs::read_to_string(&input)
                 .with_context(|| format!("failed to read {}", input.display()))?;
             let diagram = declart_core::parse_auto(&content)
@@ -109,8 +115,8 @@ fn run() -> Result<()> {
             })?;
             print!("{}", template);
         }
-        Commands::Watch { input, output, theme: theme_name, width, format } => {
-            let theme = resolve_theme(&theme_name)?;
+        Commands::Watch { input, output, theme: theme_name, width, transparent, format } => {
+            let theme = resolve_theme(&theme_name, transparent)?;
             let ext = if format == "png" { "png" } else { "svg" };
             let out_path = output.unwrap_or_else(|| input.with_extension(ext));
 
@@ -193,7 +199,12 @@ fn svg_to_png(svg_str: &str) -> Result<Vec<u8>> {
     Ok(pixmap.encode_png()?)
 }
 
-fn resolve_theme(name: &str) -> Result<Theme> {
+fn resolve_theme(name: &str, transparent: bool) -> Result<Theme> {
+    let theme = named_or_file_theme(name)?;
+    Ok(if transparent { theme.without_backdrop() } else { theme })
+}
+
+fn named_or_file_theme(name: &str) -> Result<Theme> {
     // If the value looks like a file path, load it as a custom theme TOML
     if name.contains('/') || name.contains('\\') || name.ends_with(".toml") {
         let toml_str = fs::read_to_string(name)
@@ -201,16 +212,14 @@ fn resolve_theme(name: &str) -> Result<Theme> {
         return Theme::from_toml(&toml_str)
             .with_context(|| format!("invalid theme file `{name}`"));
     }
-    match name {
-        "default" => Ok(DEFAULT_THEME.clone()),
-        "monochrome" => Ok(MONOCHROME_THEME.clone()),
-        "accessible" => Ok(ACCESSIBLE_THEME.clone()),
-        "warm" => Ok(WARM_THEME.clone()),
-        other => anyhow::bail!(
-            "unknown theme `{}`\n  = hint: Available themes: default, monochrome, accessible, warm, or a path to a .toml theme file",
-            other
-        ),
+    if Theme::names().contains(&name) {
+        return Ok(Theme::by_name(name).clone());
     }
+    anyhow::bail!(
+        "unknown theme `{}`\n  = hint: Available themes: {}, or a path to a .toml theme file",
+        name,
+        Theme::names().join(", ")
+    )
 }
 
 fn init_template(kind: &str) -> Option<&'static str> {

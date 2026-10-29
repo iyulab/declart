@@ -143,7 +143,7 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
 
     draw_bars(&mut builder, &bars, theme, band_top);
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 fn parse_date(date: &str) -> PartialDate {

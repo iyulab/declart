@@ -115,7 +115,7 @@ pub(crate) fn render(d: &StateDiagram, theme: &Theme) -> String {
         draw_arrowhead(&mut b, arrow_end_x, row_y, dot_x, row_y, &theme.layers.apex.to_hex());
     }
 
-    b.build(&theme.background.to_hex())
+    b.build(theme.backdrop_fill().as_deref())
 }
 
 fn resolve_idx(d: &StateDiagram, key: &str) -> Option<usize> {

@@ -171,7 +171,7 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
     builder.text(y_label_x, grid_bottom, "Low", dir_color, AXIS_DIRECTION_SIZE);
     builder.text(y_label_x, grid_top, "High", dir_color, AXIS_DIRECTION_SIZE);
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 #[cfg(test)]

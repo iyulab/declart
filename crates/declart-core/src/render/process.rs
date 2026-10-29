@@ -95,7 +95,7 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         status::draw_marker(&mut builder, &item.status, box_right, box_top, theme);
     }
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 fn draw_right_arrow(builder: &mut SvgBuilder, x1: f32, x2: f32, y: f32, fill: &str) {

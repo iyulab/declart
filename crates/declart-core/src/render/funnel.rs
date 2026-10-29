@@ -90,7 +90,7 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         status::draw_marker(&mut builder, &item.status, CENTER_X + top_w / 2.0, top_y, theme);
     }
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 #[cfg(test)]

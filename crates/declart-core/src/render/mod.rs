@@ -19,7 +19,7 @@ pub mod theme;
 pub(crate) mod timeline;
 pub(crate) mod venn;
 
-pub use theme::{Theme, ACCESSIBLE_THEME, DEFAULT_THEME, MONOCHROME_THEME, WARM_THEME};
+pub use theme::{Theme, ACCESSIBLE_THEME, DARK_THEME, DEFAULT_THEME, MONOCHROME_THEME, WARM_THEME};
 
 use crate::{Diagram, DeclartError};
 

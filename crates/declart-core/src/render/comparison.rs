@@ -138,7 +138,7 @@ pub fn render(diagram: &ComparisonDiagram, theme: &Theme) -> String {
         builder.line(lx, table_top, lx, table_bottom, &border, BORDER_W);
     }
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 fn rect(x: f32, y: f32, w: f32, h: f32) -> [(f32, f32); 4] {

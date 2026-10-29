@@ -164,7 +164,7 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
         }
     }
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 #[cfg(test)]

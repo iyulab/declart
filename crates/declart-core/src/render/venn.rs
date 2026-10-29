@@ -107,7 +107,7 @@ pub fn render(diagram: &VennDiagram, theme: &Theme) -> String {
         builder.text(lx, ly, &intersection.label, &theme.title_color.to_hex(), fs);
     }
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 #[cfg(test)]

@@ -143,7 +143,7 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
     };
     builder.text(cx, cy, &hub_display, &hub_text_color.to_hex(), fs);
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 #[cfg(test)]

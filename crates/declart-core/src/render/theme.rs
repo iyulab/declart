@@ -66,7 +66,11 @@ pub(crate) struct StatusColors {
 #[derive(Debug, Clone)]
 pub struct Theme {
     pub name: &'static str,
+    /// The surface the diagram sits on. Emphasis rings, matrix axes and alternating table rows
+    /// are derived from it, so it stays meaningful even when it is not painted.
     pub(crate) background: Color,
+    /// Whether `background` is painted as a backdrop under the diagram.
+    pub(crate) backdrop: bool,
     pub(crate) layers: LayerGradient,
     pub(crate) text: TextColors,
     pub(crate) typography: Typography,
@@ -83,13 +87,26 @@ impl Theme {
             "monochrome" => &MONOCHROME_THEME,
             "accessible" => &ACCESSIBLE_THEME,
             "warm" => &WARM_THEME,
+            "dark" => &DARK_THEME,
             _ => &DEFAULT_THEME,
         }
     }
 
     /// Returns the names of all built-in themes.
     pub fn names() -> &'static [&'static str] {
-        &["default", "monochrome", "accessible", "warm"]
+        &["default", "monochrome", "accessible", "warm", "dark"]
+    }
+
+    /// This theme with a transparent backdrop: nothing is painted under the diagram, so the
+    /// page shows through. Colors are unchanged — pick a theme whose surface matches the page
+    /// (`dark` on a dark page) so text and rings stay legible.
+    pub fn without_backdrop(&self) -> Theme {
+        Theme { backdrop: false, ..self.clone() }
+    }
+
+    /// The backdrop fill, or `None` when the backdrop is transparent.
+    pub(crate) fn backdrop_fill(&self) -> Option<String> {
+        self.backdrop.then(|| self.background.to_hex())
     }
 
     /// Parses a TOML string into a custom `Theme`.
@@ -119,6 +136,7 @@ impl Theme {
         Ok(Theme {
             name: "custom",
             background: parse_hex("colors.background", &c.background)?,
+            backdrop: true,
             layers: LayerGradient {
                 apex: parse_hex("colors.apex", &c.apex)?,
                 base: parse_hex("colors.base", &c.base)?,
@@ -204,6 +222,7 @@ fn parse_hex(field: &str, hex: &str) -> Result<Color, crate::DeclartError> {
 pub static DEFAULT_THEME: Theme = Theme {
     name: "default",
     background: Color::new(255, 255, 255),
+    backdrop: true,
     layers: LayerGradient {
         apex: Color::new(26, 58, 92),
         base: Color::new(168, 200, 232),
@@ -229,6 +248,7 @@ pub static DEFAULT_THEME: Theme = Theme {
 pub static MONOCHROME_THEME: Theme = Theme {
     name: "monochrome",
     background: Color::new(255, 255, 255),
+    backdrop: true,
     layers: LayerGradient {
         apex: Color::new(40, 40, 40),
         base: Color::new(200, 200, 200),
@@ -258,6 +278,7 @@ pub static MONOCHROME_THEME: Theme = Theme {
 pub static ACCESSIBLE_THEME: Theme = Theme {
     name: "accessible",
     background: Color::new(255, 255, 255),
+    backdrop: true,
     layers: LayerGradient {
         apex: Color::new(0, 114, 178),   // Okabe-Ito Blue #0072B2
         base: Color::new(86, 180, 233),  // Okabe-Ito Sky blue #56B4E9
@@ -284,6 +305,7 @@ pub static ACCESSIBLE_THEME: Theme = Theme {
 pub static WARM_THEME: Theme = Theme {
     name: "warm",
     background: Color::new(255, 250, 247),
+    backdrop: true,
     layers: LayerGradient {
         apex: Color::new(139, 37, 0),    // Deep terracotta #8B2500
         base: Color::new(244, 193, 161), // Light peach #F4C1A1
@@ -302,6 +324,33 @@ pub static WARM_THEME: Theme = Theme {
         success: Color::new(91, 140, 90),   // fern green #5B8C5A
         warning: Color::new(217, 142, 4),   // ochre #D98E04
         critical: Color::new(178, 58, 46),  // brick red #B23A2E
+    },
+};
+
+/// Light-on-dark theme for dark pages: a dark slate surface, light-blue apex fading to a deep
+/// blue base, light text. Pair it with a transparent backdrop to sit directly on the page.
+pub static DARK_THEME: Theme = Theme {
+    name: "dark",
+    background: Color::new(18, 26, 36),
+    backdrop: true,
+    layers: LayerGradient {
+        apex: Color::new(168, 200, 240), // light blue #A8C8F0
+        base: Color::new(36, 64, 98),    // deep blue #244062
+    },
+    text: TextColors {
+        on_dark: Color::new(232, 238, 245),
+        on_light: Color::new(14, 30, 48),
+    },
+    typography: Typography {
+        title_size: 18.0,
+        label_size: 14.0,
+        label_size_min: 10.0,
+    },
+    title_color: Color::new(232, 238, 245),
+    status: StatusColors {
+        success: Color::new(102, 187, 106), // #66BB6A
+        warning: Color::new(255, 167, 38),  // #FFA726
+        critical: Color::new(239, 83, 80),  // #EF5350
     },
 };
 
@@ -386,5 +435,25 @@ label="Bottom""#).unwrap();
         // lum = 0.299*128 + 0.587*128 + 0.114*128 ≈ 128 → not dark
         let light = Color::new(128, 128, 128);
         assert!(!light.is_dark());
+    }
+    #[test]
+    fn without_backdrop_keeps_colors_and_drops_the_fill() {
+        let clear = DARK_THEME.without_backdrop();
+        assert_eq!(DARK_THEME.backdrop_fill().as_deref(), Some("#121A24"));
+        assert_eq!(clear.backdrop_fill(), None);
+        assert_eq!(clear.background.to_hex(), DARK_THEME.background.to_hex());
+        assert_eq!(clear.title_color.to_hex(), DARK_THEME.title_color.to_hex());
+    }
+
+    #[test]
+    fn dark_theme_text_reads_on_its_surface() {
+        // Title and on-dark text sit on the dark surface; on-light text sits on the light apex.
+        assert!(DARK_THEME.background.is_dark());
+        assert!(!DARK_THEME.title_color.is_dark());
+        assert!(!DARK_THEME.layers.apex.is_dark());
+        assert!(DARK_THEME.layers.base.is_dark());
+        assert!(DARK_THEME.text.on_light.is_dark());
+        assert!(Theme::names().contains(&"dark"));
+        assert_eq!(Theme::by_name("dark").name, "dark");
     }
 }

@@ -102,7 +102,7 @@ mod tests {
     fn success_is_a_circle() {
         let mut b = SvgBuilder::new(100.0, 100.0);
         draw_marker(&mut b, &Some(Status::Success), 90.0, 10.0, &DEFAULT_THEME);
-        let svg = b.build("#ffffff");
+        let svg = b.build(Some("#ffffff"));
         assert!(svg.contains("<circle"), "success should emit a circle marker");
     }
 
@@ -112,7 +112,7 @@ mod tests {
         for s in [Status::Warning, Status::Critical] {
             let mut b = SvgBuilder::new(100.0, 100.0);
             draw_marker(&mut b, &Some(s.clone()), 90.0, 10.0, &DEFAULT_THEME);
-            let svg = b.build("#ffffff");
+            let svg = b.build(Some("#ffffff"));
             assert!(svg.contains("<polygon"), "{:?} should emit a polygon marker", s);
             assert!(!svg.contains("<circle"), "{:?} must not be a circle (shape coding)", s);
         }
@@ -122,7 +122,7 @@ mod tests {
     fn draw_marker_emits_nothing_for_normal() {
         let mut b = SvgBuilder::new(100.0, 100.0);
         draw_marker(&mut b, &Some(Status::Normal), 90.0, 10.0, &DEFAULT_THEME);
-        let svg = b.build("#ffffff");
+        let svg = b.build(Some("#ffffff"));
         assert!(!svg.contains("<circle") && !svg.contains("<polygon"), "normal should emit no marker");
     }
 }

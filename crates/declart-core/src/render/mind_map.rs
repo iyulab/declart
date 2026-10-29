@@ -12,7 +12,7 @@ const TITLE_AREA: f32 = 50.0;
 pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
     let nodes = &diagram.nodes;
     if nodes.is_empty() {
-        return SvgBuilder::new(400.0, 300.0).build(&theme.background.to_hex());
+        return SvgBuilder::new(400.0, 300.0).build(theme.backdrop_fill().as_deref());
     }
 
     let mut children: std::collections::HashMap<&str, Vec<usize>> =
@@ -131,7 +131,7 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
     };
     builder.text_weighted(rx, ry, &display, &text_color.to_hex(), fs, true);
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 fn node_size(depth: u32) -> (f32, f32) {

@@ -160,16 +160,21 @@ impl SvgBuilder {
         ));
     }
 
-    pub fn build(self, background: &str) -> String {
+    /// Closes the SVG. `background` is the backdrop fill painted under everything, or `None`
+    /// for a transparent backdrop.
+    pub fn build(self, background: Option<&str>) -> String {
         let elements = self.elements.join("\n  ");
+        let backdrop = match background {
+            Some(fill) => format!("<rect width=\"100%\" height=\"100%\" fill=\"{fill}\"/>\n  "),
+            None => String::new(),
+        };
         format!(
             r#"<svg xmlns="http://www.w3.org/2000/svg" width="{w:.0}" height="{h:.0}" viewBox="0 0 {w:.0} {h:.0}">
-  <rect width="100%" height="100%" fill="{bg}"/>
-  {el}
+  {backdrop}{el}
 </svg>"#,
             w = self.width,
             h = self.height,
-            bg = background,
+            backdrop = backdrop,
             el = elements,
         )
     }
@@ -190,7 +195,7 @@ mod tests {
     #[test]
     fn svg_document_has_xmlns() {
         let builder = SvgBuilder::new(100.0, 100.0);
-        let svg = builder.build("#ffffff");
+        let svg = builder.build(Some("#ffffff"));
         assert!(svg.contains("xmlns=\"http://www.w3.org/2000/svg\""));
     }
 
@@ -202,7 +207,7 @@ mod tests {
             "#1a3a5c",
             "none",
         );
-        let svg = builder.build("#ffffff");
+        let svg = builder.build(Some("#ffffff"));
         assert!(svg.contains("<polygon"));
         assert!(svg.contains("10.0,10.0"));
     }
@@ -211,7 +216,7 @@ mod tests {
     fn rect_rounded_produces_rect_element() {
         let mut builder = SvgBuilder::new(300.0, 200.0);
         builder.rect_rounded(10.0, 20.0, 100.0, 50.0, 8, "#336699", "none", 0.0);
-        let svg = builder.build("#ffffff");
+        let svg = builder.build(Some("#ffffff"));
         assert!(svg.contains("<rect"), "should contain a <rect element");
         assert!(svg.contains("rx=\"8\""), "should have rx attribute");
         assert!(svg.contains("fill=\"#336699\""));
@@ -221,7 +226,7 @@ mod tests {
     fn text_content_is_escaped() {
         let mut builder = SvgBuilder::new(200.0, 100.0);
         builder.text(100.0, 50.0, "A & B <C>", "#000000", 14.0);
-        let svg = builder.build("#ffffff");
+        let svg = builder.build(Some("#ffffff"));
         assert!(svg.contains("&amp;"));
         assert!(svg.contains("&lt;"));
         assert!(svg.contains("&gt;"));
@@ -231,7 +236,7 @@ mod tests {
     fn circle_stroked_has_stroke_attribute() {
         let mut b = SvgBuilder::new(200.0, 200.0);
         b.circle_stroked(100.0, 100.0, 30.0, "#ffffff", "#003087", 2.0);
-        let svg = b.build("#ffffff");
+        let svg = b.build(Some("#ffffff"));
         assert!(svg.contains("stroke=\"#003087\""));
         assert!(svg.contains("stroke-width=\"2.0\""));
     }
@@ -240,7 +245,7 @@ mod tests {
     fn line_dashed_contains_dasharray() {
         let mut b = SvgBuilder::new(200.0, 200.0);
         b.line_dashed(0.0, 0.0, 100.0, 100.0, "#000000", 1.5);
-        let svg = b.build("#ffffff");
+        let svg = b.build(Some("#ffffff"));
         assert!(svg.contains("stroke-dasharray"));
     }
 }

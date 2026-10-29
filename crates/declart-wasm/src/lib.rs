@@ -6,15 +6,20 @@ use wasm_bindgen::prelude::*;
 /// - `input`: TOML or JSON declaration string (auto-detected by leading `{`)
 /// - `theme`: `"default"`, `"monochrome"`, `"accessible"`, or `"warm"` (unknown values fall back to `"default"`)
 /// - `width`: optional canvas width in pixels (height scales proportionally)
+/// - `transparent`: `Some(true)` leaves the backdrop unpainted so the page shows through
 ///
 /// Returns the SVG string on success, or a `JsError` with a descriptive message on failure.
 #[wasm_bindgen]
-pub fn render(input: &str, theme: &str, width: Option<u32>) -> Result<String, JsError> {
+pub fn render(input: &str, theme: &str, width: Option<u32>, transparent: Option<bool>) -> Result<String, JsError> {
     let diagram = declart_core::parse_auto(input)
         .map_err(|e| JsError::new(&e.to_string()))?;
-    let t = Theme::by_name(theme);
-    declart_core::render_opts(&diagram, t, width)
+    let t = backdrop(Theme::by_name(theme).clone(), transparent);
+    declart_core::render_opts(&diagram, &t, width)
         .map_err(|e| JsError::new(&e.to_string()))
+}
+
+fn backdrop(theme: Theme, transparent: Option<bool>) -> Theme {
+    if transparent == Some(true) { theme.without_backdrop() } else { theme }
 }
 
 /// Renders a JSON diagram declaration to SVG with a named theme.
@@ -25,11 +30,11 @@ pub fn render(input: &str, theme: &str, width: Option<u32>) -> Result<String, Js
 ///
 /// Returns the SVG string on success, or a `JsError` on failure.
 #[wasm_bindgen]
-pub fn render_json(input: &str, theme: &str, width: Option<u32>) -> Result<String, JsError> {
+pub fn render_json(input: &str, theme: &str, width: Option<u32>, transparent: Option<bool>) -> Result<String, JsError> {
     let diagram = declart_core::parse_json(input)
         .map_err(|e| JsError::new(&e.to_string()))?;
-    let t = Theme::by_name(theme);
-    declart_core::render_opts(&diagram, t, width)
+    let t = backdrop(Theme::by_name(theme).clone(), transparent);
+    declart_core::render_opts(&diagram, &t, width)
         .map_err(|e| JsError::new(&e.to_string()))
 }
 
@@ -41,11 +46,13 @@ pub fn render_json(input: &str, theme: &str, width: Option<u32>) -> Result<Strin
 ///
 /// Returns the SVG string on success, or a `JsError` on parse/validation failure.
 #[wasm_bindgen]
-pub fn render_with_theme_toml(input: &str, theme_toml: &str, width: Option<u32>) -> Result<String, JsError> {
+pub fn render_with_theme_toml(input: &str, theme_toml: &str, width: Option<u32>, transparent: Option<bool>) -> Result<String, JsError> {
     let diagram = declart_core::parse_auto(input)
         .map_err(|e| JsError::new(&e.to_string()))?;
-    let theme = Theme::from_toml(theme_toml)
-        .map_err(|e| JsError::new(&e.to_string()))?;
+    let theme = backdrop(
+        Theme::from_toml(theme_toml).map_err(|e| JsError::new(&e.to_string()))?,
+        transparent,
+    );
     declart_core::render_opts(&diagram, &theme, width)
         .map_err(|e| JsError::new(&e.to_string()))
 }
@@ -90,7 +97,7 @@ mod tests {
     #[test]
     fn render_valid_pyramid() {
         let input = "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
-        let svg = render(input, "default", None).unwrap();
+        let svg = render(input, "default", None, None).unwrap();
         assert!(svg.contains("<svg"), "expected SVG output");
         assert!(svg.contains("Top"), "SVG should contain label text");
     }
@@ -98,14 +105,14 @@ mod tests {
     #[test]
     fn render_with_width() {
         let input = "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
-        let svg = render(input, "default", Some(400)).unwrap();
+        let svg = render(input, "default", Some(400), None).unwrap();
         assert!(svg.contains("width=\"400\""), "expected width=400 in SVG");
     }
 
     #[test]
     fn render_unknown_theme_falls_back() {
         let input = "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
-        let svg = render(input, "nonexistent", None).unwrap();
+        let svg = render(input, "nonexistent", None, None).unwrap();
         assert!(svg.contains("<svg"));
     }
 
@@ -119,7 +126,7 @@ label = \"Index\"
 ";
         let text = describe(input).unwrap();
         assert_eq!(text, "Process: Upload → Index.");
-        let svg = render(input, "default", None).unwrap();
+        let svg = render(input, "default", None, None).unwrap();
         assert!(svg.contains(&format!("<desc>{text}</desc>")), "{svg}");
         assert!(svg.contains("role=\"img\""));
     }
@@ -155,7 +162,7 @@ on_dark    = "#FFFFFF"
 on_light   = "#003087"
 title      = "#003087"
 "##;
-        let svg = render_with_theme_toml(diagram, theme, None).unwrap();
+        let svg = render_with_theme_toml(diagram, theme, None, None).unwrap();
         assert!(svg.contains("<svg"));
         assert!(svg.contains("#003087"));
     }
@@ -180,7 +187,7 @@ title      = "#003087"
     #[test]
     fn render_json_valid_pyramid() {
         let input = r#"{"kind":"tier","items":[{"label":"Top"},{"label":"Bottom"}]}"#;
-        let svg = render_json(input, "default", None).unwrap();
+        let svg = render_json(input, "default", None, None).unwrap();
         assert!(svg.contains("<svg"));
         assert!(svg.contains("Top"));
     }
@@ -194,7 +201,16 @@ title      = "#003087"
     #[test]
     fn render_auto_detects_json() {
         let json = r#"{"kind":"flow","items":[{"label":"A"},{"label":"B"}]}"#;
-        let svg = render(json, "default", None).unwrap();
+        let svg = render(json, "default", None, None).unwrap();
         assert!(svg.contains("<svg"));
+    }
+    #[test]
+    fn transparent_leaves_the_backdrop_unpainted() {
+        let input = "kind = \"flow\"\n[[items]]\nlabel = \"A\"\n";
+        let opaque = render(input, "dark", None, None).unwrap();
+        assert!(opaque.contains("<rect width=\"100%\" height=\"100%\" fill=\"#121A24\"/>"), "{opaque}");
+        let clear = render(input, "dark", None, Some(true)).unwrap();
+        assert!(!clear.contains("height=\"100%\""), "{clear}");
+        assert!(themes().split(',').any(|t| t == "dark"));
     }
 }

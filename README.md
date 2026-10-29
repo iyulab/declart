@@ -177,7 +177,7 @@ Explicit boundaries that protect focus:
 
 - **9 diagram kinds** — `flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`, `state` — with a semantic **view** layer on top.
 - **Semantic item attributes** — `emphasis` (importance) and `status` (`success`/`normal`/`warning`/`critical` health signal), declared as meaning, not styling. The `status` marker is dual-encoded by **color and shape** (circle/triangle/diamond) so it reads in monochrome and for colorblind readers.
-- **Theming** — 4 built-in themes plus user-defined TOML themes. No visual styling in source files.
+- **Theming** — 5 built-in themes (`default`, `monochrome`, `accessible`, `warm`, `dark`) plus user-defined TOML themes, and a transparent backdrop for diagrams that sit directly on the page (`--transparent`, `{ transparent: true }`). No visual styling in source files.
 - **TOML and JSON input** — write declarations in either; the engine auto-detects the format.
 - **Multiple distributions** — CLI binary, Rust crate, WebAssembly, C ABI, and npm packages `@iyulab/declart` (Node.js) and `@iyulab/declart-web` (browser/bundler) (see [Distribution](#distribution)).
 - **Prebuilt binaries** — GitHub Releases for Linux (musl), macOS, and Windows.
@@ -216,6 +216,12 @@ kind = "flow"
 [[items]]
 label = "Plan"
 `, 'default');
+```
+
+On a dark page, render with the `dark` theme and a transparent backdrop so the diagram sits on the page's own color:
+
+```ts
+const svg = render(source, dark ? 'dark' : 'default', undefined, { transparent: true });
 ```
 
 Showing the SVG through `<img>` hides its `<title>`/`<desc>` from assistive technology — give the image the same text as `alt`:

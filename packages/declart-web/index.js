@@ -10,16 +10,16 @@ import {
 
 export { validate, describe };
 
-export function render(input, theme = 'default', width) {
-  return wasmRender(input, theme, width ?? undefined);
+export function render(input, theme = 'default', width, options) {
+  return wasmRender(input, theme, width ?? undefined, options?.transparent ?? undefined);
 }
 
-export function renderJson(input, theme = 'default', width) {
-  return render_json(input, theme, width ?? undefined);
+export function renderJson(input, theme = 'default', width, options) {
+  return render_json(input, theme, width ?? undefined, options?.transparent ?? undefined);
 }
 
-export function renderWithThemeToml(input, themeToml, width) {
-  return render_with_theme_toml(input, themeToml, width ?? undefined);
+export function renderWithThemeToml(input, themeToml, width, options) {
+  return render_with_theme_toml(input, themeToml, width ?? undefined, options?.transparent ?? undefined);
 }
 
 export function themes() {

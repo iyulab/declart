@@ -112,7 +112,7 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
         }
     }
 
-    b.build(&theme.background.to_hex())
+    b.build(theme.backdrop_fill().as_deref())
 }
 
 fn draw_arrow(b: &mut SvgBuilder, x1: f32, y1: f32, x2: f32, y2: f32, color: &str) {

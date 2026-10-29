@@ -14,7 +14,7 @@ const CONNECTOR_COLOR: &str = "#888888";
 pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
     let nodes = &diagram.nodes;
     if nodes.is_empty() {
-        return SvgBuilder::new(400.0, 200.0).build(&theme.background.to_hex());
+        return SvgBuilder::new(400.0, 200.0).build(theme.backdrop_fill().as_deref());
     }
 
     // Build parent→children map keyed by label.
@@ -117,7 +117,7 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
         );
     }
 
-    builder.build(&theme.background.to_hex())
+    builder.build(theme.backdrop_fill().as_deref())
 }
 
 /// Recursively assigns X/Y positions for a subtree rooted at `idx`.
