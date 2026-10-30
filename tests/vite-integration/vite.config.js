@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
 
+// Top-level await is native at this target, so no plugin is needed for it.
 export default defineConfig({
-  plugins: [wasm(), topLevelAwait()],
+  plugins: [wasm()],
   build: {
     target: 'esnext',
   },
