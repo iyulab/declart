@@ -11,7 +11,7 @@
     "@iyulab/declart-web": "file:../../packages/declart-web"
   },
   "devDependencies": {
-    "vite": "^5.0.0",
+    "vite": "^8.3.5",
     "vite-plugin-wasm": "^3.3.0"
   }
 }
