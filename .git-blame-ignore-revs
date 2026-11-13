@@ -1,0 +1,6 @@
+# Mechanical reformatting commits: `git blame` skips them when configured with
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# (GitHub reads this file by itself.)
+
+# style: format the sources with cargo fmt
+1394bed3a26a454252ee8f9f62904329e03ca91f
