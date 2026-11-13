@@ -17,7 +17,11 @@ const ARROW_HEAD_LEN: f32 = 14.0;
 const ARROW_HEAD_SIZE: f32 = 10.0;
 
 pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
-    let title_h = if diagram.title.is_some() { TITLE_AREA } else { 20.0 };
+    let title_h = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        20.0
+    };
     let canvas_h = title_h + BRANCH_HEIGHT * 2.0 + 60.0 + 40.0;
     let spine_y = title_h + BRANCH_HEIGHT + 40.0;
 
@@ -111,13 +115,25 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
         let head_x = foot_x - BRANCH_HEIGHT * 0.6; // angle ~56° from spine
 
         // Draw branch line
-        builder.line(foot_x, foot_y, head_x, head_y, &theme.layers.apex.to_hex(), BRANCH_LINE_W);
+        builder.line(
+            foot_x,
+            foot_y,
+            head_x,
+            head_y,
+            &theme.layers.apex.to_hex(),
+            BRANCH_LINE_W,
+        );
 
         // Cause box centered at head
         let bx = head_x - CAUSE_BOX_W / 2.0;
         let by = head_y - CAUSE_BOX_H / 2.0;
         builder.polygon(
-            &[(bx, by), (bx + CAUSE_BOX_W, by), (bx + CAUSE_BOX_W, by + CAUSE_BOX_H), (bx, by + CAUSE_BOX_H)],
+            &[
+                (bx, by),
+                (bx + CAUSE_BOX_W, by),
+                (bx + CAUSE_BOX_W, by + CAUSE_BOX_H),
+                (bx, by + CAUSE_BOX_H),
+            ],
             &cause_color.to_hex(),
             "none",
         );
@@ -160,7 +176,13 @@ pub fn render(diagram: &FishboneDiagram, theme: &Theme) -> String {
             };
             // Label above/below the sub-branch line (toward the cause side)
             let label_y = sub_end_y + sign * (sfs * 0.6 + 3.0);
-            builder.text(sub_end_x, label_y, &sub_display, &sub_text_color.to_hex(), sfs);
+            builder.text(
+                sub_end_x,
+                label_y,
+                &sub_display,
+                &sub_text_color.to_hex(),
+                sfs,
+            );
         }
     }
 
@@ -181,7 +203,11 @@ mod tests {
                 .map(|i| FishboneCause {
                     label: format!("Cause {}", i + 1),
                     items: if with_items && i == 0 {
-                        vec![Item { label: "Sub 1".to_string(), emphasis: None, status: None }]
+                        vec![Item {
+                            label: "Sub 1".to_string(),
+                            emphasis: None,
+                            status: None,
+                        }]
                     } else {
                         vec![]
                     },
@@ -220,7 +246,10 @@ mod tests {
         let svg = render(&d, &DEFAULT_THEME);
         // 1 arrowhead (triangle) + 1 effect box + 2 cause boxes = 4 polygons minimum
         let polygon_count = svg.matches("<polygon").count();
-        assert!(polygon_count >= 4, "expected at least 4 polygons (arrowhead + effect box + cause boxes)");
+        assert!(
+            polygon_count >= 4,
+            "expected at least 4 polygons (arrowhead + effect box + cause boxes)"
+        );
     }
 
     #[test]

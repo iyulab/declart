@@ -26,7 +26,10 @@ impl PartialDate {
         let digits = |r: std::ops::Range<usize>| -> Option<i64> {
             let part = b.get(r)?;
             if part.iter().all(u8::is_ascii_digit) {
-                Some(part.iter().fold(0i64, |acc, &d| acc * 10 + (d - b'0') as i64))
+                Some(
+                    part.iter()
+                        .fold(0i64, |acc, &d| acc * 10 + (d - b'0') as i64),
+                )
             } else {
                 None
             }
@@ -34,13 +37,20 @@ impl PartialDate {
         let (year, month, day, precision) = match b.len() {
             4 => (digits(0..4)?, 1, 1, Precision::Year),
             7 if b[4] == b'-' => (digits(0..4)?, digits(5..7)?, 1, Precision::Month),
-            10 if b[4] == b'-' && b[7] == b'-' => (digits(0..4)?, digits(5..7)?, digits(8..10)?, Precision::Day),
+            10 if b[4] == b'-' && b[7] == b'-' => {
+                (digits(0..4)?, digits(5..7)?, digits(8..10)?, Precision::Day)
+            }
             _ => return None,
         };
         if !(1..=12).contains(&month) || day < 1 || day > days_in_month(year, month) {
             return None;
         }
-        Some(PartialDate { year, month, day, precision })
+        Some(PartialDate {
+            year,
+            month,
+            day,
+            precision,
+        })
     }
 
     /// Day number of the first day of the period.
@@ -97,7 +107,17 @@ mod tests {
 
     #[test]
     fn rejects_malformed_and_out_of_range() {
-        for s in ["January 2024", "24", "2024-1", "2024/01", "2024-00", "2024-13", "2023-02-29", "2024-04-31", "2024-01-00"] {
+        for s in [
+            "January 2024",
+            "24",
+            "2024-1",
+            "2024/01",
+            "2024-00",
+            "2024-13",
+            "2023-02-29",
+            "2024-04-31",
+            "2024-01-00",
+        ] {
             assert!(PartialDate::parse(s).is_none(), "`{s}` should be rejected");
         }
     }
@@ -112,8 +132,17 @@ mod tests {
     #[test]
     fn inclusive_end_reaches_next_period() {
         assert_eq!(p("2024").end_day_exclusive(), p("2025-01-01").start_day());
-        assert_eq!(p("2024-03").end_day_exclusive(), p("2024-04-01").start_day());
-        assert_eq!(p("2024-12").end_day_exclusive(), p("2025-01-01").start_day());
-        assert_eq!(p("2024-02-29").end_day_exclusive(), p("2024-03-01").start_day());
+        assert_eq!(
+            p("2024-03").end_day_exclusive(),
+            p("2024-04-01").start_day()
+        );
+        assert_eq!(
+            p("2024-12").end_day_exclusive(),
+            p("2025-01-01").start_day()
+        );
+        assert_eq!(
+            p("2024-02-29").end_day_exclusive(),
+            p("2024-03-01").start_day()
+        );
     }
 }

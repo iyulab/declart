@@ -18,7 +18,11 @@ fn assert_valid_examples(kind: &str) {
         })
         .collect();
 
-    assert!(!entries.is_empty(), "no valid examples found in {}", dir.display());
+    assert!(
+        !entries.is_empty(),
+        "no valid examples found in {}",
+        dir.display()
+    );
 
     for entry in entries {
         let path = entry.path();
@@ -42,7 +46,11 @@ fn assert_invalid_examples(kind: &str) {
         .filter(|e| e.path().extension() == Some(OsStr::new("toml")))
         .collect();
 
-    assert!(!entries.is_empty(), "no invalid TOML examples found in {}", dir.display());
+    assert!(
+        !entries.is_empty(),
+        "no invalid TOML examples found in {}",
+        dir.display()
+    );
 
     for entry in entries {
         let path = entry.path();
@@ -155,7 +163,11 @@ fn assert_valid_themes() {
         .filter(|e| e.path().extension() == Some(OsStr::new("toml")))
         .collect();
 
-    assert!(!entries.is_empty(), "no valid TOML theme examples found in {}", dir.display());
+    assert!(
+        !entries.is_empty(),
+        "no valid TOML theme examples found in {}",
+        dir.display()
+    );
 
     for entry in entries {
         let path = entry.path();
@@ -179,7 +191,11 @@ fn assert_invalid_themes() {
         .filter(|e| e.path().extension() == Some(OsStr::new("toml")))
         .collect();
 
-    assert!(!entries.is_empty(), "no invalid TOML theme examples found in {}", dir.display());
+    assert!(
+        !entries.is_empty(),
+        "no invalid TOML theme examples found in {}",
+        dir.display()
+    );
 
     for entry in entries {
         let path = entry.path();

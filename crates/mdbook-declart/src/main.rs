@@ -133,7 +133,10 @@ mod tests {
             "After\n"
         );
         let out = process_content(input);
-        assert!(out.contains("<figure class=\"declart\">"), "should wrap in figure");
+        assert!(
+            out.contains("<figure class=\"declart\">"),
+            "should wrap in figure"
+        );
         assert!(out.contains("<svg"), "should contain SVG");
         assert!(out.contains("Before"), "prefix preserved");
         assert!(out.contains("After"), "suffix preserved");
@@ -141,11 +144,7 @@ mod tests {
 
     #[test]
     fn renders_error_block_for_invalid_kind() {
-        let input = concat!(
-            "```declart\n",
-            "kind = \"nonexistent\"\n",
-            "```\n"
-        );
+        let input = concat!("```declart\n", "kind = \"nonexistent\"\n", "```\n");
         let out = process_content(input);
         assert!(out.contains("declart-error"), "should render error div");
     }
@@ -162,12 +161,18 @@ mod tests {
     fn handles_crlf_line_endings() {
         let input = "Before\r\n\r\n```declart\r\nkind = \"tier\"\r\n[[items]]\r\nlabel = \"Top\"\r\n[[items]]\r\nlabel = \"Base\"\r\n```\r\n\r\nAfter\r\n";
         let out = process_content(input);
-        assert!(out.contains("<figure class=\"declart\">"), "CRLF input should render SVG figure");
+        assert!(
+            out.contains("<figure class=\"declart\">"),
+            "CRLF input should render SVG figure"
+        );
         assert!(out.contains("<svg"), "should contain SVG");
     }
 
     #[test]
     fn html_escape_special_chars() {
-        assert_eq!(html_escape("<div>&\"</div>"), "&lt;div&gt;&amp;&quot;&lt;/div&gt;");
+        assert_eq!(
+            html_escape("<div>&\"</div>"),
+            "&lt;div&gt;&amp;&quot;&lt;/div&gt;"
+        );
     }
 }

@@ -13,7 +13,11 @@ const LABEL_INSET: f32 = 8.0;
 
 pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
     let n = diagram.items.len() as f32;
-    let title_y = if diagram.title.is_some() { TITLE_AREA } else { PADDING };
+    let title_y = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        PADDING
+    };
     let canvas_height = title_y + BOX_HEIGHT + PADDING;
 
     let canvas_width = f32::max(
@@ -42,13 +46,23 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let i_f = i as f32;
         let arrow_x1 = PADDING + (i_f + 1.0) * box_width + i_f * ARROW_GAP;
         let arrow_x2 = arrow_x1 + ARROW_GAP;
-        draw_right_arrow(&mut builder, arrow_x1, arrow_x2, arrow_y, &theme.layers.apex.to_hex());
+        draw_right_arrow(
+            &mut builder,
+            arrow_x1,
+            arrow_x2,
+            arrow_y,
+            &theme.layers.apex.to_hex(),
+        );
     }
 
     for (i, item) in diagram.items.iter().enumerate() {
         let i_f = i as f32;
         let n_items = diagram.items.len() as f32;
-        let t = if n_items > 1.0 { i_f / (n_items - 1.0) } else { 0.0 };
+        let t = if n_items > 1.0 {
+            i_f / (n_items - 1.0)
+        } else {
+            0.0
+        };
         let base_color = theme.layers.apex.interpolate(&theme.layers.base, t);
         let box_color = match &item.emphasis {
             Some(Emphasis::Secondary) => base_color.interpolate(&theme.layers.base, 0.3),
@@ -86,7 +100,14 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
         let center_x = box_left + box_width / 2.0;
         let center_y = box_top + BOX_HEIGHT / 2.0;
-        builder.text_lines(center_x, center_y, &lines, &text_color.to_hex(), font_size, Some(is_bold));
+        builder.text_lines(
+            center_x,
+            center_y,
+            &lines,
+            &text_color.to_hex(),
+            font_size,
+            Some(is_bold),
+        );
 
         status::draw_marker(&mut builder, &item.status, box_right, box_top, theme);
     }
@@ -113,7 +134,11 @@ fn draw_right_arrow(builder: &mut SvgBuilder, x1: f32, x2: f32, y: f32, fill: &s
     }
 
     builder.polygon(
-        &[(shaft_end, y - half_head), (x2, y), (shaft_end, y + half_head)],
+        &[
+            (shaft_end, y - half_head),
+            (x2, y),
+            (shaft_end, y + half_head),
+        ],
         fill,
         "none",
     );
@@ -129,7 +154,11 @@ mod tests {
         ItemsDiagram {
             title: title.map(String::from),
             items: (0..n)
-                .map(|i| Item { label: format!("Step {}", i + 1), emphasis: None, status: None })
+                .map(|i| Item {
+                    label: format!("Step {}", i + 1),
+                    emphasis: None,
+                    status: None,
+                })
                 .collect(),
         }
     }
@@ -156,14 +185,31 @@ mod tests {
         let d = ItemsDiagram {
             title: None,
             items: vec![
-                Item { label: "사용자가 업로드한 문서를 정제하고 청크로 나누는 전처리 단계".to_string(), emphasis: None, status: None },
-                Item { label: "색인".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "사용자가 업로드한 문서를 정제하고 청크로 나누는 전처리 단계"
+                        .to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "색인".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
         assert_eq!(svg.matches("<tspan").count(), 2, "{}", svg);
-        assert!(svg.contains(">사용자가 업로드한 문서를 정제하고</tspan>"), "{}", svg);
-        assert!(svg.contains(">청크로 나누는 전처리 단계</tspan>"), "{}", svg);
+        assert!(
+            svg.contains(">사용자가 업로드한 문서를 정제하고</tspan>"),
+            "{}",
+            svg
+        );
+        assert!(
+            svg.contains(">청크로 나누는 전처리 단계</tspan>"),
+            "{}",
+            svg
+        );
         assert!(!svg.contains('…'));
         // A short label stays a single plain text element.
         assert!(svg.contains(">색인</text>"));
@@ -191,8 +237,16 @@ mod tests {
         let d = ItemsDiagram {
             title: None,
             items: vec![
-                Item { label: "Deploy".to_string(), emphasis: None, status: Some(Status::Critical) },
-                Item { label: "Idle".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Deploy".to_string(),
+                    emphasis: None,
+                    status: Some(Status::Critical),
+                },
+                Item {
+                    label: "Idle".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);

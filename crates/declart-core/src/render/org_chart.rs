@@ -46,7 +46,11 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
 
     let max_x = x_positions.iter().cloned().fold(0.0_f32, f32::max) + NODE_W + PADDING;
     let max_y = y_positions.iter().cloned().fold(0.0_f32, f32::max);
-    let title_height = if diagram.title.is_some() { TITLE_AREA } else { PADDING };
+    let title_height = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        PADDING
+    };
     let canvas_w = max_x.max(400.0);
     let canvas_h = title_height + max_y + NODE_H + PADDING;
 
@@ -89,11 +93,20 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
         } else {
             theme.layers.base.to_hex()
         };
-        let node_color = if is_root { &theme.layers.apex } else { &theme.layers.base };
+        let node_color = if is_root {
+            &theme.layers.apex
+        } else {
+            &theme.layers.base
+        };
         let text_color = &theme.text_on(node_color);
 
         builder.polygon_stroked(
-            &[(x, y), (x + NODE_W, y), (x + NODE_W, y + NODE_H), (x, y + NODE_H)],
+            &[
+                (x, y),
+                (x + NODE_W, y),
+                (x + NODE_W, y + NODE_H),
+                (x, y + NODE_H),
+            ],
             &fill,
             "none",
             0.0,
@@ -147,7 +160,15 @@ fn assign_positions(
     // Internal node: recursively position children, then center over them.
     let mut total_width = 0.0_f32;
     for &child_idx in &child_indices {
-        total_width += assign_positions(child_idx, depth + 1, children, nodes, x_positions, y_positions, next_x);
+        total_width += assign_positions(
+            child_idx,
+            depth + 1,
+            children,
+            nodes,
+            x_positions,
+            y_positions,
+            next_x,
+        );
     }
     // Center the parent over the span from first child center to last child center.
     // This is visually correct even for asymmetric subtrees.
@@ -167,9 +188,18 @@ mod tests {
         OrgChartDiagram {
             title: Some("Company".to_string()),
             nodes: vec![
-                OrgChartNode { label: "CEO".to_string(), parent: None },
-                OrgChartNode { label: "CTO".to_string(), parent: Some("CEO".to_string()) },
-                OrgChartNode { label: "CFO".to_string(), parent: Some("CEO".to_string()) },
+                OrgChartNode {
+                    label: "CEO".to_string(),
+                    parent: None,
+                },
+                OrgChartNode {
+                    label: "CTO".to_string(),
+                    parent: Some("CEO".to_string()),
+                },
+                OrgChartNode {
+                    label: "CFO".to_string(),
+                    parent: Some("CEO".to_string()),
+                },
             ],
         }
     }
@@ -205,11 +235,26 @@ mod tests {
         let d = OrgChartDiagram {
             title: None,
             nodes: vec![
-                OrgChartNode { label: "Root".to_string(), parent: None },
-                OrgChartNode { label: "L".to_string(), parent: Some("Root".to_string()) },
-                OrgChartNode { label: "R".to_string(), parent: Some("Root".to_string()) },
-                OrgChartNode { label: "LL".to_string(), parent: Some("L".to_string()) },
-                OrgChartNode { label: "LR".to_string(), parent: Some("L".to_string()) },
+                OrgChartNode {
+                    label: "Root".to_string(),
+                    parent: None,
+                },
+                OrgChartNode {
+                    label: "L".to_string(),
+                    parent: Some("Root".to_string()),
+                },
+                OrgChartNode {
+                    label: "R".to_string(),
+                    parent: Some("Root".to_string()),
+                },
+                OrgChartNode {
+                    label: "LL".to_string(),
+                    parent: Some("L".to_string()),
+                },
+                OrgChartNode {
+                    label: "LR".to_string(),
+                    parent: Some("L".to_string()),
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
@@ -223,9 +268,10 @@ mod tests {
     #[test]
     fn wide_tree_no_negative_x() {
         // 1 root, 6 leaf children → wide flat tree
-        let mut nodes = vec![
-            OrgChartNode { label: "Root".to_string(), parent: None },
-        ];
+        let mut nodes = vec![OrgChartNode {
+            label: "Root".to_string(),
+            parent: None,
+        }];
         for i in 0..6 {
             nodes.push(OrgChartNode {
                 label: format!("Child {}", i),
@@ -236,6 +282,9 @@ mod tests {
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.starts_with("<svg"));
         // No negative x coordinates in the SVG output (all polygon/text x values ≥ 0)
-        assert!(!svg.contains("x=\"-"), "SVG should not contain negative x coordinates");
+        assert!(
+            !svg.contains("x=\"-"),
+            "SVG should not contain negative x coordinates"
+        );
     }
 }

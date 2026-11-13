@@ -7,7 +7,11 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
-#[command(name = "declart", version, about = "Declare what to show. The engine decides how it looks.")]
+#[command(
+    name = "declart",
+    version,
+    about = "Declare what to show. The engine decides how it looks."
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -81,7 +85,15 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Render { input, output, theme: theme_name, width, transparent, format, stdout } => {
+        Commands::Render {
+            input,
+            output,
+            theme: theme_name,
+            width,
+            transparent,
+            format,
+            stdout,
+        } => {
             let theme = resolve_theme(&theme_name, transparent)?;
             let content = fs::read_to_string(&input)
                 .with_context(|| format!("failed to read {}", input.display()))?;
@@ -115,17 +127,23 @@ fn run() -> Result<()> {
             })?;
             print!("{}", template);
         }
-        Commands::Watch { input, output, theme: theme_name, width, transparent, format } => {
+        Commands::Watch {
+            input,
+            output,
+            theme: theme_name,
+            width,
+            transparent,
+            format,
+        } => {
             let theme = resolve_theme(&theme_name, transparent)?;
             let ext = if format == "png" { "png" } else { "svg" };
             let out_path = output.unwrap_or_else(|| input.with_extension(ext));
 
             // Initial render
-            render_bytes(&input, &theme, width, &format)
-                .and_then(|bytes| {
-                    fs::write(&out_path, &bytes)
-                        .with_context(|| format!("failed to write {}", out_path.display()))
-                })?;
+            render_bytes(&input, &theme, width, &format).and_then(|bytes| {
+                fs::write(&out_path, &bytes)
+                    .with_context(|| format!("failed to write {}", out_path.display()))
+            })?;
 
             eprintln!("[declart] watching {} ...", input.display());
             eprintln!("[declart] output  → {}", out_path.display());
@@ -152,9 +170,8 @@ fn run() -> Result<()> {
 
                         eprint!("[declart] rebuilding ...");
                         match render_bytes(&input, &theme, width, &format).and_then(|bytes| {
-                            fs::write(&out_path, &bytes).with_context(|| {
-                                format!("failed to write {}", out_path.display())
-                            })
+                            fs::write(&out_path, &bytes)
+                                .with_context(|| format!("failed to write {}", out_path.display()))
                         }) {
                             Ok(()) => eprintln!(" ok"),
                             Err(e) => eprintln!("\n[declart] error: {e:#}"),
@@ -170,18 +187,26 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn render_to_bytes(diagram: &Diagram, theme: &Theme, width: Option<u32>, format: &str) -> Result<Vec<u8>> {
+fn render_to_bytes(
+    diagram: &Diagram,
+    theme: &Theme,
+    width: Option<u32>,
+    format: &str,
+) -> Result<Vec<u8>> {
     let svg = declart_core::render_opts(diagram, theme, width)?;
     match format {
         "svg" => Ok(svg.into_bytes()),
         "png" => svg_to_png(&svg),
-        other => anyhow::bail!("unknown format `{}`\n  = hint: Available formats: svg, png", other),
+        other => anyhow::bail!(
+            "unknown format `{}`\n  = hint: Available formats: svg, png",
+            other
+        ),
     }
 }
 
 fn render_bytes(input: &Path, theme: &Theme, width: Option<u32>, format: &str) -> Result<Vec<u8>> {
-    let content = fs::read_to_string(input)
-        .with_context(|| format!("failed to read {}", input.display()))?;
+    let content =
+        fs::read_to_string(input).with_context(|| format!("failed to read {}", input.display()))?;
     let model = declart_core::parse_auto(&content)
         .with_context(|| format!("invalid declaration: {}", input.display()))?;
     render_to_bytes(&model, theme, width, format)
@@ -195,13 +220,21 @@ fn svg_to_png(svg_str: &str) -> Result<Vec<u8>> {
     let size = tree.size().to_int_size();
     let mut pixmap = tiny_skia::Pixmap::new(size.width(), size.height())
         .ok_or_else(|| anyhow::anyhow!("zero-size canvas"))?;
-    resvg::render(&tree, tiny_skia::Transform::identity(), &mut pixmap.as_mut());
+    resvg::render(
+        &tree,
+        tiny_skia::Transform::identity(),
+        &mut pixmap.as_mut(),
+    );
     Ok(pixmap.encode_png()?)
 }
 
 fn resolve_theme(name: &str, transparent: bool) -> Result<Theme> {
     let theme = named_or_file_theme(name)?;
-    Ok(if transparent { theme.without_backdrop() } else { theme })
+    Ok(if transparent {
+        theme.without_backdrop()
+    } else {
+        theme
+    })
 }
 
 fn named_or_file_theme(name: &str) -> Result<Theme> {
@@ -209,8 +242,7 @@ fn named_or_file_theme(name: &str) -> Result<Theme> {
     if name.contains('/') || name.contains('\\') || name.ends_with(".toml") {
         let toml_str = fs::read_to_string(name)
             .with_context(|| format!("failed to read theme file `{name}`"))?;
-        return Theme::from_toml(&toml_str)
-            .with_context(|| format!("invalid theme file `{name}`"));
+        return Theme::from_toml(&toml_str).with_context(|| format!("invalid theme file `{name}`"));
     }
     if Theme::names().contains(&name) {
         return Ok(Theme::by_name(name).clone());
@@ -401,8 +433,12 @@ trigger = "Approve"
 }
 
 fn warn_hierarchy_auto_view(diagram: &Diagram, content: &str) {
-    let Diagram::Hierarchy(h) = diagram else { return };
-    if has_explicit_view(content) { return; }
+    let Diagram::Hierarchy(h) = diagram else {
+        return;
+    };
+    if has_explicit_view(content) {
+        return;
+    }
     let (view_name, root_count) = match h.view {
         HierarchyView::OrgChart => {
             let n = h.nodes.iter().filter(|n| n.parent.is_none()).count();
@@ -415,13 +451,15 @@ fn warn_hierarchy_auto_view(diagram: &Diagram, content: &str) {
         HierarchyView::MindMap => return,
     };
     let plural = if root_count == 1 { "" } else { "s" };
-    eprintln!("warning: hierarchy view auto-selected: {view_name} ({root_count} root node{plural})");
+    eprintln!(
+        "warning: hierarchy view auto-selected: {view_name} ({root_count} root node{plural})"
+    );
     eprintln!("  = hint: add `view = \"{view_name}\"` to make this explicit");
 }
 
 fn has_explicit_view(content: &str) -> bool {
     // Simple text scan: TOML `view = ` or JSON `"view":` or `"view" :`
-    content.contains("view =") || content.contains("\"view\":")  || content.contains("\"view\" :")
+    content.contains("view =") || content.contains("\"view\":") || content.contains("\"view\" :")
 }
 
 #[cfg(test)]
@@ -431,8 +469,10 @@ mod tests {
     #[test]
     fn every_kind_has_a_valid_init_template() {
         for kind in declart_core::KINDS {
-            let template = init_template(kind).unwrap_or_else(|| panic!("no init template for `{kind}`"));
-            declart_core::parse(template).unwrap_or_else(|e| panic!("init template for `{kind}` is invalid: {e}"));
+            let template =
+                init_template(kind).unwrap_or_else(|| panic!("no init template for `{kind}`"));
+            declart_core::parse(template)
+                .unwrap_or_else(|e| panic!("init template for `{kind}` is invalid: {e}"));
         }
     }
 }

@@ -9,7 +9,11 @@ const AXIS_DIRECTION_SIZE: f32 = 9.0;
 const AXIS_LINE_W: f32 = 2.0;
 
 pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
-    let title_h = if diagram.title.is_some() { TITLE_AREA } else { 20.0 };
+    let title_h = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        20.0
+    };
     let canvas_w = CANVAS_SIZE;
     let canvas_h = CANVAS_SIZE + title_h;
 
@@ -37,17 +41,17 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
 
     // Quadrant backgrounds (4 cells)
     let colors = [
-        theme.layers.apex.interpolate(&theme.layers.base, 0.1),  // top-left
-        theme.layers.apex.interpolate(&theme.layers.base, 0.3),  // top-right
-        theme.layers.apex.interpolate(&theme.layers.base, 0.6),  // bottom-left
-        theme.layers.apex.interpolate(&theme.layers.base, 0.9),  // bottom-right
+        theme.layers.apex.interpolate(&theme.layers.base, 0.1), // top-left
+        theme.layers.apex.interpolate(&theme.layers.base, 0.3), // top-right
+        theme.layers.apex.interpolate(&theme.layers.base, 0.6), // bottom-left
+        theme.layers.apex.interpolate(&theme.layers.base, 0.9), // bottom-right
     ];
 
     let cells = [
-        (grid_left, grid_top, mid_x, mid_y),       // top-left
-        (mid_x, grid_top, grid_right, mid_y),       // top-right
-        (grid_left, mid_y, mid_x, grid_bottom),     // bottom-left
-        (mid_x, mid_y, grid_right, grid_bottom),    // bottom-right
+        (grid_left, grid_top, mid_x, mid_y),     // top-left
+        (mid_x, grid_top, grid_right, mid_y),    // top-right
+        (grid_left, mid_y, mid_x, grid_bottom),  // bottom-left
+        (mid_x, mid_y, grid_right, grid_bottom), // bottom-right
     ];
 
     for (idx, (x1, y1, x2, y2)) in cells.iter().enumerate() {
@@ -72,8 +76,11 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
         );
 
         let cx = (x1 + x2) / 2.0;
-        let cell_items: Vec<&MatrixItem> =
-            diagram.items.iter().filter(|it| it.quadrant == idx).collect();
+        let cell_items: Vec<&MatrixItem> = diagram
+            .items
+            .iter()
+            .filter(|it| it.quadrant == idx)
+            .collect();
 
         if cell_items.is_empty() {
             // Label-only quadrant: centered label (backward-compatible behavior).
@@ -84,7 +91,14 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
             if text_w > cell_w && cell_w > 0.0 {
                 font_size = (font_size * cell_w / text_w).max(theme.typography.label_size_min);
             }
-            builder.text_weighted(cx, cy, &quadrant.label, &text_color.to_hex(), font_size, bold);
+            builder.text_weighted(
+                cx,
+                cy,
+                &quadrant.label,
+                &text_color.to_hex(),
+                font_size,
+                bold,
+            );
         } else {
             // Quadrant with items: label becomes a top header, items listed below.
             let header_w = (x2 - x1) * 0.9;
@@ -98,12 +112,20 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
             } else {
                 quadrant.label.clone()
             };
-            builder.text_weighted(cx, y1 + 18.0, &header_label, &text_color.to_hex(), header_fs, true);
+            builder.text_weighted(
+                cx,
+                y1 + 18.0,
+                &header_label,
+                &text_color.to_hex(),
+                header_fs,
+                true,
+            );
 
             let items_top = y1 + 36.0;
             let items_bottom = y2 - 10.0;
             let step = (items_bottom - items_top) / cell_items.len() as f32;
-            let item_fs_base = (theme.typography.label_size - 2.0).max(theme.typography.label_size_min);
+            let item_fs_base =
+                (theme.typography.label_size - 2.0).max(theme.typography.label_size_min);
             let avail = (x2 - x1) * 0.65;
             for (k, it) in cell_items.iter().enumerate() {
                 let row_y = items_top + step * (k as f32 + 0.5);
@@ -151,9 +173,21 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
     } else {
         diagram.x_axis.clone()
     };
-    builder.text((grid_left + grid_right) / 2.0, x_label_y, &x_label, label_color, x_fs);
+    builder.text(
+        (grid_left + grid_right) / 2.0,
+        x_label_y,
+        &x_label,
+        label_color,
+        x_fs,
+    );
     builder.text(grid_left, x_label_y, "Low", dir_color, AXIS_DIRECTION_SIZE);
-    builder.text(grid_right, x_label_y, "High", dir_color, AXIS_DIRECTION_SIZE);
+    builder.text(
+        grid_right,
+        x_label_y,
+        "High",
+        dir_color,
+        AXIS_DIRECTION_SIZE,
+    );
 
     // Y-axis: rotated label with scale/truncation + Low/High at grid edges
     let y_avail = grid_h * 0.7;
@@ -168,7 +202,13 @@ pub fn render(diagram: &MatrixDiagram, theme: &Theme) -> String {
         diagram.y_axis.clone()
     };
     builder.text_rotated(y_label_x, y_label_y, &y_label, label_color, y_fs, -90.0);
-    builder.text(y_label_x, grid_bottom, "Low", dir_color, AXIS_DIRECTION_SIZE);
+    builder.text(
+        y_label_x,
+        grid_bottom,
+        "Low",
+        dir_color,
+        AXIS_DIRECTION_SIZE,
+    );
     builder.text(y_label_x, grid_top, "High", dir_color, AXIS_DIRECTION_SIZE);
 
     builder.build(theme.backdrop_fill().as_deref())
@@ -186,10 +226,26 @@ mod tests {
             x_axis: "Importance".to_string(),
             y_axis: "Urgency".to_string(),
             quadrants: vec![
-                Item { label: "Do First".to_string(), emphasis: None, status: None },
-                Item { label: "Schedule".to_string(), emphasis: None, status: None },
-                Item { label: "Delegate".to_string(), emphasis: None, status: None },
-                Item { label: "Eliminate".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Do First".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Schedule".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Delegate".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Eliminate".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
             items: vec![],
         }
@@ -220,8 +276,14 @@ mod tests {
         assert!(svg.contains("Importance"));
         assert!(svg.contains("Urgency"));
         // Direction indicators
-        assert!(svg.matches(">Low<").count() >= 2, "should have Low indicator for both axes");
-        assert!(svg.matches(">High<").count() >= 2, "should have High indicator for both axes");
+        assert!(
+            svg.matches(">Low<").count() >= 2,
+            "should have Low indicator for both axes"
+        );
+        assert!(
+            svg.matches(">High<").count() >= 2,
+            "should have High indicator for both axes"
+        );
     }
 
     #[test]
@@ -239,16 +301,38 @@ mod tests {
             x_axis: "X".to_string(),
             y_axis: "Y".to_string(),
             quadrants: vec![
-                Item { label: "Primary".to_string(), emphasis: Some(Emphasis::Primary), status: None },
-                Item { label: "Q2".to_string(), emphasis: None, status: None },
-                Item { label: "Q3".to_string(), emphasis: None, status: None },
-                Item { label: "Q4".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Primary".to_string(),
+                    emphasis: Some(Emphasis::Primary),
+                    status: None,
+                },
+                Item {
+                    label: "Q2".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Q3".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Q4".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
             items: vec![],
         };
         let svg = render(&d, &DEFAULT_THEME);
-        assert!(svg.contains("font-weight=\"bold\""), "primary quadrant should be bold");
-        assert!(svg.contains("stroke-width=\"3.0\""), "primary quadrant should have stroke");
+        assert!(
+            svg.contains("font-weight=\"bold\""),
+            "primary quadrant should be bold"
+        );
+        assert!(
+            svg.contains("stroke-width=\"3.0\""),
+            "primary quadrant should have stroke"
+        );
     }
 
     #[test]
@@ -259,15 +343,34 @@ mod tests {
             x_axis: "X".to_string(),
             y_axis: "Y".to_string(),
             quadrants: vec![
-                Item { label: "Q1".to_string(), emphasis: None, status: Some(Status::Critical) },
-                Item { label: "Q2".to_string(), emphasis: None, status: None },
-                Item { label: "Q3".to_string(), emphasis: None, status: None },
-                Item { label: "Q4".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Q1".to_string(),
+                    emphasis: None,
+                    status: Some(Status::Critical),
+                },
+                Item {
+                    label: "Q2".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Q3".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Q4".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
             items: vec![],
         };
         let svg = render(&d, &DEFAULT_THEME);
-        assert!(svg.contains(&DEFAULT_THEME.status.critical.to_hex()), "a quadrant with status should render a marker");
+        assert!(
+            svg.contains(&DEFAULT_THEME.status.critical.to_hex()),
+            "a quadrant with status should render a marker"
+        );
     }
 
     #[test]
@@ -278,21 +381,50 @@ mod tests {
             x_axis: "Share".to_string(),
             y_axis: "Growth".to_string(),
             quadrants: vec![
-                Item { label: "Question Marks".to_string(), emphasis: None, status: None },
-                Item { label: "Stars".to_string(), emphasis: None, status: None },
-                Item { label: "Dogs".to_string(), emphasis: None, status: None },
-                Item { label: "Cash Cows".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Question Marks".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Stars".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Dogs".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Cash Cows".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
             items: vec![
-                MatrixItem { label: "Product A".to_string(), emphasis: None, status: Some(Status::Success), quadrant: 1 },
-                MatrixItem { label: "Product B".to_string(), emphasis: None, status: None, quadrant: 2 },
+                MatrixItem {
+                    label: "Product A".to_string(),
+                    emphasis: None,
+                    status: Some(Status::Success),
+                    quadrant: 1,
+                },
+                MatrixItem {
+                    label: "Product B".to_string(),
+                    emphasis: None,
+                    status: None,
+                    quadrant: 2,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.contains("Product A"), "placed item label should appear");
         assert!(svg.contains("Product B"));
         assert!(svg.contains("Stars"), "quadrant header should still appear");
-        assert!(svg.contains(&DEFAULT_THEME.status.success.to_hex()), "item status marker should render");
+        assert!(
+            svg.contains(&DEFAULT_THEME.status.success.to_hex()),
+            "item status marker should render"
+        );
     }
 
     #[test]
@@ -304,10 +436,26 @@ mod tests {
             x_axis: long_label.to_string(),
             y_axis: long_label.to_string(),
             quadrants: vec![
-                Item { label: "Q1".to_string(), emphasis: None, status: None },
-                Item { label: "Q2".to_string(), emphasis: None, status: None },
-                Item { label: "Q3".to_string(), emphasis: None, status: None },
-                Item { label: "Q4".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Q1".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Q2".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Q3".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "Q4".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
             items: vec![],
         };

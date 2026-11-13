@@ -12,7 +12,11 @@ const LEADER_GAP: f32 = 12.0;
 
 pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
     let n = diagram.items.len() as f32;
-    let title_height = if diagram.title.is_some() { TITLE_AREA } else { PADDING_H };
+    let title_height = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        PADDING_H
+    };
 
     // Pre-pass: compute canvas width, expanding right when layers need leader lines.
     let mut canvas_width = CANVAS_BASE_W;
@@ -49,7 +53,11 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let i_f = i as f32;
         let n_layers = diagram.items.len() as f32;
 
-        let t = if n_layers > 1.0 { i_f / (n_layers - 1.0) } else { 0.0 };
+        let t = if n_layers > 1.0 {
+            i_f / (n_layers - 1.0)
+        } else {
+            0.0
+        };
         let base_color = theme.layers.apex.interpolate(&theme.layers.base, t);
         let layer_color = match &item.emphasis {
             Some(Emphasis::Secondary) => base_color.interpolate(&theme.layers.base, 0.3),
@@ -96,7 +104,14 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             let text_w = font::measure_text(&item.label, theme.typography.label_size);
             let text_x = right_edge + LEADER_GAP + text_w / 2.0;
             let leader_color = &theme.title_color.to_hex();
-            builder.line(right_edge, center_y, right_edge + LEADER_GAP, center_y, leader_color, 1.0);
+            builder.line(
+                right_edge,
+                center_y,
+                right_edge + LEADER_GAP,
+                center_y,
+                leader_color,
+                1.0,
+            );
             let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
             builder.text_weighted(
                 text_x,
@@ -127,7 +142,14 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             };
 
             let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
-            builder.text_weighted(CENTER_X, center_y, &label, &text_color.to_hex(), font_size, is_bold);
+            builder.text_weighted(
+                CENTER_X,
+                center_y,
+                &label,
+                &text_color.to_hex(),
+                font_size,
+                is_bold,
+            );
         }
 
         // Marker on the layer's right edge at its vertical center (trapezoid apex is too narrow
@@ -166,7 +188,11 @@ mod tests {
         ItemsDiagram {
             title: title.map(String::from),
             items: (0..n)
-                .map(|i| Item { label: format!("Layer {}", i), emphasis: None, status: None })
+                .map(|i| Item {
+                    label: format!("Layer {}", i),
+                    emphasis: None,
+                    status: None,
+                })
                 .collect(),
         }
     }
@@ -216,12 +242,23 @@ mod tests {
         let d = ItemsDiagram {
             title: None,
             items: vec![
-                Item { label: "Apex".to_string(), emphasis: None, status: Some(Status::Warning) },
-                Item { label: "Base".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Apex".to_string(),
+                    emphasis: None,
+                    status: Some(Status::Warning),
+                },
+                Item {
+                    label: "Base".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
-        assert!(svg.contains(&DEFAULT_THEME.status.warning.to_hex()), "a tier layer with status should render a marker");
+        assert!(
+            svg.contains(&DEFAULT_THEME.status.warning.to_hex()),
+            "a tier layer with status should render a marker"
+        );
     }
 
     #[test]
@@ -230,7 +267,11 @@ mod tests {
             title: None,
             items: (0..7)
                 .map(|i| Item {
-                    label: if i == 0 { "Self-Actualization".to_string() } else { format!("Layer {}", i) },
+                    label: if i == 0 {
+                        "Self-Actualization".to_string()
+                    } else {
+                        format!("Layer {}", i)
+                    },
                     emphasis: None,
                     status: None,
                 })
@@ -238,10 +279,16 @@ mod tests {
         };
         let svg = render(&d, &DEFAULT_THEME);
         // With leader line: full label appears untruncated (no ellipsis)
-        assert!(svg.contains("Self-Actualization"), "long apex label should appear in full via leader line");
+        assert!(
+            svg.contains("Self-Actualization"),
+            "long apex label should appear in full via leader line"
+        );
         assert!(!svg.contains("…"), "leader line should avoid truncation");
         // A <line> element exists for the leader line (pyramids have no lines otherwise)
-        assert!(svg.contains("<line"), "leader line element should be present");
+        assert!(
+            svg.contains("<line"),
+            "leader line element should be present"
+        );
     }
 
     #[test]
@@ -254,17 +301,28 @@ mod tests {
             title: None,
             items: (0..12)
                 .map(|i| Item {
-                    label: if i == 0 { long_label.to_string() } else { format!("L{}", i) },
+                    label: if i == 0 {
+                        long_label.to_string()
+                    } else {
+                        format!("L{}", i)
+                    },
                     emphasis: None,
                     status: None,
                 })
                 .collect(),
         };
         let svg = render(&d, &DEFAULT_THEME);
-        assert!(svg.contains(long_label), "full label should appear via leader line");
+        assert!(
+            svg.contains(long_label),
+            "full label should appear via leader line"
+        );
         let width_start = svg.find("width=\"").unwrap() + 7;
         let width_end = svg[width_start..].find('"').unwrap() + width_start;
         let width: f32 = svg[width_start..width_end].parse().unwrap();
-        assert!(width > CANVAS_BASE_W, "canvas should expand for very long apex label, got {}", width);
+        assert!(
+            width > CANVAS_BASE_W,
+            "canvas should expand for very long apex label, got {}",
+            width
+        );
     }
 }

@@ -9,7 +9,11 @@ pub enum DeclartError {
     InvalidQuadrantCount(usize),
 
     #[error("not enough items: `{kind}` requires at least {min} items, got {got}")]
-    TooFewItems { kind: &'static str, min: usize, got: usize },
+    TooFewItems {
+        kind: &'static str,
+        min: usize,
+        got: usize,
+    },
 
     #[error("empty items: at least one [[items]] entry is required")]
     EmptyItems,

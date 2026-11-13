@@ -1,6 +1,6 @@
+use super::{font, status, svg::SvgBuilder};
 use crate::model::FlowDiagram;
 use crate::render::theme::Theme;
-use super::{font, status, svg::SvgBuilder};
 
 const LANE_WIDTH: f32 = 180.0;
 const STEP_HEIGHT: f32 = 56.0;
@@ -26,17 +26,20 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
 
     let title_area = if d.title.is_some() { TITLE_AREA } else { 0.0 };
     let canvas_width = (PADDING + num_actors as f32 * LANE_WIDTH + PADDING).max(400.0);
-    let canvas_height = title_area
-        + HEADER_HEIGHT
-        + num_steps as f32 * (STEP_HEIGHT + STEP_V_GAP)
-        + PADDING;
+    let canvas_height =
+        title_area + HEADER_HEIGHT + num_steps as f32 * (STEP_HEIGHT + STEP_V_GAP) + PADDING;
 
     let mut b = SvgBuilder::new(canvas_width, canvas_height);
 
     // Title
     if let Some(title) = &d.title {
-        b.text(canvas_width / 2.0, title_area / 2.0, title,
-               &theme.title_color.to_hex(), theme.typography.title_size);
+        b.text(
+            canvas_width / 2.0,
+            title_area / 2.0,
+            title,
+            &theme.title_color.to_hex(),
+            theme.typography.title_size,
+        );
     }
 
     let header_top = title_area;
@@ -46,21 +49,43 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
     // Vertical lane dividers (full height, skip first)
     for col in 1..num_actors {
         let x = PADDING + col as f32 * LANE_WIDTH;
-        b.line(x, header_top, x, content_bot,
-               &theme.layers.base.to_hex(), 1.0);
+        b.line(
+            x,
+            header_top,
+            x,
+            content_bot,
+            &theme.layers.base.to_hex(),
+            1.0,
+        );
     }
 
     // Actor header labels with background
     for (col, &actor) in actors.iter().enumerate() {
         let lane_cx = PADDING + col as f32 * LANE_WIDTH + LANE_WIDTH / 2.0;
-        let t = if num_actors > 1 { col as f32 / (num_actors - 1) as f32 } else { 0.0 };
+        let t = if num_actors > 1 {
+            col as f32 / (num_actors - 1) as f32
+        } else {
+            0.0
+        };
         let bg = theme.layers.apex.interpolate(&theme.layers.base, t);
         let text_col = &theme.text_on(&bg);
-        b.rect_rounded(PADDING + col as f32 * LANE_WIDTH, header_top,
-                       LANE_WIDTH, HEADER_HEIGHT, 0,
-                       &bg.to_hex(), "none", 0.0);
-        b.text(lane_cx, header_top + HEADER_HEIGHT / 2.0, actor,
-               &text_col.to_hex(), theme.typography.label_size);
+        b.rect_rounded(
+            PADDING + col as f32 * LANE_WIDTH,
+            header_top,
+            LANE_WIDTH,
+            HEADER_HEIGHT,
+            0,
+            &bg.to_hex(),
+            "none",
+            0.0,
+        );
+        b.text(
+            lane_cx,
+            header_top + HEADER_HEIGHT / 2.0,
+            actor,
+            &text_col.to_hex(),
+            theme.typography.label_size,
+        );
     }
 
     // Steps and arrows
@@ -72,11 +97,20 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
         let box_x = PADDING + col as f32 * LANE_WIDTH + STEP_H_MARGIN;
         let box_y = content_top + i as f32 * (STEP_HEIGHT + STEP_V_GAP) + STEP_V_GAP / 2.0;
 
-        let t = if num_actors > 1 { col as f32 / (num_actors - 1) as f32 } else { 0.0 };
-        let base_color = theme.layers.apex.interpolate(&theme.layers.base, t)
+        let t = if num_actors > 1 {
+            col as f32 / (num_actors - 1) as f32
+        } else {
+            0.0
+        };
+        let base_color = theme
+            .layers
+            .apex
+            .interpolate(&theme.layers.base, t)
             .interpolate(&theme.background, 0.25);
         let box_color = match &item.emphasis {
-            Some(crate::model::Emphasis::Secondary) => base_color.interpolate(&theme.background, 0.35),
+            Some(crate::model::Emphasis::Secondary) => {
+                base_color.interpolate(&theme.background, 0.35)
+            }
             _ => base_color,
         };
         let text_col = &theme.text_on(&box_color);
@@ -85,8 +119,16 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
             _ => (theme.layers.apex.to_hex(), 1.0_f32),
         };
 
-        b.rect_rounded(box_x, box_y, step_width, STEP_HEIGHT, 6,
-                       &box_color.to_hex(), &stroke_color, stroke_width);
+        b.rect_rounded(
+            box_x,
+            box_y,
+            step_width,
+            STEP_HEIGHT,
+            6,
+            &box_color.to_hex(),
+            &stroke_color,
+            stroke_width,
+        );
 
         let is_bold = matches!(&item.emphasis, Some(crate::model::Emphasis::Primary));
         let (lines, font_size) = font::fit_lines(
@@ -96,7 +138,14 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
             step_width * 0.85,
             STEP_HEIGHT - 2.0 * LABEL_INSET,
         );
-        b.text_lines(lane_cx, box_y + STEP_HEIGHT / 2.0, &lines, &text_col.to_hex(), font_size, Some(is_bold));
+        b.text_lines(
+            lane_cx,
+            box_y + STEP_HEIGHT / 2.0,
+            &lines,
+            &text_col.to_hex(),
+            font_size,
+            Some(is_bold),
+        );
 
         status::draw_marker(&mut b, &item.status, box_x + step_width, box_y, theme);
 
@@ -105,10 +154,16 @@ pub(crate) fn render(d: &FlowDiagram, theme: &Theme) -> String {
             let next_actor = next.actor.as_deref().unwrap_or("");
             let next_col = actors.iter().position(|&a| a == next_actor).unwrap_or(0);
             let next_cx = PADDING + next_col as f32 * LANE_WIDTH + LANE_WIDTH / 2.0;
-            let next_box_y = content_top + (i + 1) as f32 * (STEP_HEIGHT + STEP_V_GAP)
-                + STEP_V_GAP / 2.0;
-            draw_arrow(&mut b, lane_cx, box_y + STEP_HEIGHT,
-                       next_cx, next_box_y, &theme.layers.apex.to_hex());
+            let next_box_y =
+                content_top + (i + 1) as f32 * (STEP_HEIGHT + STEP_V_GAP) + STEP_V_GAP / 2.0;
+            draw_arrow(
+                &mut b,
+                lane_cx,
+                box_y + STEP_HEIGHT,
+                next_cx,
+                next_box_y,
+                &theme.layers.apex.to_hex(),
+            );
         }
     }
 
@@ -119,7 +174,9 @@ fn draw_arrow(b: &mut SvgBuilder, x1: f32, y1: f32, x2: f32, y2: f32, color: &st
     let dx = x2 - x1;
     let dy = y2 - y1;
     let len = (dx * dx + dy * dy).sqrt();
-    if len < 1.0 { return; }
+    if len < 1.0 {
+        return;
+    }
     let head = 10.0_f32;
     let ux = dx / len;
     let uy = dy / len;
@@ -128,7 +185,11 @@ fn draw_arrow(b: &mut SvgBuilder, x1: f32, y1: f32, x2: f32, y2: f32, color: &st
     b.line(x1, y1, sx, sy, color, 1.5);
     let px = -uy * head * 0.4;
     let py = ux * head * 0.4;
-    b.polygon(&[(sx + px, sy + py), (x2, y2), (sx - px, sy - py)], color, "none");
+    b.polygon(
+        &[(sx + px, sy + py), (x2, y2), (sx - px, sy - py)],
+        color,
+        "none",
+    );
 }
 
 #[cfg(test)]
@@ -141,12 +202,15 @@ mod tests {
         FlowDiagram {
             title: title.map(String::from),
             view: FlowView::Swimlane,
-            items: actors_and_labels.iter().map(|(actor, label)| FlowItem {
-                actor: Some(actor.to_string()),
-                label: label.to_string(),
-                emphasis: None,
-                status: None,
-            }).collect(),
+            items: actors_and_labels
+                .iter()
+                .map(|(actor, label)| FlowItem {
+                    actor: Some(actor.to_string()),
+                    label: label.to_string(),
+                    emphasis: None,
+                    status: None,
+                })
+                .collect(),
         }
     }
 

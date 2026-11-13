@@ -3,14 +3,11 @@ mod raw;
 use crate::date::PartialDate;
 use crate::error::DeclartError;
 use crate::model::{
-    ComparisonCell, ComparisonDiagram, Diagram, Emphasis, Status,
-    FlowDiagram, FlowItem, FlowView,
-    TierDiagram, TierView,
-    HierarchyDiagram, HierarchyNode, HierarchyView,
-    HubSpokeDiagram, Item, MatrixDiagram,
-    TimelineDiagram, TimelineEvent, TimelineWhen,
-    VennDiagram, VennIntersection, VennSet,
-    StateDiagram, StateNode, StateRole, StateTransition, TransitionKind,
+    ComparisonCell, ComparisonDiagram, Diagram, Emphasis, FlowDiagram, FlowItem, FlowView,
+    HierarchyDiagram, HierarchyNode, HierarchyView, HubSpokeDiagram, Item, MatrixDiagram,
+    StateDiagram, StateNode, StateRole, StateTransition, Status, TierDiagram, TierView,
+    TimelineDiagram, TimelineEvent, TimelineWhen, TransitionKind, VennDiagram, VennIntersection,
+    VennSet,
 };
 
 pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
@@ -38,7 +35,15 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
 ///
 /// Front ends (CLI hints, WASM `kinds()`) read this list instead of keeping their own copy.
 pub const KINDS: &[&str] = &[
-    "flow", "tier", "hierarchy", "timeline", "matrix", "hub_spoke", "venn", "comparison", "state",
+    "flow",
+    "tier",
+    "hierarchy",
+    "timeline",
+    "matrix",
+    "hub_spoke",
+    "venn",
+    "comparison",
+    "state",
 ];
 
 pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
@@ -66,7 +71,11 @@ pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
 ///
 /// If the trimmed input starts with `{`, JSON parsing is used; otherwise TOML.
 pub fn parse_auto(input: &str) -> Result<Diagram, DeclartError> {
-    if input.trim_start().starts_with('{') { parse_json(input) } else { parse(input) }
+    if input.trim_start().starts_with('{') {
+        parse_json(input)
+    } else {
+        parse(input)
+    }
 }
 
 fn parse_emphasis(s: Option<&str>) -> Result<Option<Emphasis>, DeclartError> {
@@ -98,24 +107,41 @@ fn parse_status(s: Option<&str>) -> Result<Option<Status>, DeclartError> {
 }
 
 fn parse_items(raw_items: Vec<raw::RawItem>) -> Result<Vec<Item>, DeclartError> {
-    raw_items.into_iter().map(|item| {
-        let emphasis = parse_emphasis(item.emphasis.as_deref())?;
-        let status = parse_status(item.status.as_deref())?;
-        Ok(Item { label: item.label, emphasis, status })
-    }).collect()
+    raw_items
+        .into_iter()
+        .map(|item| {
+            let emphasis = parse_emphasis(item.emphasis.as_deref())?;
+            let status = parse_status(item.status.as_deref())?;
+            Ok(Item {
+                label: item.label,
+                emphasis,
+                status,
+            })
+        })
+        .collect()
 }
 
 fn parse_flow_items(raw_items: Vec<raw::RawFlowItem>) -> Result<Vec<FlowItem>, DeclartError> {
-    raw_items.into_iter().map(|item| {
-        let emphasis = parse_emphasis(item.emphasis.as_deref())?;
-        let status = parse_status(item.status.as_deref())?;
-        Ok(FlowItem { label: item.label, emphasis, status, actor: item.actor })
-    }).collect()
+    raw_items
+        .into_iter()
+        .map(|item| {
+            let emphasis = parse_emphasis(item.emphasis.as_deref())?;
+            let status = parse_status(item.status.as_deref())?;
+            Ok(FlowItem {
+                label: item.label,
+                emphasis,
+                status,
+                actor: item.actor,
+            })
+        })
+        .collect()
 }
 
 fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "flow");
-    if raw.items.is_empty() { return Err(DeclartError::EmptyItems); }
+    if raw.items.is_empty() {
+        return Err(DeclartError::EmptyItems);
+    }
     let view = match raw.view.as_deref() {
         None | Some("process") => FlowView::Process,
         Some("cycle")     => FlowView::Cycle,
@@ -134,16 +160,27 @@ fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
     };
     let n = raw.items.len();
     match view {
-        FlowView::Cycle if n < 2 =>
-            return Err(DeclartError::TooFewItems { kind: "flow/cycle", min: 2, got: n }),
-        FlowView::Funnel if n < 2 =>
-            return Err(DeclartError::TooFewItems { kind: "flow/funnel", min: 2, got: n }),
-        FlowView::Funnel if n > 10 =>
+        FlowView::Cycle if n < 2 => {
+            return Err(DeclartError::TooFewItems {
+                kind: "flow/cycle",
+                min: 2,
+                got: n,
+            })
+        }
+        FlowView::Funnel if n < 2 => {
+            return Err(DeclartError::TooFewItems {
+                kind: "flow/funnel",
+                min: 2,
+                got: n,
+            })
+        }
+        FlowView::Funnel if n > 10 => {
             return Err(DeclartError::InvalidValue {
                 field: "items".to_string(),
                 value: format!("{n} items"),
                 hint: "Funnel view supports at most 10 stages.".to_string(),
-            }),
+            })
+        }
         FlowView::Swimlane => {
             // Every item must have a non-empty actor
             for item in &raw.items {
@@ -156,8 +193,11 @@ fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
                 }
             }
             // Must have at least 2 distinct actors
-            let distinct: std::collections::HashSet<&str> =
-                raw.items.iter().map(|i| i.actor.as_deref().unwrap_or("")).collect();
+            let distinct: std::collections::HashSet<&str> = raw
+                .items
+                .iter()
+                .map(|i| i.actor.as_deref().unwrap_or(""))
+                .collect();
             if distinct.len() < 2 {
                 return Err(DeclartError::InvalidValue {
                     field: "actor".to_string(),
@@ -169,31 +209,46 @@ fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
         _ => {}
     }
     let items = parse_flow_items(raw.items)?;
-    Ok(Diagram::Flow(FlowDiagram { title: raw.title, view, items }))
+    Ok(Diagram::Flow(FlowDiagram {
+        title: raw.title,
+        view,
+        items,
+    }))
 }
 
 fn validate_tier(raw: raw::RawTierDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "tier");
-    if raw.items.is_empty() { return Err(DeclartError::EmptyItems); }
+    if raw.items.is_empty() {
+        return Err(DeclartError::EmptyItems);
+    }
     let view = match raw.view.as_deref() {
         None | Some("pyramid") => TierView::Pyramid,
         Some("concentric") => TierView::Concentric,
-        Some(other) => return Err(DeclartError::InvalidValue {
-            field: "view".to_string(),
-            value: other.to_string(),
-            hint: "Valid view values for tier: pyramid, concentric".to_string(),
-        }),
+        Some(other) => {
+            return Err(DeclartError::InvalidValue {
+                field: "view".to_string(),
+                value: other.to_string(),
+                hint: "Valid view values for tier: pyramid, concentric".to_string(),
+            })
+        }
     };
     let items = parse_items(raw.items)?;
-    Ok(Diagram::Tier(TierDiagram { title: raw.title, view, items }))
+    Ok(Diagram::Tier(TierDiagram {
+        title: raw.title,
+        view,
+        items,
+    }))
 }
 
 fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "hierarchy");
-    if raw.nodes.is_empty() { return Err(DeclartError::EmptyItems); }
+    if raw.nodes.is_empty() {
+        return Err(DeclartError::EmptyItems);
+    }
 
     // Build identifier sets. Each node is identified by its id (if set) or label.
-    let labels: std::collections::HashSet<&str> = raw.nodes.iter().map(|n| n.label.as_str()).collect();
+    let labels: std::collections::HashSet<&str> =
+        raw.nodes.iter().map(|n| n.label.as_str()).collect();
     if labels.len() != raw.nodes.len() {
         return Err(DeclartError::InvalidValue {
             field: "label".to_string(),
@@ -202,9 +257,8 @@ fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartE
         });
     }
 
-    let ids: std::collections::HashSet<&str> = raw.nodes.iter()
-        .filter_map(|n| n.id.as_deref())
-        .collect();
+    let ids: std::collections::HashSet<&str> =
+        raw.nodes.iter().filter_map(|n| n.id.as_deref()).collect();
 
     // Check for duplicate ids
     let id_count = raw.nodes.iter().filter(|n| n.id.is_some()).count();
@@ -246,35 +300,63 @@ fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartE
         });
     }
     let view = match raw.view.as_deref() {
-        None => if root_count == 1 { HierarchyView::OrgChart } else { HierarchyView::Fishbone },
+        None => {
+            if root_count == 1 {
+                HierarchyView::OrgChart
+            } else {
+                HierarchyView::Fishbone
+            }
+        }
         Some("org_chart") => HierarchyView::OrgChart,
         Some("fishbone") => HierarchyView::Fishbone,
         Some("mind_map") => HierarchyView::MindMap,
-        Some(other) => return Err(DeclartError::InvalidValue {
-            field: "view".to_string(),
-            value: other.to_string(),
-            hint: "Valid view values for hierarchy: org_chart, fishbone, mind_map".to_string(),
-        }),
+        Some(other) => {
+            return Err(DeclartError::InvalidValue {
+                field: "view".to_string(),
+                value: other.to_string(),
+                hint: "Valid view values for hierarchy: org_chart, fishbone, mind_map".to_string(),
+            })
+        }
     };
     match view {
-        HierarchyView::OrgChart | HierarchyView::MindMap if root_count != 1 =>
+        HierarchyView::OrgChart | HierarchyView::MindMap if root_count != 1 => {
             return Err(DeclartError::InvalidValue {
                 field: "parent".to_string(),
                 value: format!("{root_count} root nodes"),
                 hint: "org_chart and mind_map views require exactly one root node".to_string(),
-            }),
-        HierarchyView::Fishbone if root_count < 2 =>
-            return Err(DeclartError::TooFewItems { kind: "hierarchy/fishbone", min: 2, got: root_count }),
-        HierarchyView::Fishbone if root_count > 20 =>
+            })
+        }
+        HierarchyView::Fishbone if root_count < 2 => {
+            return Err(DeclartError::TooFewItems {
+                kind: "hierarchy/fishbone",
+                min: 2,
+                got: root_count,
+            })
+        }
+        HierarchyView::Fishbone if root_count > 20 => {
             return Err(DeclartError::InvalidValue {
                 field: "nodes".to_string(),
                 value: format!("{root_count} root nodes"),
                 hint: "fishbone view supports at most 20 cause categories".to_string(),
-            }),
+            })
+        }
         _ => {}
     }
-    let nodes = raw.nodes.into_iter().map(|n| HierarchyNode { label: n.label, id: n.id, parent: n.parent }).collect();
-    Ok(Diagram::Hierarchy(HierarchyDiagram { title: raw.title, effect: raw.effect, view, nodes }))
+    let nodes = raw
+        .nodes
+        .into_iter()
+        .map(|n| HierarchyNode {
+            label: n.label,
+            id: n.id,
+            parent: n.parent,
+        })
+        .collect();
+    Ok(Diagram::Hierarchy(HierarchyDiagram {
+        title: raw.title,
+        effect: raw.effect,
+        view,
+        nodes,
+    }))
 }
 
 fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> {
@@ -299,11 +381,14 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
                 "top-right" => 1,
                 "bottom-left" => 2,
                 "bottom-right" => 3,
-                other => return Err(DeclartError::InvalidValue {
-                    field: "position".to_string(),
-                    value: other.to_string(),
-                    hint: "Valid values: top-left, top-right, bottom-left, bottom-right".to_string(),
-                }),
+                other => {
+                    return Err(DeclartError::InvalidValue {
+                        field: "position".to_string(),
+                        value: other.to_string(),
+                        hint: "Valid values: top-left, top-right, bottom-left, bottom-right"
+                            .to_string(),
+                    })
+                }
             };
             if slots[slot].is_some() {
                 return Err(DeclartError::InvalidValue {
@@ -389,19 +474,34 @@ fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
             hint: "Venn diagrams require exactly 2 or 3 sets".to_string(),
         });
     }
-    let sets = raw.sets.into_iter().map(|s| VennSet { label: s.label }).collect();
+    let sets = raw
+        .sets
+        .into_iter()
+        .map(|s| VennSet { label: s.label })
+        .collect();
     let intersections = raw
         .intersections
         .into_iter()
-        .map(|i| VennIntersection { sets: i.sets, label: i.label })
+        .map(|i| VennIntersection {
+            sets: i.sets,
+            label: i.label,
+        })
         .collect();
-    Ok(Diagram::Venn(VennDiagram { title: raw.title, sets, intersections }))
+    Ok(Diagram::Venn(VennDiagram {
+        title: raw.title,
+        sets,
+        intersections,
+    }))
 }
 
 fn validate_timeline(raw: raw::RawTimelineDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "timeline");
     if raw.events.len() < 2 {
-        return Err(DeclartError::TooFewItems { kind: "timeline", min: 2, got: raw.events.len() });
+        return Err(DeclartError::TooFewItems {
+            kind: "timeline",
+            min: 2,
+            got: raw.events.len(),
+        });
     }
     let mut events = raw
         .events
@@ -410,13 +510,22 @@ fn validate_timeline(raw: raw::RawTimelineDiagram) -> Result<Diagram, DeclartErr
         .collect::<Result<Vec<_>, _>>()?;
     events.sort_by_key(|(start_day, _)| *start_day);
     let events = events.into_iter().map(|(_, event)| event).collect();
-    Ok(Diagram::Timeline(TimelineDiagram { title: raw.title, events }))
+    Ok(Diagram::Timeline(TimelineDiagram {
+        title: raw.title,
+        events,
+    }))
 }
 
 /// Validates one event and returns it with its start day (the sort key).
 fn validate_timeline_event(e: raw::RawTimelineEvent) -> Result<(i64, TimelineEvent), DeclartError> {
-    const SHAPE_HINT: &str = "Each event needs either `date` (a milestone) or both `start` and `end` (a period)";
-    let raw::RawTimelineEvent { date, start, end, label } = e;
+    const SHAPE_HINT: &str =
+        "Each event needs either `date` (a milestone) or both `start` and `end` (a period)";
+    let raw::RawTimelineEvent {
+        date,
+        start,
+        end,
+        label,
+    } = e;
     let shape_error = |problem: &str| DeclartError::InvalidValue {
         field: "events".to_string(),
         value: format!("{label}: {problem}"),
@@ -456,7 +565,11 @@ fn validate_timeline_event(e: raw::RawTimelineEvent) -> Result<(i64, TimelineEve
 fn validate_hub_spoke(raw: raw::RawHubSpokeDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "hub_spoke");
     if raw.spokes.len() < 2 {
-        return Err(DeclartError::TooFewItems { kind: "hub_spoke", min: 2, got: raw.spokes.len() });
+        return Err(DeclartError::TooFewItems {
+            kind: "hub_spoke",
+            min: 2,
+            got: raw.spokes.len(),
+        });
     }
     let spokes = parse_items(raw.spokes)?;
     Ok(Diagram::HubSpoke(HubSpokeDiagram {
@@ -502,7 +615,9 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
             return Err(DeclartError::InvalidValue {
                 field: "column label".to_string(),
                 value: "label".to_string(),
-                hint: "'label' is reserved for the row identifier and cannot be used as a column name".to_string(),
+                hint:
+                    "'label' is reserved for the row identifier and cannot be used as a column name"
+                        .to_string(),
             });
         }
     }
@@ -541,14 +656,23 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
         }
     }
 
-    Ok(Diagram::Comparison(ComparisonDiagram { title: raw.title, rows, columns, cells }))
+    Ok(Diagram::Comparison(ComparisonDiagram {
+        title: raw.title,
+        rows,
+        columns,
+        cells,
+    }))
 }
 
 fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "state");
 
     if raw.states.len() < 2 {
-        return Err(DeclartError::TooFewItems { kind: "state", min: 2, got: raw.states.len() });
+        return Err(DeclartError::TooFewItems {
+            kind: "state",
+            min: 2,
+            got: raw.states.len(),
+        });
     }
 
     // Duplicate label check
@@ -558,7 +682,8 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
         return Err(DeclartError::InvalidValue {
             field: "label".to_string(),
             value: "(duplicate)".to_string(),
-            hint: "Each state label must be unique; use `id` to disambiguate if labels collide".to_string(),
+            hint: "Each state label must be unique; use `id` to disambiguate if labels collide"
+                .to_string(),
         });
     }
 
@@ -579,15 +704,24 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
     for s in raw.states {
         let role = match s.role.as_deref() {
             None => None,
-            Some("initial") => { initial_count += 1; Some(StateRole::Initial) }
+            Some("initial") => {
+                initial_count += 1;
+                Some(StateRole::Initial)
+            }
             Some("terminal") => Some(StateRole::Terminal),
-            Some(other) => return Err(DeclartError::InvalidValue {
-                field: "role".to_string(),
-                value: other.to_string(),
-                hint: "Valid values: initial, terminal".to_string(),
-            }),
+            Some(other) => {
+                return Err(DeclartError::InvalidValue {
+                    field: "role".to_string(),
+                    value: other.to_string(),
+                    hint: "Valid values: initial, terminal".to_string(),
+                })
+            }
         };
-        states.push(StateNode { label: s.label, id: s.id, role });
+        states.push(StateNode {
+            label: s.label,
+            id: s.id,
+            role,
+        });
     }
     if initial_count > 1 {
         return Err(DeclartError::InvalidValue {
@@ -598,11 +732,16 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
     }
 
     // Build reachable key set (id OR label for each state)
-    let reachable: std::collections::HashSet<&str> = states.iter().flat_map(|s| {
-        let mut keys = vec![s.label.as_str()];
-        if let Some(id) = s.id.as_deref() { keys.push(id); }
-        keys
-    }).collect();
+    let reachable: std::collections::HashSet<&str> = states
+        .iter()
+        .flat_map(|s| {
+            let mut keys = vec![s.label.as_str()];
+            if let Some(id) = s.id.as_deref() {
+                keys.push(id);
+            }
+            keys
+        })
+        .collect();
 
     // Parse transitions
     let mut transitions = Vec::with_capacity(raw.transitions.len());
@@ -624,25 +763,34 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
         let kind = match t.kind.as_deref() {
             None | Some("normal") => TransitionKind::Normal,
             Some("exception") => TransitionKind::Exception,
-            Some(other) => return Err(DeclartError::InvalidValue {
-                field: "type".to_string(),
-                value: other.to_string(),
-                hint: "Valid values: normal, exception".to_string(),
-            }),
+            Some(other) => {
+                return Err(DeclartError::InvalidValue {
+                    field: "type".to_string(),
+                    value: other.to_string(),
+                    hint: "Valid values: normal, exception".to_string(),
+                })
+            }
         };
         transitions.push(StateTransition {
-            from: t.from, to: t.to, trigger: t.trigger, kind,
+            from: t.from,
+            to: t.to,
+            trigger: t.trigger,
+            kind,
         });
     }
 
-    Ok(Diagram::State(StateDiagram { title: raw.title, states, transitions }))
+    Ok(Diagram::State(StateDiagram {
+        title: raw.title,
+        states,
+        transitions,
+    }))
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::model::{Diagram, FlowView, TierView, HierarchyView, StateRole, TimelineWhen};
     use super::{parse, parse_auto, parse_json, KINDS};
     use crate::error::DeclartError;
+    use crate::model::{Diagram, FlowView, HierarchyView, StateRole, TierView, TimelineWhen};
 
     // --- flow tests ---
 
@@ -650,7 +798,9 @@ mod tests {
     fn parse_flow_defaults_to_process_view() {
         let input = "kind = \"flow\"\n\n[[items]]\nlabel = \"Plan\"\n\n[[items]]\nlabel = \"Do\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Flow(d) = diagram else { panic!("expected Flow") };
+        let Diagram::Flow(d) = diagram else {
+            panic!("expected Flow")
+        };
         assert_eq!(d.view, FlowView::Process);
         assert_eq!(d.items.len(), 2);
     }
@@ -675,14 +825,20 @@ mod tests {
     fn parse_flow_pyramid_view_gives_migration_hint() {
         let input = "kind = \"flow\"\nview = \"pyramid\"\n\n[[items]]\nlabel = \"Top\"\n";
         let err = parse(input).unwrap_err();
-        assert!(err.to_string().contains("tier"), "error should mention tier kind");
+        assert!(
+            err.to_string().contains("tier"),
+            "error should mention tier kind"
+        );
     }
 
     #[test]
     fn parse_tier_defaults_to_pyramid_view() {
-        let input = "kind = \"tier\"\n\n[[items]]\nlabel = \"Top\"\n\n[[items]]\nlabel = \"Bottom\"\n";
+        let input =
+            "kind = \"tier\"\n\n[[items]]\nlabel = \"Top\"\n\n[[items]]\nlabel = \"Bottom\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Tier(d) = diagram else { panic!("expected Tier") };
+        let Diagram::Tier(d) = diagram else {
+            panic!("expected Tier")
+        };
         assert_eq!(d.view, TierView::Pyramid);
         assert_eq!(d.items.len(), 2);
     }
@@ -699,7 +855,9 @@ mod tests {
     fn parse_tier_explicit_view_concentric() {
         let input = "kind = \"tier\"\nview = \"concentric\"\n\n[[items]]\nlabel = \"Core\"\n\n[[items]]\nlabel = \"Outer\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Tier(d) = diagram else { panic!("expected Tier") };
+        let Diagram::Tier(d) = diagram else {
+            panic!("expected Tier")
+        };
         assert_eq!(d.view, TierView::Concentric);
         assert_eq!(d.items.len(), 2);
     }
@@ -709,7 +867,10 @@ mod tests {
         let input = "kind = \"tier\"\nview = \"cycle\"\n\n[[items]]\nlabel = \"A\"\n";
         let err = parse(input).unwrap_err();
         // Hint should mention both supported views so the migration path is clear.
-        assert!(format!("{err}").contains("concentric"), "invalid-view hint should list concentric");
+        assert!(
+            format!("{err}").contains("concentric"),
+            "invalid-view hint should list concentric"
+        );
     }
 
     #[test]
@@ -734,7 +895,10 @@ mod tests {
     fn parse_sequence_gives_deprecation_hint() {
         let input = "kind = \"sequence\"\n\n[[items]]\nlabel = \"A\"\n";
         let err = parse(input).unwrap_err();
-        assert!(err.to_string().contains("renamed to `flow`"), "error should mention renamed to flow");
+        assert!(
+            err.to_string().contains("renamed to `flow`"),
+            "error should mention renamed to flow"
+        );
     }
 
     #[test]
@@ -771,7 +935,9 @@ status = "normal"
 label = "Untracked"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Flow(d) = diagram else { panic!("expected Flow") };
+        let Diagram::Flow(d) = diagram else {
+            panic!("expected Flow")
+        };
         assert_eq!(d.items[0].status, Some(Status::Success));
         assert_eq!(d.items[1].status, Some(Status::Critical));
         assert_eq!(d.items[2].status, Some(Status::Warning));
@@ -803,7 +969,10 @@ label = "Other"
     fn parse_flow_rejects_invalid_status() {
         let input = "kind = \"flow\"\n\n[[items]]\nlabel = \"A\"\nstatus = \"green\"\n\n[[items]]\nlabel = \"B\"\n";
         let err = parse(input).unwrap_err();
-        assert!(err.to_string().contains("status"), "error should mention status");
+        assert!(
+            err.to_string().contains("status"),
+            "error should mention status"
+        );
     }
 
     #[test]
@@ -811,7 +980,9 @@ label = "Other"
         use crate::model::Status;
         let input = "kind = \"tier\"\n\n[[items]]\nlabel = \"Top\"\nstatus = \"critical\"\n\n[[items]]\nlabel = \"Base\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Tier(d) = diagram else { panic!("expected Tier") };
+        let Diagram::Tier(d) = diagram else {
+            panic!("expected Tier")
+        };
         assert_eq!(d.items[0].status, Some(Status::Critical));
         assert_eq!(d.items[1].status, None);
     }
@@ -821,7 +992,9 @@ label = "Other"
         use crate::model::Status;
         let input = "kind = \"hub_spoke\"\ncenter = \"Core\"\n\n[[spokes]]\nlabel = \"Auth\"\nstatus = \"warning\"\n\n[[spokes]]\nlabel = \"DB\"\nstatus = \"success\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::HubSpoke(d) = diagram else { panic!("expected HubSpoke") };
+        let Diagram::HubSpoke(d) = diagram else {
+            panic!("expected HubSpoke")
+        };
         assert_eq!(d.spokes[0].status, Some(Status::Warning));
         assert_eq!(d.spokes[1].status, Some(Status::Success));
     }
@@ -854,18 +1027,23 @@ position = "bottom-right"
 status = "warning"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Matrix(d) = diagram else { panic!("expected Matrix") };
+        let Diagram::Matrix(d) = diagram else {
+            panic!("expected Matrix")
+        };
         // position reorders to [top-left, top-right, bottom-left, bottom-right]
-        assert_eq!(d.quadrants[0].status, None);                    // Monitor (top-left)
-        assert_eq!(d.quadrants[1].status, Some(Status::Critical));  // Critical Risk (top-right)
-        assert_eq!(d.quadrants[2].status, Some(Status::Success));   // Low (bottom-left)
-        assert_eq!(d.quadrants[3].status, Some(Status::Warning));   // Watch (bottom-right)
+        assert_eq!(d.quadrants[0].status, None); // Monitor (top-left)
+        assert_eq!(d.quadrants[1].status, Some(Status::Critical)); // Critical Risk (top-right)
+        assert_eq!(d.quadrants[2].status, Some(Status::Success)); // Low (bottom-left)
+        assert_eq!(d.quadrants[3].status, Some(Status::Warning)); // Watch (bottom-right)
     }
 
     #[test]
     fn parse_tier_rejects_invalid_status() {
         let input = "kind = \"tier\"\n\n[[items]]\nlabel = \"Top\"\nstatus = \"bogus\"\n";
-        assert!(parse(input).is_err(), "invalid status value should be rejected");
+        assert!(
+            parse(input).is_err(),
+            "invalid status value should be rejected"
+        );
     }
 
     #[test]
@@ -883,7 +1061,9 @@ actor = "B"
 label = "Step 2"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Flow(d) = diagram else { panic!("expected Flow") };
+        let Diagram::Flow(d) = diagram else {
+            panic!("expected Flow")
+        };
         assert_eq!(d.view, FlowView::Swimlane);
         assert_eq!(d.items[0].actor.as_deref(), Some("A"));
         assert_eq!(d.items[1].actor.as_deref(), Some("B"));
@@ -922,7 +1102,10 @@ label = "Step 2"
     fn parse_flow_swimlane_hint_in_valid_view_error() {
         let input = "kind = \"flow\"\nview = \"unknown\"\n\n[[items]]\nlabel = \"A\"\n";
         let err = parse(input).unwrap_err();
-        assert!(err.to_string().contains("swimlane"), "error hint should list swimlane");
+        assert!(
+            err.to_string().contains("swimlane"),
+            "error hint should list swimlane"
+        );
     }
 
     // --- hierarchy tests ---
@@ -931,7 +1114,9 @@ label = "Step 2"
     fn parse_hierarchy_auto_selects_org_chart_for_single_root() {
         let input = "kind = \"hierarchy\"\n\n[[nodes]]\nlabel = \"CEO\"\n\n[[nodes]]\nlabel = \"CTO\"\nparent = \"CEO\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        let Diagram::Hierarchy(d) = diagram else {
+            panic!()
+        };
         assert_eq!(d.view, HierarchyView::OrgChart);
         assert_eq!(d.nodes.len(), 2);
     }
@@ -940,7 +1125,9 @@ label = "Step 2"
     fn parse_hierarchy_auto_selects_fishbone_for_multiple_roots() {
         let input = "kind = \"hierarchy\"\ntitle = \"Issues\"\n\n[[nodes]]\nlabel = \"Materials\"\n\n[[nodes]]\nlabel = \"Methods\"\n\n[[nodes]]\nlabel = \"Bad input\"\nparent = \"Materials\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        let Diagram::Hierarchy(d) = diagram else {
+            panic!()
+        };
         assert_eq!(d.view, HierarchyView::Fishbone);
     }
 
@@ -948,7 +1135,9 @@ label = "Step 2"
     fn parse_hierarchy_explicit_view_org_chart() {
         let input = "kind = \"hierarchy\"\nview = \"org_chart\"\n\n[[nodes]]\nlabel = \"Root\"\n\n[[nodes]]\nlabel = \"Child\"\nparent = \"Root\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        let Diagram::Hierarchy(d) = diagram else {
+            panic!()
+        };
         assert_eq!(d.view, HierarchyView::OrgChart);
     }
 
@@ -956,7 +1145,9 @@ label = "Step 2"
     fn parse_hierarchy_explicit_view_fishbone() {
         let input = "kind = \"hierarchy\"\nview = \"fishbone\"\ntitle = \"Effect\"\n\n[[nodes]]\nlabel = \"Cause A\"\n\n[[nodes]]\nlabel = \"Cause B\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        let Diagram::Hierarchy(d) = diagram else {
+            panic!()
+        };
         assert_eq!(d.view, HierarchyView::Fishbone);
     }
 
@@ -994,7 +1185,9 @@ label = "CTO"
 parent = "ceo"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        let Diagram::Hierarchy(d) = diagram else {
+            panic!()
+        };
         assert_eq!(d.nodes.len(), 2);
         assert_eq!(d.nodes[0].id.as_deref(), Some("ceo"));
         assert_eq!(d.nodes[1].parent.as_deref(), Some("ceo"));
@@ -1019,7 +1212,10 @@ label = "Node B"
     #[test]
     fn parse_hierarchy_label_parent_still_works_without_id() {
         let input = "kind = \"hierarchy\"\n\n[[nodes]]\nlabel = \"CEO\"\n\n[[nodes]]\nlabel = \"CTO\"\nparent = \"CEO\"\n";
-        assert!(parse(input).is_ok(), "existing label-based parent reference must still work");
+        assert!(
+            parse(input).is_ok(),
+            "existing label-based parent reference must still work"
+        );
     }
 
     #[test]
@@ -1037,7 +1233,9 @@ label = "Materials"
 label = "Methods"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        let Diagram::Hierarchy(d) = diagram else {
+            panic!()
+        };
         assert_eq!(d.title.as_deref(), Some("API Performance"));
         assert_eq!(d.effect.as_deref(), Some("Slow API Response"));
     }
@@ -1046,7 +1244,9 @@ label = "Methods"
     fn parse_hierarchy_effect_defaults_to_none() {
         let input = "kind = \"hierarchy\"\nview = \"fishbone\"\ntitle = \"Issues\"\n\n[[nodes]]\nlabel = \"Materials\"\n\n[[nodes]]\nlabel = \"Methods\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Hierarchy(d) = diagram else { panic!() };
+        let Diagram::Hierarchy(d) = diagram else {
+            panic!()
+        };
         assert!(d.effect.is_none());
     }
 
@@ -1061,11 +1261,20 @@ label = "Methods"
     #[test]
     fn every_listed_kind_is_dispatched() {
         for kind in KINDS {
-            let err = parse(&format!("kind = \"{kind}\"
-")).err();
-            assert!(!matches!(err, Some(DeclartError::UnknownKind(_))), "`{kind}` is in KINDS but not dispatched by parse");
+            let err = parse(&format!(
+                "kind = \"{kind}\"
+"
+            ))
+            .err();
+            assert!(
+                !matches!(err, Some(DeclartError::UnknownKind(_))),
+                "`{kind}` is in KINDS but not dispatched by parse"
+            );
             let err = parse_json(&format!("{{\"kind\":\"{kind}\"}}")).err();
-            assert!(!matches!(err, Some(DeclartError::UnknownKind(_))), "`{kind}` is in KINDS but not dispatched by parse_json");
+            assert!(
+                !matches!(err, Some(DeclartError::UnknownKind(_))),
+                "`{kind}` is in KINDS but not dispatched by parse_json"
+            );
         }
     }
 
@@ -1085,7 +1294,8 @@ label = "Methods"
 
     #[test]
     fn parse_json_hierarchy() {
-        let input = r#"{"kind":"hierarchy","nodes":[{"label":"CEO"},{"label":"CTO","parent":"CEO"}]}"#;
+        let input =
+            r#"{"kind":"hierarchy","nodes":[{"label":"CEO"},{"label":"CTO","parent":"CEO"}]}"#;
         let diagram = parse_json(input).unwrap();
         assert!(matches!(diagram, Diagram::Hierarchy(_)));
     }
@@ -1132,7 +1342,9 @@ label = "Bottom-Left"
 position = "bottom-left"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Matrix(d) = diagram else { panic!("expected Matrix") };
+        let Diagram::Matrix(d) = diagram else {
+            panic!("expected Matrix")
+        };
         assert_eq!(d.quadrants[0].label, "Top-Left");
         assert_eq!(d.quadrants[1].label, "Top-Right");
         assert_eq!(d.quadrants[2].label, "Bottom-Left");
@@ -1162,7 +1374,10 @@ position = "top-right"
 label = "D"
 position = "bottom-left"
 "#;
-        assert!(parse(input).is_err(), "duplicate position should be rejected");
+        assert!(
+            parse(input).is_err(),
+            "duplicate position should be rejected"
+        );
     }
 
     #[test]
@@ -1187,7 +1402,10 @@ position = "top-right"
 label = "D"
 position = "bottom-left"
 "#;
-        assert!(parse(input).is_err(), "mixed position/no-position should be rejected");
+        assert!(
+            parse(input).is_err(),
+            "mixed position/no-position should be rejected"
+        );
     }
 
     #[test]
@@ -1230,7 +1448,9 @@ quadrant = "bottom-left"
 status = "critical"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Matrix(d) = diagram else { panic!("expected Matrix") };
+        let Diagram::Matrix(d) = diagram else {
+            panic!("expected Matrix")
+        };
         assert_eq!(d.items.len(), 3);
         // top-right = slot 1, bottom-left = slot 2
         assert_eq!(d.items[0].quadrant, 1);
@@ -1259,7 +1479,10 @@ label = "D"
 label = "X"
 quadrant = "middle"
 "#;
-        assert!(parse(input).is_err(), "invalid quadrant position should be rejected");
+        assert!(
+            parse(input).is_err(),
+            "invalid quadrant position should be rejected"
+        );
     }
 
     #[test]
@@ -1292,9 +1515,14 @@ label = "orphan"
             input.push_str(&format!("[[quadrants]]\nlabel = \"{label}\"\n"));
         }
         for i in 0..7 {
-            input.push_str(&format!("[[items]]\nlabel = \"I{i}\"\nquadrant = \"top-left\"\n"));
+            input.push_str(&format!(
+                "[[items]]\nlabel = \"I{i}\"\nquadrant = \"top-left\"\n"
+            ));
         }
-        assert!(parse(&input).is_err(), "more than 6 items in one quadrant should be rejected");
+        assert!(
+            parse(&input).is_err(),
+            "more than 6 items in one quadrant should be rejected"
+        );
     }
 
     #[test]
@@ -1302,7 +1530,9 @@ label = "orphan"
         // Backward compatibility: label-only quadrants, no items.
         let input = "kind = \"matrix\"\nx_axis = \"X\"\ny_axis = \"Y\"\n\n[[quadrants]]\nlabel = \"Q1\"\n\n[[quadrants]]\nlabel = \"Q2\"\n\n[[quadrants]]\nlabel = \"Q3\"\n\n[[quadrants]]\nlabel = \"Q4\"\n";
         let diagram = parse(input).unwrap();
-        let Diagram::Matrix(d) = diagram else { panic!() };
+        let Diagram::Matrix(d) = diagram else {
+            panic!()
+        };
         assert!(d.items.is_empty());
     }
 
@@ -1313,7 +1543,10 @@ label = "orphan"
             input.push_str(&format!("[[items]]\nlabel = \"Stage {}\"\n", i));
         }
         let err = parse(&input).unwrap_err();
-        assert!(err.to_string().contains("items"), "error should mention 'items'");
+        assert!(
+            err.to_string().contains("items"),
+            "error should mention 'items'"
+        );
     }
 
     #[test]
@@ -1378,7 +1611,9 @@ date = "2024"
 label = "End"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Timeline(d) = diagram else { panic!("expected Timeline") };
+        let Diagram::Timeline(d) = diagram else {
+            panic!("expected Timeline")
+        };
         assert_eq!(d.events.len(), 2);
         assert_eq!(d.events[0].when, TimelineWhen::Point("2023".into()));
     }
@@ -1418,7 +1653,9 @@ date = "2022-01-01"
 label = "First"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Timeline(d) = diagram else { panic!() };
+        let Diagram::Timeline(d) = diagram else {
+            panic!()
+        };
         assert_eq!(d.events[0].when.start(), "2022-01-01");
         assert_eq!(d.events[1].when.start(), "2023-06");
         assert_eq!(d.events[2].when.start(), "2025");
@@ -1427,13 +1664,16 @@ label = "First"
     // --- Timeline periods (start/end) ---
 
     fn timeline(events: &str) -> Result<Diagram, DeclartError> {
-        parse(&format!("kind = \"timeline\"
-{events}"))
+        parse(&format!(
+            "kind = \"timeline\"
+{events}"
+        ))
     }
 
     #[test]
     fn parse_timeline_accepts_period_and_milestone() {
-        let d = timeline(r#"
+        let d = timeline(
+            r#"
 [[events]]
 start = "2024-02"
 end = "2024-03"
@@ -1442,64 +1682,87 @@ label = "Beta"
 [[events]]
 date = "2024-01-15"
 label = "Alpha"
-"#).unwrap();
+"#,
+        )
+        .unwrap();
         let Diagram::Timeline(d) = d else { panic!() };
         assert_eq!(d.events[0].label, "Alpha", "events sort by start date");
-        assert_eq!(d.events[1].when, TimelineWhen::Span { start: "2024-02".into(), end: "2024-03".into() });
+        assert_eq!(
+            d.events[1].when,
+            TimelineWhen::Span {
+                start: "2024-02".into(),
+                end: "2024-03".into()
+            }
+        );
     }
 
     #[test]
     fn parse_timeline_period_end_is_inclusive() {
         // Same month, and an end coarser than a start inside it, are both valid periods.
-        assert!(timeline("[[events]]
+        assert!(timeline(
+            "[[events]]
 start = \"2024-03\"
 end = \"2024-03\"
 label = \"A\"
 [[events]]
 date = \"2025\"
 label = \"B\"
-").is_ok());
-        assert!(timeline("[[events]]
+"
+        )
+        .is_ok());
+        assert!(timeline(
+            "[[events]]
 start = \"2024-03-15\"
 end = \"2024-03\"
 label = \"A\"
 [[events]]
 date = \"2025\"
 label = \"B\"
-").is_ok());
+"
+        )
+        .is_ok());
     }
 
     #[test]
     fn parse_timeline_rejects_end_before_start() {
-        let err = timeline("[[events]]
+        let err = timeline(
+            "[[events]]
 start = \"2024-05\"
 end = \"2024-04-30\"
 label = \"A\"
 [[events]]
 date = \"2025\"
 label = \"B\"
-").unwrap_err();
+",
+        )
+        .unwrap_err();
         assert!(err.to_string().contains("`end`"), "{err}");
     }
 
     #[test]
     fn parse_timeline_rejects_invalid_event_shapes() {
         let cases = [
-            ("date = \"2024\"
+            (
+                "date = \"2024\"
 start = \"2024\"
-end = \"2025\"", "combined"),
+end = \"2025\"",
+                "combined",
+            ),
             ("start = \"2024\"", "together"),
             ("end = \"2024\"", "together"),
             ("", "no date"),
         ];
         for (fields, expected) in cases {
-            let err = timeline(&format!("[[events]]
+            let err = timeline(&format!(
+                "[[events]]
 {fields}
 label = \"A\"
 [[events]]
 date = \"2025\"
 label = \"B\"
-")).unwrap_err();
+"
+            ))
+            .unwrap_err();
             assert!(err.to_string().contains(expected), "`{fields}` → {err}");
         }
     }
@@ -1507,13 +1770,19 @@ label = \"B\"
     #[test]
     fn parse_timeline_rejects_out_of_range_dates() {
         for bad in ["2024-13", "2024-02-30"] {
-            assert!(timeline(&format!("[[events]]
+            assert!(
+                timeline(&format!(
+                    "[[events]]
 date = \"{bad}\"
 label = \"A\"
 [[events]]
 date = \"2025\"
 label = \"B\"
-")).is_err(), "{bad}");
+"
+                ))
+                .is_err(),
+                "{bad}"
+            );
         }
     }
 
@@ -1558,7 +1827,9 @@ Ecosystem = "★★★"
     #[test]
     fn parse_valid_comparison() {
         let diagram = parse(VALID_COMPARISON).unwrap();
-        let Diagram::Comparison(d) = diagram else { panic!("expected Comparison") };
+        let Diagram::Comparison(d) = diagram else {
+            panic!("expected Comparison")
+        };
         assert_eq!(d.rows.len(), 2);
         assert_eq!(d.columns.len(), 2);
         assert_eq!(d.cells.len(), 3); // React has 2 cells, Vue has 1
@@ -1569,10 +1840,22 @@ Ecosystem = "★★★"
         // Map iteration order once leaked into the rendered output; cells must come out
         // in row order, then declared column order, on every parse.
         for _ in 0..16 {
-            let Diagram::Comparison(d) = parse(VALID_COMPARISON).unwrap() else { panic!() };
-            let order: Vec<(&str, &str)> =
-                d.cells.iter().map(|c| (c.row.as_str(), c.column.as_str())).collect();
-            assert_eq!(order, vec![("React", "Performance"), ("React", "Ecosystem"), ("Vue", "Ecosystem")]);
+            let Diagram::Comparison(d) = parse(VALID_COMPARISON).unwrap() else {
+                panic!()
+            };
+            let order: Vec<(&str, &str)> = d
+                .cells
+                .iter()
+                .map(|c| (c.row.as_str(), c.column.as_str()))
+                .collect();
+            assert_eq!(
+                order,
+                vec![
+                    ("React", "Performance"),
+                    ("React", "Ecosystem"),
+                    ("Vue", "Ecosystem")
+                ]
+            );
         }
     }
 
@@ -1618,7 +1901,9 @@ label = "Speed"
 label = "A"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::Comparison(d) = diagram else { panic!() };
+        let Diagram::Comparison(d) = diagram else {
+            panic!()
+        };
         assert_eq!(d.cells.len(), 0);
     }
 
@@ -1630,7 +1915,9 @@ label = "A"
   "rows": [{"label": "React", "Speed": "Fast"}, {"label": "Vue"}]
 }"#;
         let diagram = parse_json(input).unwrap();
-        let Diagram::Comparison(d) = diagram else { panic!() };
+        let Diagram::Comparison(d) = diagram else {
+            panic!()
+        };
         assert_eq!(d.cells.len(), 1);
         assert_eq!(d.cells[0].value, "Fast");
     }
@@ -1664,7 +1951,9 @@ to = "done"
 trigger = "finish"
 "#;
         let diagram = parse(input).unwrap();
-        let Diagram::State(d) = diagram else { panic!("expected State") };
+        let Diagram::State(d) = diagram else {
+            panic!("expected State")
+        };
         assert_eq!(d.states.len(), 2);
         assert_eq!(d.transitions[0].trigger.as_deref(), Some("finish"));
         assert!(matches!(d.states[0].role, Some(StateRole::Initial)));
@@ -1767,6 +2056,9 @@ label = "Ready"
     #[test]
     fn unknown_kind_hint_includes_state() {
         let err = parse("kind = \"unknown\"\n").unwrap_err();
-        assert!(err.to_string().contains("state"), "hint should list 'state'");
+        assert!(
+            err.to_string().contains("state"),
+            "hint should list 'state'"
+        );
     }
 }

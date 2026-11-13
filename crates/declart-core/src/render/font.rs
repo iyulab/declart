@@ -33,7 +33,8 @@ pub fn measure_text(text: &str, font_size: f32) -> f32 {
 /// A wide character a line may break before or after — every one but Hangul, whose words
 /// are separated by spaces.
 fn breaks_between(c: char) -> bool {
-    is_wide(c) && !matches!(c as u32, 0x1100..=0x115F | 0x3130..=0x318F | 0xA960..=0xA97F | 0xAC00..=0xD7A3)
+    is_wide(c)
+        && !matches!(c as u32, 0x1100..=0x115F | 0x3130..=0x318F | 0xA960..=0xA97F | 0xAC00..=0xD7A3)
 }
 
 /// East Asian Width `W` / `F` blocks (UAX #11) — the characters fonts draw one em wide.
@@ -156,7 +157,9 @@ fn wrap(text: &str, font_size: f32, max_width: f32) -> Vec<String> {
         while measure_text(line.trim_end(), font_size) > max_width && line.chars().count() > 1 {
             let chars: Vec<char> = line.chars().collect();
             let mut end = chars.len() - 1;
-            while end > 1 && measure_text(&chars[..end].iter().collect::<String>(), font_size) > max_width {
+            while end > 1
+                && measure_text(&chars[..end].iter().collect::<String>(), font_size) > max_width
+            {
                 end -= 1;
             }
             lines.push(chars[..end].iter().collect());
@@ -176,8 +179,8 @@ fn break_tokens(text: &str) -> Vec<String> {
     let mut cur = String::new();
     for c in text.chars() {
         let after_space = cur.ends_with(' ') && c != ' ';
-        let around_breakable = c != ' '
-            && (breaks_between(c) || cur.chars().last().is_some_and(breaks_between));
+        let around_breakable =
+            c != ' ' && (breaks_between(c) || cur.chars().last().is_some_and(breaks_between));
         if !cur.is_empty() && (after_space || around_breakable) {
             tokens.push(std::mem::take(&mut cur));
         }
@@ -195,7 +198,10 @@ mod tests {
 
     #[test]
     fn fit_lines_keeps_a_fitting_label_on_one_line() {
-        assert_eq!(fit_lines("Plan", 14.0, 10.0, 200.0, 44.0), (vec!["Plan".to_string()], 14.0));
+        assert_eq!(
+            fit_lines("Plan", 14.0, 10.0, 200.0, 44.0),
+            (vec!["Plan".to_string()], 14.0)
+        );
     }
 
     #[test]
@@ -208,11 +214,20 @@ mod tests {
 
     #[test]
     fn fit_lines_wraps_before_shrinking() {
-        let (lines, size) = fit_lines("Collect requirements from every stakeholder", 14.0, 10.0, 160.0, 44.0);
+        let (lines, size) = fit_lines(
+            "Collect requirements from every stakeholder",
+            14.0,
+            10.0,
+            160.0,
+            44.0,
+        );
         assert_eq!(size, 14.0, "two lines fit at full size: {:?}", lines);
         assert_eq!(lines.len(), 2);
         assert!(lines.iter().all(|l| measure_text(l, size) <= 160.0));
-        assert_eq!(lines.join(" "), "Collect requirements from every stakeholder");
+        assert_eq!(
+            lines.join(" "),
+            "Collect requirements from every stakeholder"
+        );
     }
 
     #[test]
@@ -220,7 +235,12 @@ mod tests {
         let label = "사용자가 업로드한 문서를 정제하고 청크로 나누는 전처리 단계";
         let (lines, size) = fit_lines(label, 14.0, 10.0, 229.5, 44.0);
         assert!(lines.len() >= 2, "{:?}", lines);
-        assert!(lines.iter().all(|l| measure_text(l, size) <= 229.5), "{:?} at {}", lines, size);
+        assert!(
+            lines.iter().all(|l| measure_text(l, size) <= 229.5),
+            "{:?} at {}",
+            lines,
+            size
+        );
         assert!(lines.len() as f32 * size * LINE_HEIGHT <= 44.0 + 1e-3);
         assert_eq!(lines.join(" "), label, "the whole label is kept");
     }
@@ -293,7 +313,13 @@ mod tests {
         // Every kept syllable costs one em; the drawn width must stay within the box.
         let drawn: f32 = result
             .chars()
-            .map(|c| if c == ' ' || c == '…' { measure_text(&c.to_string(), 13.2) } else { 13.2 })
+            .map(|c| {
+                if c == ' ' || c == '…' {
+                    measure_text(&c.to_string(), 13.2)
+                } else {
+                    13.2
+                }
+            })
             .sum();
         assert!(drawn <= 258.0 + 0.5, "drawn width {} exceeds 258", drawn);
     }
@@ -309,7 +335,10 @@ mod tests {
         let long = "This is a very long label that should definitely be truncated at small widths";
         let result = truncate_text(long, 14.0, 50.0);
         assert!(result.ends_with('…'), "expected ellipsis, got: {}", result);
-        assert!(result.len() < long.len(), "result should be shorter than input");
+        assert!(
+            result.len() < long.len(),
+            "result should be shorter than input"
+        );
         assert!(measure_text(&result, 14.0) <= 50.0 + 1.0);
     }
 

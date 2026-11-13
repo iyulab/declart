@@ -11,7 +11,11 @@ const CIRCLE_OPACITY: f32 = 0.45;
 
 pub fn render(diagram: &VennDiagram, theme: &Theme) -> String {
     let n = diagram.sets.len();
-    let title_h = if diagram.title.is_some() { TITLE_AREA } else { 20.0 };
+    let title_h = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        20.0
+    };
     let canvas_w = CANVAS_SIZE;
     let canvas_h = CANVAS_SIZE + title_h;
     let cx = canvas_w / 2.0;
@@ -120,8 +124,12 @@ mod tests {
         VennDiagram {
             title: title.map(String::from),
             sets: vec![
-                VennSet { label: "A".to_string() },
-                VennSet { label: "B".to_string() },
+                VennSet {
+                    label: "A".to_string(),
+                },
+                VennSet {
+                    label: "B".to_string(),
+                },
             ],
             intersections: vec![VennIntersection {
                 sets: vec!["A".to_string(), "B".to_string()],
@@ -159,9 +167,15 @@ mod tests {
         let d = VennDiagram {
             title: None,
             sets: vec![
-                VennSet { label: "X".to_string() },
-                VennSet { label: "Y".to_string() },
-                VennSet { label: "Z".to_string() },
+                VennSet {
+                    label: "X".to_string(),
+                },
+                VennSet {
+                    label: "Y".to_string(),
+                },
+                VennSet {
+                    label: "Z".to_string(),
+                },
             ],
             intersections: vec![],
         };

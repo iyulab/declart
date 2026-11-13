@@ -31,8 +31,8 @@ pub unsafe extern "C" fn declart_render(
     let t = Theme::by_name(theme_str);
     let width_opt = if width == 0 { None } else { Some(width) };
 
-    let result = declart_core::parse(input_str)
-        .and_then(|d| declart_core::render_opts(&d, t, width_opt));
+    let result =
+        declart_core::parse(input_str).and_then(|d| declart_core::render_opts(&d, t, width_opt));
 
     match result {
         Ok(svg) => match CString::new(svg) {
@@ -92,7 +92,8 @@ mod tests {
 
     #[test]
     fn render_valid_pyramid() {
-        let input = c("kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n");
+        let input =
+            c("kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n");
         let theme = c("default");
         unsafe {
             let ptr = declart_render(input.as_ptr(), theme.as_ptr(), 0);
@@ -105,7 +106,8 @@ mod tests {
 
     #[test]
     fn render_with_width() {
-        let input = c("kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n");
+        let input =
+            c("kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n");
         let theme = c("default");
         unsafe {
             let ptr = declart_render(input.as_ptr(), theme.as_ptr(), 400);
@@ -158,6 +160,8 @@ mod tests {
 
     #[test]
     fn free_null_is_safe() {
-        unsafe { declart_free(std::ptr::null_mut()); }
+        unsafe {
+            declart_free(std::ptr::null_mut());
+        }
     }
 }

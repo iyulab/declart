@@ -34,12 +34,19 @@ struct Bar<'a> {
 }
 
 pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
-    let title_h = if diagram.title.is_some() { TITLE_AREA } else { 20.0 };
+    let title_h = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        20.0
+    };
     let axis_y = title_h + AXIS_Y_OFFSET;
 
     // Expand canvas width when there are many events to reduce label collision
     let n = diagram.events.len();
-    let canvas_w = f32::max(CANVAS_WIDTH_MIN, n as f32 * MIN_EVENT_SPACING + 2.0 * PADDING_H);
+    let canvas_w = f32::max(
+        CANVAS_WIDTH_MIN,
+        n as f32 * MIN_EVENT_SPACING + 2.0 * PADDING_H,
+    );
     let usable_width = canvas_w - 2.0 * PADDING_H;
 
     // Events are sorted by start in parse, and every date was validated there.
@@ -113,7 +120,14 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
         let above = i % 2 == 0; // alternate above/below
 
         // Tick mark
-        builder.line(ex, axis_y - TICK_HEIGHT, ex, axis_y + TICK_HEIGHT, &theme.layers.apex.to_hex(), 1.5);
+        builder.line(
+            ex,
+            axis_y - TICK_HEIGHT,
+            ex,
+            axis_y + TICK_HEIGHT,
+            &theme.layers.apex.to_hex(),
+            1.5,
+        );
 
         // Dot
         builder.circle(ex, axis_y, DOT_RADIUS, &theme.layers.apex.to_hex(), 1.0);
@@ -127,7 +141,11 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
 
         // available width scales with milestone spacing to reduce horizontal label collision.
         // Half the average inter-milestone gap, capped to [40, 100] px.
-        let avg_spacing = if n_points > 1 { usable_width / (n_points - 1) as f32 } else { usable_width };
+        let avg_spacing = if n_points > 1 {
+            usable_width / (n_points - 1) as f32
+        } else {
+            usable_width
+        };
         let available = (avg_spacing * 0.45).clamp(40.0, 100.0);
         let (display_label, fs) = fit_label(label, theme, available);
         builder.text(ex, label_y, &display_label, &theme.title_color.to_hex(), fs);
@@ -138,7 +156,13 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
         } else {
             axis_y + TICK_HEIGHT + 4.0
         };
-        builder.text(ex, date_y, date, &theme.layers.apex.to_hex(), DATE_FONT_SIZE);
+        builder.text(
+            ex,
+            date_y,
+            date,
+            &theme.layers.apex.to_hex(),
+            DATE_FONT_SIZE,
+        );
     }
 
     draw_bars(&mut builder, &bars, theme, band_top);
@@ -175,13 +199,22 @@ fn label_inside(bar_w: f32) -> bool {
 }
 
 /// Positions every period and packs overlapping ones into lanes (first lane that fits).
-fn layout_bars<'a>(diagram: &'a TimelineDiagram, theme: &Theme, x_for: &dyn Fn(i64) -> f32) -> Vec<Bar<'a>> {
+fn layout_bars<'a>(
+    diagram: &'a TimelineDiagram,
+    theme: &Theme,
+    x_for: &dyn Fn(i64) -> f32,
+) -> Vec<Bar<'a>> {
     let mut lane_ends: Vec<f32> = Vec::new();
     let mut bars = Vec::new();
     for event in &diagram.events {
-        let TimelineWhen::Span { start, end } = &event.when else { continue };
+        let TimelineWhen::Span { start, end } = &event.when else {
+            continue;
+        };
         let x0 = x_for(start_day(start));
-        let x1 = f32::max(x_for(parse_date(end).end_day_exclusive()), x0 + MIN_BAR_WIDTH);
+        let x1 = f32::max(
+            x_for(parse_date(end).end_day_exclusive()),
+            x0 + MIN_BAR_WIDTH,
+        );
         let dates = format!("{start} – {end}");
 
         // Horizontal extent the bar claims in its lane: the bar, its centered date range,
@@ -191,7 +224,9 @@ fn layout_bars<'a>(diagram: &'a TimelineDiagram, theme: &Theme, x_for: &dyn Fn(i
         let left = f32::min(x0, center - half_dates) - LANE_GAP / 2.0;
         let mut right = f32::max(x1, center + half_dates);
         if !label_inside(x1 - x0) {
-            let outside = x1 + BAR_TEXT_PAD + font::measure_text(&event.label, theme.typography.label_size_min);
+            let outside = x1
+                + BAR_TEXT_PAD
+                + font::measure_text(&event.label, theme.typography.label_size_min);
             right = f32::max(right, outside);
         }
         right += LANE_GAP / 2.0;
@@ -204,7 +239,13 @@ fn layout_bars<'a>(diagram: &'a TimelineDiagram, theme: &Theme, x_for: &dyn Fn(i
             }
         };
         lane_ends[lane] = right;
-        bars.push(Bar { x0, x1, label: &event.label, dates, lane });
+        bars.push(Bar {
+            x0,
+            x1,
+            label: &event.label,
+            dates,
+            lane,
+        });
     }
     bars
 }
@@ -230,11 +271,23 @@ fn draw_bars(builder: &mut SvgBuilder, bars: &[Bar], theme: &Theme, band_top: f3
         builder.rect_rounded(bar.x0, top, w, BAR_HEIGHT, 4, &fill.to_hex(), "none", 0.0);
         if label_inside(w) {
             let (label, fs) = fit_label(bar.label, theme, w - 2.0 * BAR_TEXT_PAD);
-            builder.text((bar.x0 + bar.x1) / 2.0, mid_y, &label, &on_fill.to_hex(), fs);
+            builder.text(
+                (bar.x0 + bar.x1) / 2.0,
+                mid_y,
+                &label,
+                &on_fill.to_hex(),
+                fs,
+            );
         } else {
             let fs = theme.typography.label_size_min;
             let lw = font::measure_text(bar.label, fs);
-            builder.text(bar.x1 + BAR_TEXT_PAD + lw / 2.0, mid_y, bar.label, &theme.title_color.to_hex(), fs);
+            builder.text(
+                bar.x1 + BAR_TEXT_PAD + lw / 2.0,
+                mid_y,
+                bar.label,
+                &theme.title_color.to_hex(),
+                fs,
+            );
         }
         builder.text(
             (bar.x0 + bar.x1) / 2.0,
@@ -253,12 +306,18 @@ mod tests {
     use crate::render::DEFAULT_THEME;
 
     fn point(date: &str, label: &str) -> TimelineEvent {
-        TimelineEvent { when: TimelineWhen::Point(date.to_string()), label: label.to_string() }
+        TimelineEvent {
+            when: TimelineWhen::Point(date.to_string()),
+            label: label.to_string(),
+        }
     }
 
     fn span(start: &str, end: &str, label: &str) -> TimelineEvent {
         TimelineEvent {
-            when: TimelineWhen::Span { start: start.to_string(), end: end.to_string() },
+            when: TimelineWhen::Span {
+                start: start.to_string(),
+                end: end.to_string(),
+            },
             label: label.to_string(),
         }
     }
@@ -315,21 +374,34 @@ mod tests {
         // available = (58.9 * 0.45).clamp(40, 100) ≈ 26.5 → clamped to 40.0.
         // A 40-char label must be truncated.
         let events: Vec<TimelineEvent> = (0..15)
-            .map(|i| point(&format!("2024-{:02}-01", (i % 12) + 1), "A Very Long Event Label That Should Be Truncated"))
+            .map(|i| {
+                point(
+                    &format!("2024-{:02}-01", (i % 12) + 1),
+                    "A Very Long Event Label That Should Be Truncated",
+                )
+            })
             .collect();
-        let d = TimelineDiagram { title: None, events };
+        let d = TimelineDiagram {
+            title: None,
+            events,
+        };
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.starts_with("<svg"));
         // Full label should not appear; truncated version (with ellipsis) should
-        assert!(!svg.contains("A Very Long Event Label That Should Be Truncated"),
-            "long label should be truncated in dense timeline");
+        assert!(
+            !svg.contains("A Very Long Event Label That Should Be Truncated"),
+            "long label should be truncated in dense timeline"
+        );
     }
 
     #[test]
     fn period_renders_as_bar_with_date_range() {
         let d = TimelineDiagram {
             title: None,
-            events: vec![point("2024-01-15", "Alpha"), span("2024-02", "2024-03", "Beta")],
+            events: vec![
+                point("2024-01-15", "Alpha"),
+                span("2024-02", "2024-03", "Beta"),
+            ],
         };
         let svg = render(&d, &DEFAULT_THEME);
         assert_eq!(rect_count(&svg), 1, "one bar");
@@ -347,11 +419,17 @@ mod tests {
     fn overlapping_periods_stack_into_lanes() {
         let separate = TimelineDiagram {
             title: None,
-            events: vec![span("2024-01", "2024-03", "A"), span("2024-07", "2024-09", "B")],
+            events: vec![
+                span("2024-01", "2024-03", "A"),
+                span("2024-07", "2024-09", "B"),
+            ],
         };
         let overlapping = TimelineDiagram {
             title: None,
-            events: vec![span("2024-01", "2024-06", "A"), span("2024-03", "2024-09", "B")],
+            events: vec![
+                span("2024-01", "2024-06", "A"),
+                span("2024-03", "2024-09", "B"),
+            ],
         };
         let one_lane = svg_height(&render(&separate, &DEFAULT_THEME));
         let two_lanes = svg_height(&render(&overlapping, &DEFAULT_THEME));
@@ -363,7 +441,10 @@ mod tests {
         // The only milestone is at the start; the period must still end inside the canvas.
         let d = TimelineDiagram {
             title: None,
-            events: vec![point("2024-01", "Kickoff"), span("2024-01", "2024-12", "Build")],
+            events: vec![
+                point("2024-01", "Kickoff"),
+                span("2024-01", "2024-12", "Build"),
+            ],
         };
         let svg = render(&d, &DEFAULT_THEME);
         let bar = &svg[svg.rfind("<rect x=").unwrap()..];
@@ -372,6 +453,9 @@ mod tests {
             rest[..rest.find('"').unwrap()].parse().unwrap()
         };
         let right = attr("x") + attr("width");
-        assert!((right - (CANVAS_WIDTH_MIN - PADDING_H)).abs() < 0.5, "bar should end at the right edge, got {right}");
+        assert!(
+            (right - (CANVAS_WIDTH_MIN - PADDING_H)).abs() < 0.5,
+            "bar should end at the right edge, got {right}"
+        );
     }
 }

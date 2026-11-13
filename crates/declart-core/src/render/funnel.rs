@@ -12,7 +12,11 @@ const CENTER_X: f32 = CANVAS_W / 2.0;
 
 pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
     let n = diagram.items.len() as f32;
-    let title_height = if diagram.title.is_some() { TITLE_AREA } else { PADDING_H };
+    let title_height = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        PADDING_H
+    };
     let canvas_height = title_height + n * STAGE_HEIGHT + BOTTOM_PAD;
 
     let mut builder = SvgBuilder::new(CANVAS_W, canvas_height);
@@ -31,7 +35,11 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let i_f = i as f32;
         let n_items = n;
 
-        let t = if n_items > 1.0 { i_f / (n_items - 1.0) } else { 0.0 };
+        let t = if n_items > 1.0 {
+            i_f / (n_items - 1.0)
+        } else {
+            0.0
+        };
         let base_color = theme.layers.apex.interpolate(&theme.layers.base, t);
         let stage_color = match &item.emphasis {
             Some(Emphasis::Secondary) => base_color.interpolate(&theme.layers.base, 0.3),
@@ -68,8 +76,8 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let mut font_size = theme.typography.label_size;
         let text_width = font::measure_text(&item.label, font_size);
         if text_width > available_width && available_width > 0.0 {
-            font_size = (font_size * available_width / text_width)
-                .max(theme.typography.label_size_min);
+            font_size =
+                (font_size * available_width / text_width).max(theme.typography.label_size_min);
         }
         let display_label = if font::measure_text(&item.label, font_size) > available_width {
             font::truncate_text(&item.label, font_size, available_width)
@@ -87,7 +95,13 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             is_bold,
         );
 
-        status::draw_marker(&mut builder, &item.status, CENTER_X + top_w / 2.0, top_y, theme);
+        status::draw_marker(
+            &mut builder,
+            &item.status,
+            CENTER_X + top_w / 2.0,
+            top_y,
+            theme,
+        );
     }
 
     builder.build(theme.backdrop_fill().as_deref())
@@ -103,7 +117,11 @@ mod tests {
         ItemsDiagram {
             title: Some("Funnel".to_string()),
             items: (0..n)
-                .map(|i| Item { label: format!("Stage {}", i + 1), emphasis: None, status: None })
+                .map(|i| Item {
+                    label: format!("Stage {}", i + 1),
+                    emphasis: None,
+                    status: None,
+                })
                 .collect(),
         }
     }

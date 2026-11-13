@@ -7,8 +7,16 @@ const NODE_W: f32 = 110.0;
 const NODE_H: f32 = 50.0;
 
 fn rect_clip(ux: f32, uy: f32, hw: f32, hh: f32) -> f32 {
-    let tx = if ux.abs() > 1e-6 { hw / ux.abs() } else { f32::INFINITY };
-    let ty = if uy.abs() > 1e-6 { hh / uy.abs() } else { f32::INFINITY };
+    let tx = if ux.abs() > 1e-6 {
+        hw / ux.abs()
+    } else {
+        f32::INFINITY
+    };
+    let ty = if uy.abs() > 1e-6 {
+        hh / uy.abs()
+    } else {
+        f32::INFINITY
+    };
     tx.min(ty)
 }
 const PADDING: f32 = 30.0;
@@ -29,7 +37,11 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
     let radius = f32::max(130.0, min_radius * 1.15);
 
     let diagram_size = 2.0 * (radius + node_half_diag + PADDING);
-    let title_h = if diagram.title.is_some() { TITLE_AREA } else { PADDING };
+    let title_h = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        PADDING
+    };
     let canvas_w = diagram_size;
     let canvas_h = diagram_size + title_h;
     let cx = canvas_w / 2.0;
@@ -119,7 +131,12 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let y = ny - NODE_H / 2.0;
 
         builder.polygon_stroked(
-            &[(x, y), (x + NODE_W, y), (x + NODE_W, y + NODE_H), (x, y + NODE_H)],
+            &[
+                (x, y),
+                (x + NODE_W, y),
+                (x + NODE_W, y + NODE_H),
+                (x, y + NODE_H),
+            ],
             &node_color.to_hex(),
             &stroke_color,
             stroke_width,
@@ -129,8 +146,8 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let mut font_size = theme.typography.label_size;
         let text_width = font::measure_text(&item.label, font_size);
         if text_width > available_width && available_width > 0.0 {
-            font_size = (font_size * available_width / text_width)
-                .max(theme.typography.label_size_min);
+            font_size =
+                (font_size * available_width / text_width).max(theme.typography.label_size_min);
         }
         let display_label = if font::measure_text(&item.label, font_size) > available_width {
             font::truncate_text(&item.label, font_size, available_width)
@@ -139,9 +156,22 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         };
 
         let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
-        builder.text_weighted(nx, ny, &display_label, &text_color.to_hex(), font_size, is_bold);
+        builder.text_weighted(
+            nx,
+            ny,
+            &display_label,
+            &text_color.to_hex(),
+            font_size,
+            is_bold,
+        );
 
-        status::draw_marker(&mut builder, &item.status, nx + NODE_W / 2.0, ny - NODE_H / 2.0, theme);
+        status::draw_marker(
+            &mut builder,
+            &item.status,
+            nx + NODE_W / 2.0,
+            ny - NODE_H / 2.0,
+            theme,
+        );
     }
 
     builder.build(theme.backdrop_fill().as_deref())
@@ -157,7 +187,11 @@ mod tests {
         ItemsDiagram {
             title: title.map(String::from),
             items: (0..n)
-                .map(|i| Item { label: format!("Step {}", i + 1), emphasis: None, status: None })
+                .map(|i| Item {
+                    label: format!("Step {}", i + 1),
+                    emphasis: None,
+                    status: None,
+                })
                 .collect(),
         }
     }
@@ -185,7 +219,11 @@ mod tests {
         let d = make_diagram(4, None);
         let svg = render(&d, &DEFAULT_THEME);
         let polygon_count = svg.matches("<polygon").count();
-        assert!(polygon_count >= 4, "expected at least 4 polygons, got {}", polygon_count);
+        assert!(
+            polygon_count >= 4,
+            "expected at least 4 polygons, got {}",
+            polygon_count
+        );
     }
 
     #[test]

@@ -38,8 +38,14 @@ impl SvgBuilder {
     #[allow(clippy::too_many_arguments)]
     pub fn rect_rounded(
         &mut self,
-        x: f32, y: f32, width: f32, height: f32, rx: u32,
-        fill: &str, stroke: &str, stroke_width: f32,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        rx: u32,
+        fill: &str,
+        stroke: &str,
+        stroke_width: f32,
     ) {
         self.elements.push(format!(
             r#"<rect x="{:.1}" y="{:.1}" width="{:.1}" height="{:.1}" rx="{}" fill="{}" stroke="{}" stroke-width="{:.1}"/>"#,
@@ -62,8 +68,13 @@ impl SvgBuilder {
     }
 
     pub fn circle_stroked(
-        &mut self, cx: f32, cy: f32, r: f32,
-        fill: &str, stroke: &str, stroke_width: f32,
+        &mut self,
+        cx: f32,
+        cy: f32,
+        r: f32,
+        fill: &str,
+        stroke: &str,
+        stroke_width: f32,
     ) {
         self.elements.push(format!(
             r#"<circle cx="{:.1}" cy="{:.1}" r="{:.1}" fill="{}" stroke="{}" stroke-width="{:.1}"/>"#,
@@ -72,8 +83,13 @@ impl SvgBuilder {
     }
 
     pub fn line_dashed(
-        &mut self, x1: f32, y1: f32, x2: f32, y2: f32,
-        stroke: &str, stroke_width: f32,
+        &mut self,
+        x1: f32,
+        y1: f32,
+        x2: f32,
+        y2: f32,
+        stroke: &str,
+        stroke_width: f32,
     ) {
         self.elements.push(format!(
             r#"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="{}" stroke-width="{:.1}" stroke-dasharray="6,3"/>"#,
@@ -136,7 +152,12 @@ impl SvgBuilder {
             .enumerate()
             .map(|(i, line)| {
                 let dy = if i == 0 { first_dy } else { line_height };
-                format!(r#"<tspan x="{:.1}" dy="{:.1}">{}</tspan>"#, x, dy, escape_xml(line))
+                format!(
+                    r#"<tspan x="{:.1}" dy="{:.1}">{}</tspan>"#,
+                    x,
+                    dy,
+                    escape_xml(line)
+                )
             })
             .collect();
         self.elements.push(format!(

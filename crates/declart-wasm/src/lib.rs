@@ -10,16 +10,23 @@ use wasm_bindgen::prelude::*;
 ///
 /// Returns the SVG string on success, or a `JsError` with a descriptive message on failure.
 #[wasm_bindgen]
-pub fn render(input: &str, theme: &str, width: Option<u32>, transparent: Option<bool>) -> Result<String, JsError> {
-    let diagram = declart_core::parse_auto(input)
-        .map_err(|e| JsError::new(&e.to_string()))?;
+pub fn render(
+    input: &str,
+    theme: &str,
+    width: Option<u32>,
+    transparent: Option<bool>,
+) -> Result<String, JsError> {
+    let diagram = declart_core::parse_auto(input).map_err(|e| JsError::new(&e.to_string()))?;
     let t = backdrop(Theme::by_name(theme).clone(), transparent);
-    declart_core::render_opts(&diagram, &t, width)
-        .map_err(|e| JsError::new(&e.to_string()))
+    declart_core::render_opts(&diagram, &t, width).map_err(|e| JsError::new(&e.to_string()))
 }
 
 fn backdrop(theme: Theme, transparent: Option<bool>) -> Theme {
-    if transparent == Some(true) { theme.without_backdrop() } else { theme }
+    if transparent == Some(true) {
+        theme.without_backdrop()
+    } else {
+        theme
+    }
 }
 
 /// Renders a JSON diagram declaration to SVG with a named theme.
@@ -30,12 +37,15 @@ fn backdrop(theme: Theme, transparent: Option<bool>) -> Theme {
 ///
 /// Returns the SVG string on success, or a `JsError` on failure.
 #[wasm_bindgen]
-pub fn render_json(input: &str, theme: &str, width: Option<u32>, transparent: Option<bool>) -> Result<String, JsError> {
-    let diagram = declart_core::parse_json(input)
-        .map_err(|e| JsError::new(&e.to_string()))?;
+pub fn render_json(
+    input: &str,
+    theme: &str,
+    width: Option<u32>,
+    transparent: Option<bool>,
+) -> Result<String, JsError> {
+    let diagram = declart_core::parse_json(input).map_err(|e| JsError::new(&e.to_string()))?;
     let t = backdrop(Theme::by_name(theme).clone(), transparent);
-    declart_core::render_opts(&diagram, &t, width)
-        .map_err(|e| JsError::new(&e.to_string()))
+    declart_core::render_opts(&diagram, &t, width).map_err(|e| JsError::new(&e.to_string()))
 }
 
 /// Renders a TOML or JSON diagram declaration with a custom theme defined as a TOML string.
@@ -46,15 +56,18 @@ pub fn render_json(input: &str, theme: &str, width: Option<u32>, transparent: Op
 ///
 /// Returns the SVG string on success, or a `JsError` on parse/validation failure.
 #[wasm_bindgen]
-pub fn render_with_theme_toml(input: &str, theme_toml: &str, width: Option<u32>, transparent: Option<bool>) -> Result<String, JsError> {
-    let diagram = declart_core::parse_auto(input)
-        .map_err(|e| JsError::new(&e.to_string()))?;
+pub fn render_with_theme_toml(
+    input: &str,
+    theme_toml: &str,
+    width: Option<u32>,
+    transparent: Option<bool>,
+) -> Result<String, JsError> {
+    let diagram = declart_core::parse_auto(input).map_err(|e| JsError::new(&e.to_string()))?;
     let theme = backdrop(
         Theme::from_toml(theme_toml).map_err(|e| JsError::new(&e.to_string()))?,
         transparent,
     );
-    declart_core::render_opts(&diagram, &theme, width)
-        .map_err(|e| JsError::new(&e.to_string()))
+    declart_core::render_opts(&diagram, &theme, width).map_err(|e| JsError::new(&e.to_string()))
 }
 
 /// Validates a TOML or JSON diagram declaration without rendering.
@@ -152,7 +165,8 @@ label = \"Index\"
 
     #[test]
     fn render_with_theme_toml_valid() {
-        let diagram = "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
+        let diagram =
+            "kind = \"tier\"\n[[items]]\nlabel = \"Top\"\n[[items]]\nlabel = \"Bottom\"\n";
         let theme = r##"
 [colors]
 apex       = "#003087"
@@ -208,7 +222,10 @@ title      = "#003087"
     fn transparent_leaves_the_backdrop_unpainted() {
         let input = "kind = \"flow\"\n[[items]]\nlabel = \"A\"\n";
         let opaque = render(input, "dark", None, None).unwrap();
-        assert!(opaque.contains("<rect width=\"100%\" height=\"100%\" fill=\"#121A24\"/>"), "{opaque}");
+        assert!(
+            opaque.contains("<rect width=\"100%\" height=\"100%\" fill=\"#121A24\"/>"),
+            "{opaque}"
+        );
         let clear = render(input, "dark", None, Some(true)).unwrap();
         assert!(!clear.contains("height=\"100%\""), "{clear}");
         assert!(themes().split(',').any(|t| t == "dark"));

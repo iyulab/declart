@@ -13,7 +13,11 @@ const BOTTOM_PAD: f32 = 20.0;
 pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
     let n = diagram.items.len();
     let n_f = n as f32;
-    let title_height = if diagram.title.is_some() { TITLE_AREA } else { PADDING };
+    let title_height = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        PADDING
+    };
     let center_y = title_height + MAX_R;
     let canvas_height = title_height + 2.0 * MAX_R + BOTTOM_PAD;
 
@@ -48,7 +52,14 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
             Some(Emphasis::Primary) => (theme.background.to_hex(), 3.0_f32),
             _ => ("none".to_string(), 0.0_f32),
         };
-        builder.circle_stroked(CENTER_X, center_y, r_out, &color.to_hex(), &stroke, stroke_w);
+        builder.circle_stroked(
+            CENTER_X,
+            center_y,
+            r_out,
+            &color.to_hex(),
+            &stroke,
+            stroke_w,
+        );
     }
 
     // Labels + status markers, stacked in the upper hemisphere (one per band).
@@ -61,7 +72,10 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let (label_y, half) = if i == 0 {
             (center_y, r_out * 0.7)
         } else {
-            (center_y - r_mid, (r_out * r_out - r_mid * r_mid).max(0.0).sqrt() * 0.9)
+            (
+                center_y - r_mid,
+                (r_out * r_out - r_mid * r_mid).max(0.0).sqrt() * 0.9,
+            )
         };
         let available = 2.0 * half;
 
@@ -76,7 +90,14 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
         let color = layer_color(i, &item.emphasis);
         let text_color = &theme.text_on(&color);
         let is_bold = matches!(&item.emphasis, Some(Emphasis::Primary));
-        builder.text_weighted(CENTER_X, label_y, &label, &text_color.to_hex(), font_size, is_bold);
+        builder.text_weighted(
+            CENTER_X,
+            label_y,
+            &label,
+            &text_color.to_hex(),
+            font_size,
+            is_bold,
+        );
 
         // Marker at the band's right edge at label height, inset to stay inside the ring.
         let marker_cx = CENTER_X + half - status::STATUS_MARKER_R - 2.0;
@@ -96,7 +117,11 @@ mod tests {
         ItemsDiagram {
             title: title.map(String::from),
             items: (0..n)
-                .map(|i| Item { label: format!("Ring {}", i), emphasis: None, status: None })
+                .map(|i| Item {
+                    label: format!("Ring {}", i),
+                    emphasis: None,
+                    status: None,
+                })
                 .collect(),
         }
     }
@@ -142,8 +167,16 @@ mod tests {
         let d = ItemsDiagram {
             title: None,
             items: vec![
-                Item { label: "Core".to_string(), emphasis: None, status: Some(Status::Warning) },
-                Item { label: "Outer".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Core".to_string(),
+                    emphasis: None,
+                    status: Some(Status::Warning),
+                },
+                Item {
+                    label: "Outer".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
@@ -158,12 +191,23 @@ mod tests {
         let d = ItemsDiagram {
             title: None,
             items: vec![
-                Item { label: "Core".to_string(), emphasis: Some(Emphasis::Primary), status: None },
-                Item { label: "Outer".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Core".to_string(),
+                    emphasis: Some(Emphasis::Primary),
+                    status: None,
+                },
+                Item {
+                    label: "Outer".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
-        assert!(svg.contains("stroke-width=\"3.0\""), "primary layer should be stroked");
+        assert!(
+            svg.contains("stroke-width=\"3.0\""),
+            "primary layer should be stroked"
+        );
     }
 
     #[test]
@@ -173,15 +217,27 @@ mod tests {
             // A long label in the small core ring cannot fit and should be truncated with an ellipsis.
             items: vec![
                 Item {
-                    label: "An Extremely Long Core Layer Label That Cannot Possibly Fit".to_string(),
+                    label: "An Extremely Long Core Layer Label That Cannot Possibly Fit"
+                        .to_string(),
                     emphasis: None,
                     status: None,
                 },
-                Item { label: "B".to_string(), emphasis: None, status: None },
-                Item { label: "C".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "B".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
+                Item {
+                    label: "C".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
-        assert!(svg.contains('…'), "an oversized label should be truncated with an ellipsis");
+        assert!(
+            svg.contains('…'),
+            "an oversized label should be truncated with an ellipsis"
+        );
     }
 }

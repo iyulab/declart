@@ -16,10 +16,18 @@ pub fn render(diagram: &ComparisonDiagram, theme: &Theme) -> String {
     let n_rows = diagram.rows.len();
     let n_cols = diagram.columns.len();
 
-    let title_h = if diagram.title.is_some() { TITLE_H } else { MARGIN };
+    let title_h = if diagram.title.is_some() {
+        TITLE_H
+    } else {
+        MARGIN
+    };
     let table_w = CANVAS_W - 2.0 * MARGIN;
     let data_w = table_w - ROW_HEADER_W;
-    let cell_w = if n_cols > 0 { data_w / n_cols as f32 } else { data_w };
+    let cell_w = if n_cols > 0 {
+        data_w / n_cols as f32
+    } else {
+        data_w
+    };
 
     let canvas_h = title_h + COL_HEADER_H + n_rows as f32 * ROW_H + BOTTOM_PAD;
     let table_left = MARGIN;
@@ -113,12 +121,22 @@ pub fn render(diagram: &ComparisonDiagram, theme: &Theme) -> String {
             let cell_bg = if ri % 2 == 0 { even_bg } else { odd_bg };
             let text_fg = theme.text_on(&cell_bg);
             let label = font::truncate_text(&cell.value, CELL_FONT, cell_w - 12.0);
-            builder.text(cx + cell_w / 2.0, ry + ROW_H / 2.0, &label, &text_fg.to_hex(), CELL_FONT);
+            builder.text(
+                cx + cell_w / 2.0,
+                ry + ROW_H / 2.0,
+                &label,
+                &text_fg.to_hex(),
+                CELL_FONT,
+            );
         }
     }
 
     // Grid border lines
-    let border = theme.layers.apex.interpolate(&theme.background, 0.5).to_hex();
+    let border = theme
+        .layers
+        .apex
+        .interpolate(&theme.background, 0.5)
+        .to_hex();
     let table_right = table_left + table_w;
     let table_bottom = table_top + COL_HEADER_H + n_rows as f32 * ROW_H;
 
@@ -128,11 +146,32 @@ pub fn render(diagram: &ComparisonDiagram, theme: &Theme) -> String {
         builder.line(table_left, ly, table_right, ly, &border, BORDER_W);
     }
     // Outer top border (column header top)
-    builder.line(table_left, table_top, table_right, table_top, &border, BORDER_W);
+    builder.line(
+        table_left,
+        table_top,
+        table_right,
+        table_top,
+        &border,
+        BORDER_W,
+    );
 
     // Vertical lines (right edge of each column section)
-    builder.line(table_left, table_top, table_left, table_bottom, &border, BORDER_W);
-    builder.line(table_left + ROW_HEADER_W, table_top, table_left + ROW_HEADER_W, table_bottom, &border, BORDER_W);
+    builder.line(
+        table_left,
+        table_top,
+        table_left,
+        table_bottom,
+        &border,
+        BORDER_W,
+    );
+    builder.line(
+        table_left + ROW_HEADER_W,
+        table_top,
+        table_left + ROW_HEADER_W,
+        table_bottom,
+        &border,
+        BORDER_W,
+    );
     for ci in 1..=n_cols {
         let lx = table_left + ROW_HEADER_W + ci as f32 * cell_w;
         builder.line(lx, table_top, lx, table_bottom, &border, BORDER_W);

@@ -13,15 +13,15 @@ pub(crate) mod process;
 pub(crate) mod pyramid;
 pub(crate) mod state;
 pub(crate) mod status;
-pub(crate) mod swimlane;
 mod svg;
+pub(crate) mod swimlane;
 pub mod theme;
 pub(crate) mod timeline;
 pub(crate) mod venn;
 
 pub use theme::{Theme, ACCESSIBLE_THEME, DARK_THEME, DEFAULT_THEME, MONOCHROME_THEME, WARM_THEME};
 
-use crate::{Diagram, DeclartError};
+use crate::{DeclartError, Diagram};
 
 /// Renders `diagram` to an SVG string using the given `theme`.
 pub fn render(diagram: &Diagram, theme: &Theme) -> Result<String, DeclartError> {
@@ -30,17 +30,21 @@ pub fn render(diagram: &Diagram, theme: &Theme) -> Result<String, DeclartError> 
 
 /// Renders `diagram` to an SVG string. When `width` is `Some(px)`, the outer SVG viewport is
 /// scaled to that pixel width while the internal viewBox is preserved.
-pub fn render_opts(diagram: &Diagram, theme: &Theme, width: Option<u32>) -> Result<String, DeclartError> {
+pub fn render_opts(
+    diagram: &Diagram,
+    theme: &Theme,
+    width: Option<u32>,
+) -> Result<String, DeclartError> {
     let svg = match diagram {
-        Diagram::Flow(d)       => flow::render_flow(d, theme),
-        Diagram::Tier(d)       => flow::render_tier(d, theme),
-        Diagram::Hierarchy(d)  => flow::render_hierarchy(d, theme),
-        Diagram::Matrix(d)     => matrix::render(d, theme),
-        Diagram::HubSpoke(d)   => hub_spoke::render(d, theme),
-        Diagram::Venn(d)       => venn::render(d, theme),
-        Diagram::Timeline(d)   => timeline::render(d, theme),
+        Diagram::Flow(d) => flow::render_flow(d, theme),
+        Diagram::Tier(d) => flow::render_tier(d, theme),
+        Diagram::Hierarchy(d) => flow::render_hierarchy(d, theme),
+        Diagram::Matrix(d) => matrix::render(d, theme),
+        Diagram::HubSpoke(d) => hub_spoke::render(d, theme),
+        Diagram::Venn(d) => venn::render(d, theme),
+        Diagram::Timeline(d) => timeline::render(d, theme),
         Diagram::Comparison(d) => comparison::render(d, theme),
-        Diagram::State(d)      => state::render(d, theme),
+        Diagram::State(d) => state::render(d, theme),
     };
     let svg = with_text_equivalent(svg, diagram);
     if let Some(w) = width {
@@ -55,7 +59,9 @@ pub fn render_opts(diagram: &Diagram, theme: &Theme, width: Option<u32>) -> Resu
 /// name and description without `id` references (several diagrams inlined in one page cannot
 /// collide).
 fn with_text_equivalent(svg: String, diagram: &Diagram) -> String {
-    let Some(open_end) = svg.find('>') else { return svg };
+    let Some(open_end) = svg.find('>') else {
+        return svg;
+    };
     let title = svg::escape_xml(&crate::describe::accessible_name(diagram));
     let desc = svg::escape_xml(&crate::describe::describe(diagram));
     format!(
@@ -111,8 +117,14 @@ mod tests {
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"></svg>"#.to_string();
         let result = apply_width(svg, 300);
         assert!(result.contains("width=\"300\""), "width should be 300");
-        assert!(result.contains("height=\"200\""), "height should scale to 200");
-        assert!(result.contains("viewBox=\"0 0 600 400\""), "viewBox should be unchanged");
+        assert!(
+            result.contains("height=\"200\""),
+            "height should scale to 200"
+        );
+        assert!(
+            result.contains("viewBox=\"0 0 600 400\""),
+            "viewBox should be unchanged"
+        );
     }
 
     #[test]

@@ -14,8 +14,16 @@ const LINE_W: f32 = 2.0;
 /// Returns the scalar t such that (cx + ux*t, cy + uy*t) lies exactly on the
 /// edge of a rectangle centered at (cx, cy) with half-extents (hw, hh).
 fn rect_clip(ux: f32, uy: f32, hw: f32, hh: f32) -> f32 {
-    let tx = if ux.abs() > 1e-6 { hw / ux.abs() } else { f32::INFINITY };
-    let ty = if uy.abs() > 1e-6 { hh / uy.abs() } else { f32::INFINITY };
+    let tx = if ux.abs() > 1e-6 {
+        hw / ux.abs()
+    } else {
+        f32::INFINITY
+    };
+    let ty = if uy.abs() > 1e-6 {
+        hh / uy.abs()
+    } else {
+        f32::INFINITY
+    };
     tx.min(ty)
 }
 
@@ -32,7 +40,11 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
     };
 
     let diagram_size = 2.0 * (radius + spoke_half_diag + PADDING);
-    let title_h = if diagram.title.is_some() { TITLE_AREA } else { PADDING };
+    let title_h = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        PADDING
+    };
     let canvas_w = diagram_size;
     let canvas_h = diagram_size + title_h;
     let cx = canvas_w / 2.0;
@@ -98,7 +110,12 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
         let bold = matches!(&spoke.emphasis, Some(Emphasis::Primary));
 
         builder.polygon_stroked(
-            &[(x, y), (x + SPOKE_W, y), (x + SPOKE_W, y + SPOKE_H), (x, y + SPOKE_H)],
+            &[
+                (x, y),
+                (x + SPOKE_W, y),
+                (x + SPOKE_W, y + SPOKE_H),
+                (x, y + SPOKE_H),
+            ],
             &box_color.to_hex(),
             &stroke_color,
             stroke_width,
@@ -117,7 +134,13 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
         };
         builder.text_weighted(sx, sy, &spoke_display, &text_color.to_hex(), fs, bold);
 
-        status::draw_marker(&mut builder, &spoke.status, sx + SPOKE_W / 2.0, sy - SPOKE_H / 2.0, theme);
+        status::draw_marker(
+            &mut builder,
+            &spoke.status,
+            sx + SPOKE_W / 2.0,
+            sy - SPOKE_H / 2.0,
+            theme,
+        );
     }
 
     // Draw hub node on top
@@ -125,7 +148,12 @@ pub fn render(diagram: &HubSpokeDiagram, theme: &Theme) -> String {
     let hx = cx - HUB_W / 2.0;
     let hy = cy - HUB_H / 2.0;
     builder.polygon(
-        &[(hx, hy), (hx + HUB_W, hy), (hx + HUB_W, hy + HUB_H), (hx, hy + HUB_H)],
+        &[
+            (hx, hy),
+            (hx + HUB_W, hy),
+            (hx + HUB_W, hy + HUB_H),
+            (hx, hy + HUB_H),
+        ],
         &hub_color.to_hex(),
         "none",
     );
@@ -157,7 +185,11 @@ mod tests {
             title: title.map(String::from),
             center: "Hub".to_string(),
             spokes: (0..n)
-                .map(|i| Item { label: format!("Spoke {}", i + 1), emphasis: None, status: None })
+                .map(|i| Item {
+                    label: format!("Spoke {}", i + 1),
+                    emphasis: None,
+                    status: None,
+                })
                 .collect(),
         }
     }
@@ -202,13 +234,27 @@ mod tests {
             title: None,
             center: "Hub".to_string(),
             spokes: vec![
-                Item { label: "Primary".to_string(), emphasis: Some(Emphasis::Primary), status: None },
-                Item { label: "Normal".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Primary".to_string(),
+                    emphasis: Some(Emphasis::Primary),
+                    status: None,
+                },
+                Item {
+                    label: "Normal".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
-        assert!(svg.contains("font-weight=\"bold\""), "primary spoke should be bold");
-        assert!(svg.contains("stroke-width=\"3.0\""), "primary spoke should have stroke");
+        assert!(
+            svg.contains("font-weight=\"bold\""),
+            "primary spoke should be bold"
+        );
+        assert!(
+            svg.contains("stroke-width=\"3.0\""),
+            "primary spoke should have stroke"
+        );
     }
 
     #[test]
@@ -222,17 +268,29 @@ mod tests {
             .collect();
         let step = 2.0 * PI / n_f;
         for i in 1..n {
-            assert!((angles[i] - angles[i - 1] - step).abs() < 1e-5, "angular step should be uniform 72°");
+            assert!(
+                (angles[i] - angles[i - 1] - step).abs() < 1e-5,
+                "angular step should be uniform 72°"
+            );
         }
         // First spoke is at top
-        assert!((angles[0] - (-PI / 2.0)).abs() < 1e-5, "first spoke should be at top");
+        assert!(
+            (angles[0] - (-PI / 2.0)).abs() < 1e-5,
+            "first spoke should be at top"
+        );
         // Left-right symmetry: cos of spokes i=1,4 and i=2,3 should be equal and opposite
         let cos_1 = angles[1].cos();
         let cos_4 = angles[4].cos();
-        assert!((cos_1 + cos_4).abs() < 1e-4, "spokes 1 and 4 should be symmetric about vertical axis");
+        assert!(
+            (cos_1 + cos_4).abs() < 1e-4,
+            "spokes 1 and 4 should be symmetric about vertical axis"
+        );
         let cos_2 = angles[2].cos();
         let cos_3 = angles[3].cos();
-        assert!((cos_2 + cos_3).abs() < 1e-4, "spokes 2 and 3 should be symmetric about vertical axis");
+        assert!(
+            (cos_2 + cos_3).abs() < 1e-4,
+            "spokes 2 and 3 should be symmetric about vertical axis"
+        );
     }
 
     #[test]
@@ -242,12 +300,23 @@ mod tests {
             title: None,
             center: "Core".to_string(),
             spokes: vec![
-                Item { label: "Auth".to_string(), emphasis: None, status: Some(Status::Critical) },
-                Item { label: "DB".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Auth".to_string(),
+                    emphasis: None,
+                    status: Some(Status::Critical),
+                },
+                Item {
+                    label: "DB".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
-        assert!(svg.contains(&DEFAULT_THEME.status.critical.to_hex()), "a spoke with status should render a marker");
+        assert!(
+            svg.contains(&DEFAULT_THEME.status.critical.to_hex()),
+            "a spoke with status should render a marker"
+        );
     }
 
     #[test]
@@ -256,11 +325,22 @@ mod tests {
             title: None,
             center: "Hub".to_string(),
             spokes: vec![
-                Item { label: "Secondary".to_string(), emphasis: Some(Emphasis::Secondary), status: None },
-                Item { label: "Normal".to_string(), emphasis: None, status: None },
+                Item {
+                    label: "Secondary".to_string(),
+                    emphasis: Some(Emphasis::Secondary),
+                    status: None,
+                },
+                Item {
+                    label: "Normal".to_string(),
+                    emphasis: None,
+                    status: None,
+                },
             ],
         };
         let svg = render(&d, &DEFAULT_THEME);
-        assert!(!svg.contains("stroke-width=\"3.0\""), "secondary spoke should not have outline stroke");
+        assert!(
+            !svg.contains("stroke-width=\"3.0\""),
+            "secondary spoke should not have outline stroke"
+        );
     }
 }

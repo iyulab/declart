@@ -2,8 +2,8 @@
 //! the alternative text a page gives a diagram it shows as an image.
 
 use crate::model::{
-    Diagram, FlowView, HierarchyDiagram, HierarchyNode, HierarchyView, StateRole, TierView, TimelineWhen,
-    TransitionKind,
+    Diagram, FlowView, HierarchyDiagram, HierarchyNode, HierarchyView, StateRole, TierView,
+    TimelineWhen, TransitionKind,
 };
 
 /// A short accessible name for `diagram`: its declared `title`, or its kind and view
@@ -106,7 +106,11 @@ pub fn describe(diagram: &Diagram) -> String {
         }
         Diagram::HubSpoke(d) => {
             let spokes: Vec<&str> = d.spokes.iter().map(|s| s.label.as_str()).collect();
-            format!("{} at the centre, connected to {}", d.center, spokes.join(", "))
+            format!(
+                "{} at the centre, connected to {}",
+                d.center,
+                spokes.join(", ")
+            )
         }
         Diagram::Venn(d) => {
             let sets: Vec<&str> = d.sets.iter().map(|s| s.label.as_str()).collect();
@@ -220,7 +224,13 @@ fn hierarchy(d: &HierarchyDiagram) -> String {
             .nodes
             .iter()
             .filter(|c| c.parent.as_deref() == Some(key(node)))
-            .map(|c| if depth < 32 { outline(d, c, depth + 1) } else { c.label.clone() })
+            .map(|c| {
+                if depth < 32 {
+                    outline(d, c, depth + 1)
+                } else {
+                    c.label.clone()
+                }
+            })
             .collect();
         if children.is_empty() {
             node.label.clone()
@@ -272,10 +282,14 @@ mod tests {
     #[test]
     fn every_valid_spec_example_has_a_description() {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../../spec/kinds");
-        let Ok(kinds) = std::fs::read_dir(root) else { return };
+        let Ok(kinds) = std::fs::read_dir(root) else {
+            return;
+        };
         let mut seen = 0;
         for kind in kinds.flatten() {
-            let Ok(files) = std::fs::read_dir(kind.path().join("valid")) else { continue };
+            let Ok(files) = std::fs::read_dir(kind.path().join("valid")) else {
+                continue;
+            };
             for f in files.flatten() {
                 let path = f.path();
                 if path.extension().and_then(|e| e.to_str()) != Some("toml") {
@@ -284,7 +298,12 @@ mod tests {
                 let input = std::fs::read_to_string(&path).unwrap();
                 let d = parse(&input).unwrap();
                 let text = describe(&d);
-                assert!(text.len() > 3 && text.ends_with('.'), "{}: {:?}", path.display(), text);
+                assert!(
+                    text.len() > 3 && text.ends_with('.'),
+                    "{}: {:?}",
+                    path.display(),
+                    text
+                );
                 assert!(!accessible_name(&d).is_empty());
                 seen += 1;
             }

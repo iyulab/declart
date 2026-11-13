@@ -1,6 +1,6 @@
-use std::f32::consts::PI;
 use crate::model::OrgChartDiagram;
 use crate::render::{font, svg::SvgBuilder, theme::Theme};
+use std::f32::consts::PI;
 
 const ROOT_R: f32 = 42.0;
 const NODE_W: f32 = 100.0;
@@ -28,7 +28,11 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
     let canvas_r = ROOT_R + RING_GAP * max_depth.max(1) as f32 + NODE_W / 2.0 + PADDING;
     let canvas_size = (2.0 * canvas_r).max(400.0);
 
-    let title_h = if diagram.title.is_some() { TITLE_AREA } else { PADDING };
+    let title_h = if diagram.title.is_some() {
+        TITLE_AREA
+    } else {
+        PADDING
+    };
     let cx = canvas_size / 2.0;
     let cy = title_h + canvas_size / 2.0;
     let canvas_w = canvas_size;
@@ -37,27 +41,46 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
     let mut positions = vec![(0.0f32, 0.0f32); nodes.len()];
     let mut depths = vec![0u32; nodes.len()];
     assign_positions(
-        root_idx, 0, -PI / 2.0, 3.0 * PI / 2.0,
-        &children, nodes, cx, cy, &mut positions, &mut depths,
+        root_idx,
+        0,
+        -PI / 2.0,
+        3.0 * PI / 2.0,
+        &children,
+        nodes,
+        cx,
+        cy,
+        &mut positions,
+        &mut depths,
     );
 
     let mut builder = SvgBuilder::new(canvas_w, canvas_h);
 
     if let Some(title) = &diagram.title {
-        builder.text(cx, TITLE_AREA / 2.0, title, &theme.title_color.to_hex(),
-                     theme.typography.title_size);
+        builder.text(
+            cx,
+            TITLE_AREA / 2.0,
+            title,
+            &theme.title_color.to_hex(),
+            theme.typography.title_size,
+        );
     }
 
     // Connectors (drawn before nodes)
     for (i, node) in nodes.iter().enumerate() {
-        let Some(parent_label) = &node.parent else { continue };
-        let Some(pi) = nodes.iter().position(|n| &n.label == parent_label) else { continue };
+        let Some(parent_label) = &node.parent else {
+            continue;
+        };
+        let Some(pi) = nodes.iter().position(|n| &n.label == parent_label) else {
+            continue;
+        };
         let (px, py) = positions[pi];
         let (nx, ny) = positions[i];
         let dx = nx - px;
         let dy = ny - py;
         let dist = (dx * dx + dy * dy).sqrt();
-        if dist < 1.0 { continue; }
+        if dist < 1.0 {
+            continue;
+        }
         let ux = dx / dist;
         let uy = dy / dist;
 
@@ -77,7 +100,9 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
 
     // Non-root nodes
     for (i, node) in nodes.iter().enumerate() {
-        if depths[i] == 0 { continue; }
+        if depths[i] == 0 {
+            continue;
+        }
         let (nx, ny) = positions[i];
         let depth = depths[i];
         let (nw, nh) = node_size(depth);
@@ -90,8 +115,14 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
         let bold = depth == 1;
 
         builder.rect_rounded(
-            nx - nw / 2.0, ny - nh / 2.0, nw, nh, 8,
-            &fill.to_hex(), "none", 0.0,
+            nx - nw / 2.0,
+            ny - nh / 2.0,
+            nw,
+            nh,
+            8,
+            &fill.to_hex(),
+            "none",
+            0.0,
         );
 
         let available = nw * 0.88;
@@ -117,7 +148,14 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
     let (rx, ry) = positions[root_idx];
     let fill = theme.layers.apex;
     let text_color = &theme.text_on(&fill);
-    builder.circle_stroked(rx, ry, ROOT_R, &fill.to_hex(), &theme.background.to_hex(), 3.0);
+    builder.circle_stroked(
+        rx,
+        ry,
+        ROOT_R,
+        &fill.to_hex(),
+        &theme.background.to_hex(),
+        3.0,
+    );
     let available = ROOT_R * 1.6;
     let mut fs = theme.typography.label_size;
     if font::measure_text(&root.label, fs) > available {
@@ -135,12 +173,24 @@ pub fn render(diagram: &OrgChartDiagram, theme: &Theme) -> String {
 }
 
 fn node_size(depth: u32) -> (f32, f32) {
-    if depth == 1 { (NODE_W, NODE_H) } else { (NODE_W * 0.88, NODE_H * 0.88) }
+    if depth == 1 {
+        (NODE_W, NODE_H)
+    } else {
+        (NODE_W * 0.88, NODE_H * 0.88)
+    }
 }
 
 fn rect_clip(ux: f32, uy: f32, hw: f32, hh: f32) -> f32 {
-    let tx = if ux.abs() > 1e-6 { hw / ux.abs() } else { f32::INFINITY };
-    let ty = if uy.abs() > 1e-6 { hh / uy.abs() } else { f32::INFINITY };
+    let tx = if ux.abs() > 1e-6 {
+        hw / ux.abs()
+    } else {
+        f32::INFINITY
+    };
+    let ty = if uy.abs() > 1e-6 {
+        hh / uy.abs()
+    } else {
+        f32::INFINITY
+    };
     tx.min(ty)
 }
 
@@ -166,7 +216,13 @@ fn compute_max_depth(
     match children.get(label) {
         None => 0,
         Some(v) if v.is_empty() => 0,
-        Some(v) => 1 + v.iter().map(|&c| compute_max_depth(c, children, nodes)).max().unwrap_or(0),
+        Some(v) => {
+            1 + v
+                .iter()
+                .map(|&c| compute_max_depth(c, children, nodes))
+                .max()
+                .unwrap_or(0)
+        }
     }
 }
 
@@ -214,8 +270,16 @@ fn assign_positions(
         };
         let span = total_angle * frac;
         assign_positions(
-            child, depth + 1, current, current + span,
-            children, nodes, cx, cy, positions, depths,
+            child,
+            depth + 1,
+            current,
+            current + span,
+            children,
+            nodes,
+            cx,
+            cy,
+            positions,
+            depths,
         );
         current += span;
     }
@@ -230,16 +294,22 @@ mod tests {
     fn make_diagram(nodes: Vec<(&str, Option<&str>)>, title: Option<&str>) -> OrgChartDiagram {
         OrgChartDiagram {
             title: title.map(String::from),
-            nodes: nodes.into_iter().map(|(label, parent)| OrgChartNode {
-                label: label.to_string(),
-                parent: parent.map(String::from),
-            }).collect(),
+            nodes: nodes
+                .into_iter()
+                .map(|(label, parent)| OrgChartNode {
+                    label: label.to_string(),
+                    parent: parent.map(String::from),
+                })
+                .collect(),
         }
     }
 
     #[test]
     fn render_produces_svg() {
-        let d = make_diagram(vec![("Root", None), ("A", Some("Root")), ("B", Some("Root"))], Some("Test"));
+        let d = make_diagram(
+            vec![("Root", None), ("A", Some("Root")), ("B", Some("Root"))],
+            Some("Test"),
+        );
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.starts_with("<svg"));
         assert!(svg.ends_with("</svg>"));
@@ -247,12 +317,15 @@ mod tests {
 
     #[test]
     fn render_includes_all_labels() {
-        let d = make_diagram(vec![
-            ("Center", None),
-            ("Branch1", Some("Center")),
-            ("Branch2", Some("Center")),
-            ("Leaf", Some("Branch1")),
-        ], None);
+        let d = make_diagram(
+            vec![
+                ("Center", None),
+                ("Branch1", Some("Center")),
+                ("Branch2", Some("Center")),
+                ("Leaf", Some("Branch1")),
+            ],
+            None,
+        );
         let svg = render(&d, &DEFAULT_THEME);
         for label in &["Center", "Branch1", "Branch2", "Leaf"] {
             assert!(svg.contains(label), "missing label: {}", label);
@@ -268,11 +341,10 @@ mod tests {
 
     #[test]
     fn render_has_connector_lines() {
-        let d = make_diagram(vec![
-            ("Root", None),
-            ("A", Some("Root")),
-            ("B", Some("Root")),
-        ], None);
+        let d = make_diagram(
+            vec![("Root", None), ("A", Some("Root")), ("B", Some("Root"))],
+            None,
+        );
         let svg = render(&d, &DEFAULT_THEME);
         let line_count = svg.matches("<line").count();
         assert_eq!(line_count, 2, "expected 2 connector lines for 2 children");
@@ -280,13 +352,16 @@ mod tests {
 
     #[test]
     fn render_three_level_tree() {
-        let d = make_diagram(vec![
-            ("Root", None),
-            ("L1a", Some("Root")),
-            ("L1b", Some("Root")),
-            ("L2a", Some("L1a")),
-            ("L2b", Some("L1a")),
-        ], Some("Three levels"));
+        let d = make_diagram(
+            vec![
+                ("Root", None),
+                ("L1a", Some("Root")),
+                ("L1b", Some("Root")),
+                ("L2a", Some("L1a")),
+                ("L2b", Some("L1a")),
+            ],
+            Some("Three levels"),
+        );
         let svg = render(&d, &DEFAULT_THEME);
         assert!(svg.starts_with("<svg"));
         for label in &["Root", "L1a", "L1b", "L2a", "L2b"] {

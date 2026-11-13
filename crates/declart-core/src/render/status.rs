@@ -43,14 +43,20 @@ pub(crate) fn draw_marker_at(
     cy: f32,
     theme: &Theme,
 ) {
-    let Some((fill, shape)) = marker_style(status, theme) else { return };
+    let Some((fill, shape)) = marker_style(status, theme) else {
+        return;
+    };
     let ring = theme.background.to_hex();
     let r = STATUS_MARKER_R;
     match shape {
         Shape::Circle => builder.circle_stroked(cx, cy, r, &fill, &ring, 1.5),
         // Equilateral triangle pointing up (sin60 ≈ 0.866, cos60 = 0.5).
         Shape::Triangle => builder.polygon_stroked(
-            &[(cx, cy - r), (cx - 0.866 * r, cy + 0.5 * r), (cx + 0.866 * r, cy + 0.5 * r)],
+            &[
+                (cx, cy - r),
+                (cx - 0.866 * r, cy + 0.5 * r),
+                (cx + 0.866 * r, cy + 0.5 * r),
+            ],
             &fill,
             &ring,
             1.5,
@@ -94,8 +100,18 @@ mod tests {
             marker_style(&Some(Status::Critical), &DEFAULT_THEME).unwrap(),
             (DEFAULT_THEME.status.critical.to_hex(), Shape::Diamond)
         );
-        assert_eq!(marker_style(&Some(Status::Success), &DEFAULT_THEME).unwrap().1, Shape::Circle);
-        assert_eq!(marker_style(&Some(Status::Warning), &DEFAULT_THEME).unwrap().1, Shape::Triangle);
+        assert_eq!(
+            marker_style(&Some(Status::Success), &DEFAULT_THEME)
+                .unwrap()
+                .1,
+            Shape::Circle
+        );
+        assert_eq!(
+            marker_style(&Some(Status::Warning), &DEFAULT_THEME)
+                .unwrap()
+                .1,
+            Shape::Triangle
+        );
     }
 
     #[test]
@@ -103,7 +119,10 @@ mod tests {
         let mut b = SvgBuilder::new(100.0, 100.0);
         draw_marker(&mut b, &Some(Status::Success), 90.0, 10.0, &DEFAULT_THEME);
         let svg = b.build(Some("#ffffff"));
-        assert!(svg.contains("<circle"), "success should emit a circle marker");
+        assert!(
+            svg.contains("<circle"),
+            "success should emit a circle marker"
+        );
     }
 
     #[test]
@@ -113,8 +132,16 @@ mod tests {
             let mut b = SvgBuilder::new(100.0, 100.0);
             draw_marker(&mut b, &Some(s.clone()), 90.0, 10.0, &DEFAULT_THEME);
             let svg = b.build(Some("#ffffff"));
-            assert!(svg.contains("<polygon"), "{:?} should emit a polygon marker", s);
-            assert!(!svg.contains("<circle"), "{:?} must not be a circle (shape coding)", s);
+            assert!(
+                svg.contains("<polygon"),
+                "{:?} should emit a polygon marker",
+                s
+            );
+            assert!(
+                !svg.contains("<circle"),
+                "{:?} must not be a circle (shape coding)",
+                s
+            );
         }
     }
 
@@ -123,6 +150,9 @@ mod tests {
         let mut b = SvgBuilder::new(100.0, 100.0);
         draw_marker(&mut b, &Some(Status::Normal), 90.0, 10.0, &DEFAULT_THEME);
         let svg = b.build(Some("#ffffff"));
-        assert!(!svg.contains("<circle") && !svg.contains("<polygon"), "normal should emit no marker");
+        assert!(
+            !svg.contains("<circle") && !svg.contains("<polygon"),
+            "normal should emit no marker"
+        );
     }
 }
