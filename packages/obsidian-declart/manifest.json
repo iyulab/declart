@@ -1,0 +1,9 @@
+{
+  "id": "declart",
+  "name": "Declart",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Render declart code blocks as SVG diagrams.",
+  "author": "iyulab",
+  "isDesktopOnly": false
+}

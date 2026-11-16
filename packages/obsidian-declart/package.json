@@ -1,0 +1,19 @@
+{
+  "name": "obsidian-declart",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Obsidian plugin that renders declart code blocks as SVG diagrams",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build:wasm": "node build-wasm.js",
+    "build": "node build-wasm.js && node esbuild.js",
+    "test": "node --test test/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.28.0",
+    "obsidian": "latest",
+    "typescript": "^5.0.0"
+  }
+}
