@@ -47,3 +47,13 @@ npm test
 ```
 
 `npm run build:wasm` rebuilds only the WebAssembly module (into `src/wasm/`).
+
+## Privacy
+
+The plugin makes no network requests, collects no telemetry, and does not read or write any
+files outside your vault. Diagrams are rendered locally by a bundled WebAssembly module.
+
+## License
+
+MIT. See `LICENSE`. Third-party components bundled into the renderer (including the embedded
+Noto Sans font, under the SIL Open Font License 1.1) are listed in `THIRD-PARTY-NOTICES.md`.
