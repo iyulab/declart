@@ -162,6 +162,7 @@ pub fn render(diagram: &ItemsDiagram, theme: &Theme) -> String {
 }
 
 fn truncate_label(label: &str, available_width: f32, font_size: f32) -> String {
+    crate::diagnostic::record(crate::diagnostic::DiagnosticCode::LabelTruncated, label);
     let ellipsis = "…";
     let ellipsis_w = font::measure_text(ellipsis, font_size);
     let max_w = (available_width - ellipsis_w).max(0.0);

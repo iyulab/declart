@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Diagnostics — what the engine changed to make labels fit** (new, Rust `declart_core::render_diagnosed`, `Diagnostic`, `DiagnosticCode`; wasm `render_detailed`): a label too wide for its slot was cut short with "…" or set smaller, and `render` returned a normal SVG either way, so a pipeline that never looks at the picture could not tell a faithful rendering from one that dropped text. `render_diagnosed` returns the SVG together with a list of diagnostics — `label_truncated` (text is missing from the picture) and `label_shrunk` (set smaller, nothing missing) — each with the label as declared, a message and a hint. An empty list means every label is in the picture as declared. The SVG is identical to the one `render` gives.
+
 ## v0.22.0
 
 Diagrams that read in any language and sit on any page — wide-character measurement, wrapped labels, an accessible SVG, a transparent backdrop and a dark theme.

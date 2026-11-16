@@ -1,3 +1,4 @@
+use crate::diagnostic::{self, DiagnosticCode};
 use std::sync::OnceLock;
 
 const FONT_BYTES: &[u8] = include_bytes!("../../assets/fonts/NotoSans-Regular.ttf");
@@ -57,7 +58,16 @@ fn is_wide(c: char) -> bool {
 }
 
 /// Returns `text` truncated to fit within `max_width` at `font_size`, appending "…" if needed.
+/// A truncation is recorded as a [`DiagnosticCode::LabelTruncated`] diagnostic.
 pub fn truncate_text(text: &str, font_size: f32, max_width: f32) -> String {
+    let out = truncate_unrecorded(text, font_size, max_width);
+    if out != text {
+        diagnostic::record(DiagnosticCode::LabelTruncated, text);
+    }
+    out
+}
+
+fn truncate_unrecorded(text: &str, font_size: f32, max_width: f32) -> String {
     if measure_text(text, font_size) <= max_width {
         return text.to_string();
     }
@@ -111,6 +121,7 @@ pub fn fit_lines(
     // A label that needs only a slight shrink stays on one line.
     let one_line_size = font_size * max_width / width;
     if one_line_size >= (font_size * ONE_LINE_SHRINK).max(min_size) {
+        diagnostic::record(DiagnosticCode::LabelShrunk, text);
         return (vec![text.to_string()], one_line_size);
     }
     let mut size = font_size;
@@ -118,6 +129,9 @@ pub fn fit_lines(
         let room = lines_that_fit(size, max_height);
         let lines = wrap(text, size, max_width);
         if lines.len() <= room {
+            if size < font_size {
+                diagnostic::record(DiagnosticCode::LabelShrunk, text);
+            }
             return (lines, size);
         }
         if size <= min_size {
@@ -126,8 +140,9 @@ pub fn fit_lines(
             let rest: String = text.chars().skip(consumed).collect();
             if let Some(last) = kept.last_mut() {
                 let tail = format!("{}{}", last, rest.trim_start());
-                *last = truncate_text(&tail, size, max_width);
+                *last = truncate_unrecorded(&tail, size, max_width);
             }
+            diagnostic::record(DiagnosticCode::LabelTruncated, text);
             return (kept, size);
         }
         size = (size - SIZE_STEP).max(min_size);

@@ -249,6 +249,7 @@ name = "declart-wasm"
 version = "0.22.0"
 dependencies = [
  "declart-core",
+ "serde_json",
  "wasm-bindgen",
  "wasm-bindgen-test",
 ]

@@ -70,6 +70,27 @@ pub fn render_with_theme_toml(
     declart_core::render_opts(&diagram, &theme, width).map_err(|e| JsError::new(&e.to_string()))
 }
 
+/// Renders a TOML or JSON diagram declaration to SVG and reports what the engine changed to make the
+/// labels fit.
+///
+/// Returns a JSON string `{"svg": "...", "warnings": [{"code", "label", "message", "hint"}]}`.
+/// `code` is `label_truncated` (text is missing from the picture) or `label_shrunk` (set smaller);
+/// an empty `warnings` list means every label is in the picture as declared.
+#[wasm_bindgen]
+pub fn render_detailed(
+    input: &str,
+    theme: &str,
+    width: Option<u32>,
+    transparent: Option<bool>,
+) -> Result<String, JsError> {
+    let diagram = declart_core::parse_auto(input).map_err(|e| JsError::new(&e.to_string()))?;
+    let t = backdrop(Theme::by_name(theme).clone(), transparent);
+    let (svg, warnings) = declart_core::render_diagnosed(&diagram, &t, width)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    serde_json::to_string(&serde_json::json!({ "svg": svg, "warnings": warnings }))
+        .map_err(|e| JsError::new(&e.to_string()))
+}
+
 /// Validates a TOML or JSON diagram declaration without rendering.
 ///
 /// Returns `Ok(())` if valid, or a `JsError` with the parse/validation error message.

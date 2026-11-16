@@ -54,6 +54,18 @@ pub fn render_opts(
     }
 }
 
+/// Renders `diagram` like [`render_opts`] and also returns what the engine changed to make the labels
+/// fit — labels cut short with "…" and labels set smaller. An empty list means the picture carries
+/// every label as declared.
+pub fn render_diagnosed(
+    diagram: &Diagram,
+    theme: &Theme,
+    width: Option<u32>,
+) -> Result<(String, Vec<crate::Diagnostic>), DeclartError> {
+    let (svg, diagnostics) = crate::diagnostic::collect(|| render_opts(diagram, theme, width));
+    svg.map(|svg| (svg, diagnostics))
+}
+
 /// Marks the SVG as one image and gives it its accessible name and description — `role="img"`
 /// on the root, then `<title>` and `<desc>` as its first children, which SVG-AAM maps to the
 /// name and description without `id` references (several diagrams inlined in one page cannot

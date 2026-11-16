@@ -30,12 +30,14 @@
 
 mod date;
 mod describe;
+mod diagnostic;
 mod error;
 mod model;
 pub(crate) mod parse;
 pub mod render;
 
 pub use describe::{accessible_name, describe};
+pub use diagnostic::{Diagnostic, DiagnosticCode};
 pub use error::DeclartError;
 pub use model::{
     ComparisonCell, ComparisonDiagram, Diagram, Emphasis, FlowDiagram, FlowView, HierarchyDiagram,
@@ -43,4 +45,4 @@ pub use model::{
     TierView, TimelineDiagram, TimelineEvent, TimelineWhen, VennDiagram, VennIntersection, VennSet,
 };
 pub use parse::{parse, parse_auto, parse_json, KINDS};
-pub use render::{render, render_opts, ACCESSIBLE_THEME, WARM_THEME};
+pub use render::{render, render_diagnosed, render_opts, ACCESSIBLE_THEME, WARM_THEME};
