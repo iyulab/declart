@@ -1,0 +1,3 @@
+[submodule "packages/obsidian-declart"]
+	path = packages/obsidian-declart
+	url = https://github.com/iyulab/obsidian-declart.git
