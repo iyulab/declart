@@ -5,6 +5,7 @@ const require = createRequire(import.meta.url);
 const declart = require('./index.js');
 
 export const render = declart.render;
+export const renderDetailed = declart.renderDetailed;
 export const renderJson = declart.renderJson;
 export const renderWithThemeToml = declart.renderWithThemeToml;
 export const validate = declart.validate;

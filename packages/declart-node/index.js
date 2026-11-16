@@ -15,6 +15,19 @@ function render(input, theme = 'default', width, options) {
 }
 
 /**
+ * Renders a TOML or JSON diagram declaration to SVG and reports what the engine changed to make the
+ * labels fit. An empty `warnings` list means every label is in the picture as declared.
+ * @param {string} input - TOML or JSON declaration string (auto-detected)
+ * @param {string} [theme='default'] - Theme name
+ * @param {number} [width] - Optional canvas width in pixels
+ * @param {{ transparent?: boolean }} [options] - `transparent: true` leaves the backdrop unpainted
+ * @returns {{ svg: string, warnings: Array<{ code: 'label_truncated' | 'label_shrunk', label: string, message: string, hint: string }> }}
+ */
+function renderDetailed(input, theme = 'default', width, options) {
+    return JSON.parse(wasm.render_detailed(input, theme, width ?? null, options?.transparent ?? null));
+}
+
+/**
  * Renders a JSON diagram declaration to SVG.
  * @param {string} input - JSON declaration string
  * @param {string} [theme='default'] - Theme name
@@ -40,11 +53,20 @@ function renderWithThemeToml(input, themeToml, width, options) {
 
 /**
  * Validates a TOML or JSON diagram declaration without rendering.
+ * With `strict: true` the declaration must also fit: a label the engine would cut short with "…"
+ * is an error (a label only set smaller is not).
  * @param {string} input - TOML or JSON declaration string
- * @throws {Error} If the declaration is invalid
+ * @param {{ strict?: boolean }} [options]
+ * @throws {Error} If the declaration is invalid, or — in strict mode — a label would be cut short
  */
-function validate(input) {
-    return wasm.validate(input);
+function validate(input, options) {
+    wasm.validate(input);
+    if (options?.strict) {
+        const cut = renderDetailed(input).warnings.filter((w) => w.code === 'label_truncated');
+        if (cut.length > 0) {
+            throw new Error(cut.map((w) => `${w.message} — ${w.hint}`).join('; '));
+        }
+    }
 }
 
 /**
@@ -74,4 +96,4 @@ function kinds() {
     return wasm.kinds().split(',');
 }
 
-module.exports = { render, renderJson, renderWithThemeToml, validate, describe, themes, kinds };
+module.exports = { render, renderDetailed, renderJson, renderWithThemeToml, validate, describe, themes, kinds };
