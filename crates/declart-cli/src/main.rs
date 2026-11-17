@@ -53,6 +53,14 @@ enum Commands {
         #[arg(long)]
         strict: bool,
     },
+    /// Show how long a label can be in each place it goes in a diagram kind
+    Limits {
+        /// Diagram kind: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison, state
+        kind: String,
+        /// View of the kind [default: the kind's first view]
+        #[arg(long)]
+        view: Option<String>,
+    },
     /// Print a starter TOML declaration for a diagram kind
     Init {
         /// Diagram kind: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison, state
@@ -128,6 +136,29 @@ fn run() -> Result<()> {
             warn_hierarchy_auto_view(&diagram, &content);
             if strict {
                 require_labels_fit(&diagram, &resolve_theme("default", false)?, &input)?;
+            }
+        }
+        Commands::Limits { kind, view } => {
+            let slots = declart_core::limits(&kind, view.as_deref())?;
+            let shown = |n: Option<usize>| n.map_or("-".to_string(), |n| n.to_string());
+            println!("label length in characters, written without spaces");
+            println!(
+                "  unchanged = shown at the usual size on one line · whole = shown without \"…\""
+            );
+            println!("  - = the engine reports nothing for that slot, which does not mean any length fits");
+            println!();
+            println!(
+                "{:<28} {:<22} {:>12} {:>12}",
+                "slot", "measured in", "hangul", "ascii"
+            );
+            for s in slots {
+                println!(
+                    "{:<28} {:<22} {:>12} {:>12}",
+                    s.path,
+                    s.reference,
+                    format!("{} / {}", shown(s.hangul.unchanged), shown(s.hangul.whole)),
+                    format!("{} / {}", shown(s.ascii.unchanged), shown(s.ascii.whole)),
+                );
             }
         }
         Commands::Init { kind } => {

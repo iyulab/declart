@@ -43,6 +43,8 @@ If `validate` fails, paste the error message back to the LLM and ask it to fix t
 
 A declaration can be valid and still not fit: a label too long for its slot is cut short with "…" in the picture. `declart validate --strict` (and `declart render --strict`, which then writes nothing) fails on that, and its message names each label and what to change, so the loop above closes without anyone looking at the SVG.
 
+To write labels that fit in the first place, ask for the limits: `declart limits state` (Node `limits('state')`) lists how many Hangul and Latin characters each label slot takes before the engine changes it. The same tables are at the end of every kind's page in the spec.
+
 ---
 
 ## Prompt Templates

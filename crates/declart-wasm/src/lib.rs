@@ -112,6 +112,20 @@ pub fn describe(input: &str) -> Result<String, JsError> {
         .map_err(|e| JsError::new(&e.to_string()))
 }
 
+/// Reports how long a label can be in each place it goes in `kind` for `view` (omitted: the kind's
+/// first view), measured with the same diagnostics `render_detailed` returns.
+///
+/// Returns a JSON string `[{"path", "reference", "hangul": {"unchanged", "whole"}, "ascii": {...}}]`.
+/// A capacity is the longest label in characters (no spaces) before it is set smaller or wrapped
+/// (`unchanged`) and before it is cut short with "…" (`whole`); `null` means the engine reports
+/// nothing for that slot up to 120 characters.
+#[wasm_bindgen]
+pub fn limits(kind: &str, view: Option<String>) -> Result<String, JsError> {
+    let slots =
+        declart_core::limits(kind, view.as_deref()).map_err(|e| JsError::new(&e.to_string()))?;
+    serde_json::to_string(&slots).map_err(|e| JsError::new(&e.to_string()))
+}
+
 /// Returns a comma-separated list of supported theme names.
 #[wasm_bindgen]
 pub fn themes() -> String {

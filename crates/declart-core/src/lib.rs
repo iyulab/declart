@@ -32,6 +32,7 @@ mod date;
 mod describe;
 mod diagnostic;
 mod error;
+mod limits;
 mod model;
 pub(crate) mod parse;
 pub mod render;
@@ -39,6 +40,7 @@ pub mod render;
 pub use describe::{accessible_name, describe};
 pub use diagnostic::{Diagnostic, DiagnosticCode};
 pub use error::DeclartError;
+pub use limits::{limits, views, Capacity, SlotLimit, MAX_PROBED};
 pub use model::{
     ComparisonCell, ComparisonDiagram, Diagram, Emphasis, FlowDiagram, FlowView, HierarchyDiagram,
     HierarchyNode, HierarchyView, HubSpokeDiagram, Item, ItemsDiagram, LinkDirection, LinkRelation,

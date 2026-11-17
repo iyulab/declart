@@ -130,3 +130,34 @@ parent = "vp"
 label = "Frontend Team"
 parent = "vp"
 ```
+
+<!-- limits:start — generated; do not edit by hand -->
+## Label capacity
+
+How long a label can be before the engine sets it smaller, wraps it, or cuts it short with "…". Each number is measured by rendering a small reference declaration with a growing label and reading the diagnostics `render_detailed` returns, so the table always agrees with them. Lengths are in characters written without spaces: Hangul syllables are one em wide, Latin lowercase letters about half that. **unchanged** is the longest label shown at the usual size on one line; **whole** is the longest shown without "…". A slot's width depends on its siblings, so read a number as a guide for the reference declaration named in the second column and use `declart validate --strict` for the declaration itself.
+
+A dash means the engine reports nothing for the slot up to 120 characters. That is not a promise that any length fits: a slot the engine does not fit at all draws a long label past the picture without a warning.
+
+### `org_chart`
+
+| Slot | Measured in | Hangul (unchanged / whole) | Latin (unchanged / whole) |
+|------|-------------|----------------------------|---------------------------|
+| `nodes[].label (no parent)` | a root, 2 children | 7 / 20 | 14 / 38 |
+| `nodes[].label (parent set)` | a root, 2 children | 7 / 20 | 14 / 38 |
+
+### `fishbone`
+
+| Slot | Measured in | Hangul (unchanged / whole) | Latin (unchanged / whole) |
+|------|-------------|----------------------------|---------------------------|
+| `nodes[].label (no parent)` | 2 categories, 2 causes | 9 / 9 | 15 / 15 |
+| `nodes[].label (parent set)` | 2 categories, 2 causes | 7 / 7 | 14 / 14 |
+| `effect` | 2 categories, 2 causes | 10 / 10 | 19 / 19 |
+
+### `mind_map`
+
+| Slot | Measured in | Hangul (unchanged / whole) | Latin (unchanged / whole) |
+|------|-------------|----------------------------|---------------------------|
+| `nodes[].label (no parent)` | a root, 2 children | 6 / 6 | 13 / 13 |
+| `nodes[].label (parent set)` | a root, 2 children | 8 / 8 | 16 / 16 |
+
+<!-- limits:end -->

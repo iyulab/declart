@@ -96,4 +96,16 @@ function kinds() {
     return wasm.kinds().split(',');
 }
 
-module.exports = { render, renderDetailed, renderJson, renderWithThemeToml, validate, describe, themes, kinds };
+/**
+ * Reports how long a label can be in each place it goes in a diagram kind, measured with the same
+ * diagnostics {@link renderDetailed} returns — so a limit and a `label_truncated` warning always agree.
+ * @param {string} kind - Diagram kind, one of {@link kinds}
+ * @param {string} [view] - View of the kind (defaults to the kind's first view)
+ * @returns {Array<{ path: string, reference: string, hangul: { unchanged: number|null, whole: number|null }, ascii: { unchanged: number|null, whole: number|null } }>}
+ * @throws {Error} If the kind or the view is unknown
+ */
+function limits(kind, view) {
+    return JSON.parse(wasm.limits(kind, view ?? null));
+}
+
+module.exports = { render, renderDetailed, renderJson, renderWithThemeToml, validate, describe, themes, kinds, limits };

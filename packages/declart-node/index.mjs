@@ -12,3 +12,4 @@ export const validate = declart.validate;
 export const describe = declart.describe;
 export const themes = declart.themes;
 export const kinds = declart.kinds;
+export const limits = declart.limits;

@@ -17,6 +17,30 @@ export interface DetailedRender {
   warnings: RenderWarning[];
 }
 
+/** How many characters of one script a slot takes before the engine steps in. */
+export interface LabelCapacity {
+  /** The longest label shown at its usual size on one line; one more character is set smaller or wrapped. */
+  unchanged: number | null;
+  /** The longest label shown whole; one more character is cut short with "…". */
+  whole: number | null;
+}
+
+/**
+ * The capacity of one place in a declaration where a label goes. `null` means the engine reports
+ * nothing for the slot up to 120 characters — not that any length fits: a slot the engine does not
+ * fit at all draws a long label past the picture without a warning.
+ */
+export interface SlotLimit {
+  /** Where the label goes, such as `items[].label` or `states[].label`. */
+  path: string;
+  /** The reference declaration the numbers were measured in, such as `3 items`. A slot's width depends on its siblings, so read a limit as a guide and use {@link renderDetailed} for the declaration itself. */
+  reference: string;
+  /** Hangul syllables (one em wide each), written without spaces. */
+  hangul: LabelCapacity;
+  /** Lowercase Latin letters, written without spaces. */
+  ascii: LabelCapacity;
+}
+
 /** Options for {@link validate}. */
 export interface ValidateOptions {
   /** Also fail when the declaration does not fit: a label the engine would cut short with "…". */
@@ -53,6 +77,16 @@ export function render(input: string, theme?: string, width?: number, options?: 
  * @throws If the declaration is invalid
  */
 export function renderDetailed(input: string, theme?: string, width?: number, options?: RenderOptions): DetailedRender;
+
+/**
+ * Reports how long a label can be in each place it goes in a diagram kind. The numbers are measured
+ * with the same diagnostics {@link renderDetailed} returns, so a limit and a `label_truncated`
+ * warning always agree.
+ * @param kind - Diagram kind, one of {@link kinds}
+ * @param view - View of the kind (defaults to the kind's first view)
+ * @throws If the kind or the view is unknown
+ */
+export function limits(kind: string, view?: string): SlotLimit[];
 
 /**
  * Renders a JSON diagram declaration to SVG.

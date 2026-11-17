@@ -120,3 +120,36 @@ status = "critical"
 label = "Monitor"
 status = "normal"
 ```
+
+<!-- limits:start — generated; do not edit by hand -->
+## Label capacity
+
+How long a label can be before the engine sets it smaller, wraps it, or cuts it short with "…". Each number is measured by rendering a small reference declaration with a growing label and reading the diagnostics `render_detailed` returns, so the table always agrees with them. Lengths are in characters written without spaces: Hangul syllables are one em wide, Latin lowercase letters about half that. **unchanged** is the longest label shown at the usual size on one line; **whole** is the longest shown without "…". A slot's width depends on its siblings, so read a number as a guide for the reference declaration named in the second column and use `declart validate --strict` for the declaration itself.
+
+A dash means the engine reports nothing for the slot up to 120 characters. That is not a promise that any length fits: a slot the engine does not fit at all draws a long label past the picture without a warning.
+
+### `process`
+
+| Slot | Measured in | Hangul (unchanged / whole) | Latin (unchanged / whole) |
+|------|-------------|----------------------------|---------------------------|
+| `items[].label` | 3 items | 20 / 42 | 39 / 81 |
+
+### `cycle`
+
+| Slot | Measured in | Hangul (unchanged / whole) | Latin (unchanged / whole) |
+|------|-------------|----------------------------|---------------------------|
+| `items[].label` | 3 items | 9 / 9 | 15 / 15 |
+
+### `funnel`
+
+| Slot | Measured in | Hangul (unchanged / whole) | Latin (unchanged / whole) |
+|------|-------------|----------------------------|---------------------------|
+| `items[].label` | 3 items | 22 / 22 | 49 / 49 |
+
+### `swimlane`
+
+| Slot | Measured in | Hangul (unchanged / whole) | Latin (unchanged / whole) |
+|------|-------------|----------------------------|---------------------------|
+| `items[].label` | 3 items | 18 / 36 | 34 / 72 |
+
+<!-- limits:end -->
