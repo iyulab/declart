@@ -1,0 +1,10 @@
+kind = "system"
+
+[[nodes]]
+id = "a"
+label = "A"
+role = "database"
+
+[[nodes]]
+id = "b"
+label = "B"

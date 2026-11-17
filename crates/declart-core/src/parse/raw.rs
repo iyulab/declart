@@ -212,3 +212,45 @@ pub struct RawStateTransition {
     #[serde(rename = "type", default)]
     pub kind: Option<String>,
 }
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawSystemDiagram {
+    pub kind: String,
+    pub title: Option<String>,
+    #[serde(default)]
+    pub groups: Vec<RawSystemGroup>,
+    #[serde(default)]
+    pub nodes: Vec<RawSystemNode>,
+    #[serde(default)]
+    pub links: Vec<RawSystemLink>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawSystemGroup {
+    pub id: String,
+    pub label: String,
+    pub parent: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawSystemNode {
+    pub id: String,
+    pub label: String,
+    pub group: Option<String>,
+    pub role: Option<String>,
+    pub emphasis: Option<String>,
+    pub status: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RawSystemLink {
+    pub from: String,
+    pub to: String,
+    pub label: Option<String>,
+    pub direction: Option<String>,
+    pub relation: Option<String>,
+}

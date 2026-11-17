@@ -1,0 +1,102 @@
+kind = "system"
+title = "RAG"
+
+[[groups]]
+id = "idx"
+label = "인덱싱 (사전)"
+
+[[groups]]
+id = "qry"
+label = "질의 (실시간)"
+
+[[nodes]]
+id = "doc"
+label = "문서"
+group = "idx"
+
+[[nodes]]
+id = "chunk"
+label = "청킹"
+group = "idx"
+
+[[nodes]]
+id = "embed"
+label = "임베딩"
+group = "idx"
+
+[[nodes]]
+id = "vdb"
+label = "벡터 DB"
+group = "idx"
+role = "store"
+
+[[nodes]]
+id = "q"
+label = "질문"
+group = "qry"
+
+[[nodes]]
+id = "qe"
+label = "질문 임베딩"
+group = "qry"
+
+[[nodes]]
+id = "ret"
+label = "검색기"
+group = "qry"
+
+[[nodes]]
+id = "aug"
+label = "프롬프트 보강"
+group = "qry"
+
+[[nodes]]
+id = "llm"
+label = "LLM"
+group = "qry"
+
+[[nodes]]
+id = "ans"
+label = "답변 + 출처"
+group = "qry"
+
+[[links]]
+from = "doc"
+to = "chunk"
+
+[[links]]
+from = "chunk"
+to = "embed"
+
+[[links]]
+from = "embed"
+to = "vdb"
+
+[[links]]
+from = "q"
+to = "qe"
+
+[[links]]
+from = "qe"
+to = "ret"
+
+[[links]]
+from = "ret"
+to = "aug"
+
+[[links]]
+from = "aug"
+to = "llm"
+
+[[links]]
+from = "llm"
+to = "ans"
+
+[[links]]
+from = "vdb"
+to = "ret"
+label = "Top-K 조각"
+
+[[links]]
+from = "q"
+to = "aug"

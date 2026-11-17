@@ -1,0 +1,55 @@
+kind = "system"
+title = "가명정보 결합"
+
+[[nodes]]
+id = "org_a"
+label = "기관 A 가명처리"
+
+[[nodes]]
+id = "org_b"
+label = "기관 B 가명처리"
+
+[[nodes]]
+id = "key"
+label = "결합키 관리기관 결합키 연계정보 생성"
+
+[[nodes]]
+id = "link"
+label = "결합전문기관 결합 수행"
+
+[[nodes]]
+id = "review"
+label = "반출 심사·승인"
+
+[[nodes]]
+id = "user"
+label = "결합 신청자 분석 활용"
+role = "actor"
+
+[[links]]
+from = "org_a"
+to = "key"
+
+[[links]]
+from = "org_b"
+to = "key"
+
+[[links]]
+from = "org_a"
+to = "link"
+
+[[links]]
+from = "org_b"
+to = "link"
+
+[[links]]
+from = "key"
+to = "link"
+
+[[links]]
+from = "link"
+to = "review"
+
+[[links]]
+from = "review"
+to = "user"

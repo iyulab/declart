@@ -1,0 +1,74 @@
+kind = "system"
+title = "Zero Trust Architecture"
+
+[[groups]]
+id = "cp"
+label = "Control plane"
+
+[[groups]]
+id = "pdp"
+label = "Policy decision point"
+parent = "cp"
+
+[[groups]]
+id = "dp"
+label = "Data plane"
+
+[[nodes]]
+id = "pe"
+label = "Policy engine"
+group = "pdp"
+
+[[nodes]]
+id = "pa"
+label = "Policy administrator"
+group = "pdp"
+
+[[nodes]]
+id = "signals"
+label = "Identity, device state, threat intelligence, logs"
+group = "cp"
+
+[[nodes]]
+id = "subject"
+label = "Subject: user or device"
+group = "dp"
+role = "actor"
+
+[[nodes]]
+id = "pep"
+label = "Policy enforcement point"
+group = "dp"
+
+[[nodes]]
+id = "resource"
+label = "Enterprise resource"
+group = "dp"
+
+[[links]]
+from = "pe"
+to = "pa"
+direction = "both"
+
+[[links]]
+from = "signals"
+to = "pe"
+
+[[links]]
+from = "subject"
+to = "pep"
+
+[[links]]
+from = "pep"
+to = "resource"
+
+[[links]]
+from = "pa"
+to = "pep"
+label = "allow / deny"
+
+[[links]]
+from = "pep"
+to = "pa"
+label = "access request"
+relation = "indirect"

@@ -15,7 +15,8 @@ $tmp = Join-Path $here '.tmp'
 New-Item -ItemType Directory -Force $tmp | Out-Null
 & $cli render (Join-Path $here 'hero.toml') --format png --width 900 -o (Join-Path $tmp 'hero.png')
 Get-ChildItem (Join-Path $here 'gallery/*.toml') | ForEach-Object {
-  & $cli render $_.FullName --format png --width 1000 -o (Join-Path $tmp "$($_.BaseName).png")
+  $w = if ($_.BaseName -eq 'system') { 1500 } else { 1000 }
+  & $cli render $_.FullName --format png --width $w -o (Join-Path $tmp "$($_.BaseName).png")
 }
 
 # Headless Chrome reserves part of the window for its own UI, so capture a taller window and crop to size.
@@ -34,5 +35,5 @@ function Capture($page, $out, $w, $h) {
   $dst.Dispose()
 }
 Capture 'hero.html' (Join-Path $root 'assets/hero.png') 1600 900
-Capture 'gallery.html' (Join-Path $root 'assets/gallery.png') 1500 1420
+Capture 'gallery.html' (Join-Path $root 'assets/gallery.png') 1500 1860
 Remove-Item -Recurse -Force $tmp

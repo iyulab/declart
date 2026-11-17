@@ -71,6 +71,7 @@ let svg = render(&diagram, &DEFAULT_THEME)?;
 | `venn` | — |
 | `comparison` | — |
 | `state` | — |
+| `system` | — |
 
 ## Semantic item attributes
 

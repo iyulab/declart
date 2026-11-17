@@ -4,8 +4,9 @@ use crate::date::PartialDate;
 use crate::error::DeclartError;
 use crate::model::{
     ComparisonCell, ComparisonDiagram, Diagram, Emphasis, FlowDiagram, FlowItem, FlowView,
-    HierarchyDiagram, HierarchyNode, HierarchyView, HubSpokeDiagram, Item, MatrixDiagram,
-    StateDiagram, StateNode, StateRole, StateTransition, Status, TierDiagram, TierView,
+    HierarchyDiagram, HierarchyNode, HierarchyView, HubSpokeDiagram, Item, LinkDirection,
+    LinkRelation, MatrixDiagram, StateDiagram, StateNode, StateRole, StateTransition, Status,
+    SystemDiagram, SystemGroup, SystemLink, SystemNode, SystemRole, TierDiagram, TierView,
     TimelineDiagram, TimelineEvent, TimelineWhen, TransitionKind, VennDiagram, VennIntersection,
     VennSet,
 };
@@ -27,6 +28,7 @@ pub fn parse(input: &str) -> Result<Diagram, DeclartError> {
         "timeline" => { let raw: raw::RawTimelineDiagram = toml::from_str(input)?; validate_timeline(raw) }
         "comparison" => { let raw: raw::RawComparisonDiagram = toml::from_str(input)?; validate_comparison(raw) }
         "state" => { let raw: raw::RawStateDiagram = toml::from_str(input)?; validate_state(raw) }
+        "system" => { let raw: raw::RawSystemDiagram = toml::from_str(input)?; validate_system(raw) }
         other => Err(DeclartError::UnknownKind(other.to_string())),
     }
 }
@@ -44,6 +46,7 @@ pub const KINDS: &[&str] = &[
     "venn",
     "comparison",
     "state",
+    "system",
 ];
 
 pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
@@ -63,6 +66,7 @@ pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
         "timeline" => { let raw: raw::RawTimelineDiagram = serde_json::from_str(input)?; validate_timeline(raw) }
         "comparison" => { let raw: raw::RawComparisonDiagram = serde_json::from_str(input)?; validate_comparison(raw) }
         "state" => { let raw: raw::RawStateDiagram = serde_json::from_str(input)?; validate_state(raw) }
+        "system" => { let raw: raw::RawSystemDiagram = serde_json::from_str(input)?; validate_system(raw) }
         other => Err(DeclartError::UnknownKind(other.to_string())),
     }
 }
@@ -783,6 +787,213 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
         title: raw.title,
         states,
         transitions,
+    }))
+}
+
+/// Most nodes, groups and links one system diagram holds — past this a diagram stops being
+/// readable at a glance, and splitting it is the better drawing.
+const SYSTEM_MAX_NODES: usize = 16;
+const SYSTEM_MAX_GROUPS: usize = 6;
+const SYSTEM_MAX_LINKS: usize = 24;
+
+fn invalid(field: &str, value: impl Into<String>, hint: impl Into<String>) -> DeclartError {
+    DeclartError::InvalidValue {
+        field: field.to_string(),
+        value: value.into(),
+        hint: hint.into(),
+    }
+}
+
+fn validate_system(raw: raw::RawSystemDiagram) -> Result<Diagram, DeclartError> {
+    debug_assert_eq!(raw.kind, "system");
+    use std::collections::{HashMap, HashSet};
+
+    if raw.nodes.len() < 2 {
+        return Err(DeclartError::TooFewItems {
+            kind: "system",
+            min: 2,
+            got: raw.nodes.len(),
+        });
+    }
+    for (what, got, max) in [
+        ("nodes", raw.nodes.len(), SYSTEM_MAX_NODES),
+        ("groups", raw.groups.len(), SYSTEM_MAX_GROUPS),
+        ("links", raw.links.len(), SYSTEM_MAX_LINKS),
+    ] {
+        if got > max {
+            return Err(invalid(
+                what,
+                got.to_string(),
+                format!("A system diagram holds at most {max} {what}; split it into two diagrams, one per concern"),
+            ));
+        }
+    }
+
+    // One namespace for nodes and groups, so a link can name either.
+    let mut seen: HashSet<&str> = HashSet::new();
+    for id in raw
+        .groups
+        .iter()
+        .map(|g| g.id.as_str())
+        .chain(raw.nodes.iter().map(|n| n.id.as_str()))
+    {
+        if !seen.insert(id) {
+            return Err(invalid(
+                "id",
+                id,
+                "Each node and group id must be unique within the diagram",
+            ));
+        }
+    }
+
+    let group_parent: HashMap<&str, Option<&str>> = raw
+        .groups
+        .iter()
+        .map(|g| (g.id.as_str(), g.parent.as_deref()))
+        .collect();
+    for g in &raw.groups {
+        if let Some(p) = g.parent.as_deref() {
+            if p == g.id {
+                return Err(invalid("parent", p, "A group cannot sit inside itself"));
+            }
+            let Some(grand) = group_parent.get(p) else {
+                return Err(invalid(
+                    "parent",
+                    p,
+                    "parent must be the id of another group",
+                ));
+            };
+            if grand.is_some() {
+                return Err(invalid(
+                    "parent",
+                    p,
+                    "Groups nest at most two deep (a group inside a group)",
+                ));
+            }
+        }
+    }
+    for n in &raw.nodes {
+        if let Some(g) = n.group.as_deref() {
+            if !group_parent.contains_key(g) {
+                return Err(invalid("group", g, "group must be the id of a group"));
+            }
+        }
+    }
+
+    // A link's end is a node or a group; the groups above it decide what it may reach.
+    let node_group: HashMap<&str, Option<&str>> = raw
+        .nodes
+        .iter()
+        .map(|n| (n.id.as_str(), n.group.as_deref()))
+        .collect();
+    let chain_of = |id: &str| -> Vec<String> {
+        let mut chain = vec![id.to_string()];
+        let mut at = node_group
+            .get(id)
+            .copied()
+            .or_else(|| group_parent.get(id).copied())
+            .flatten();
+        while let Some(g) = at {
+            chain.push(g.to_string());
+            at = group_parent.get(g).copied().flatten();
+        }
+        chain
+    };
+    let mut links = Vec::with_capacity(raw.links.len());
+    for l in raw.links {
+        for end in [&l.from, &l.to] {
+            if !seen.contains(end.as_str()) {
+                return Err(invalid(
+                    "link",
+                    end.clone(),
+                    "from and to must be the id of a node or group",
+                ));
+            }
+        }
+        if l.from == l.to {
+            return Err(invalid(
+                "link",
+                l.from,
+                "A link joins two different ends; a state that loops back is a `state` diagram",
+            ));
+        }
+        if chain_of(&l.from).contains(&l.to) || chain_of(&l.to).contains(&l.from) {
+            return Err(invalid(
+                "link",
+                format!("{} → {}", l.from, l.to),
+                "A link cannot join a group to something inside it",
+            ));
+        }
+        let direction = match l.direction.as_deref() {
+            None | Some("forward") => LinkDirection::Forward,
+            Some("both") => LinkDirection::Both,
+            Some("none") => LinkDirection::None,
+            Some(other) => {
+                return Err(invalid(
+                    "direction",
+                    other,
+                    "Valid values are: forward, both, none",
+                ))
+            }
+        };
+        let relation = match l.relation.as_deref() {
+            None | Some("direct") => LinkRelation::Direct,
+            Some("indirect") => LinkRelation::Indirect,
+            Some(other) => {
+                return Err(invalid(
+                    "relation",
+                    other,
+                    "Valid values are: direct, indirect",
+                ))
+            }
+        };
+        links.push(SystemLink {
+            from: l.from,
+            to: l.to,
+            label: l.label,
+            direction,
+            relation,
+        });
+    }
+
+    let mut nodes = Vec::with_capacity(raw.nodes.len());
+    for n in raw.nodes {
+        let role = match n.role.as_deref() {
+            None => None,
+            Some("store") => Some(SystemRole::Store),
+            Some("external") => Some(SystemRole::External),
+            Some("actor") => Some(SystemRole::Actor),
+            Some(other) => {
+                return Err(invalid(
+                    "role",
+                    other,
+                    "Valid values are: store, external, actor",
+                ))
+            }
+        };
+        nodes.push(SystemNode {
+            id: n.id,
+            label: n.label,
+            group: n.group,
+            role,
+            emphasis: parse_emphasis(n.emphasis.as_deref())?,
+            status: parse_status(n.status.as_deref())?,
+        });
+    }
+
+    Ok(Diagram::System(SystemDiagram {
+        title: raw.title,
+        groups: raw
+            .groups
+            .into_iter()
+            .map(|g| SystemGroup {
+                id: g.id,
+                label: g.label,
+                parent: g.parent,
+            })
+            .collect(),
+        nodes,
+        links,
     }))
 }
 
@@ -1926,6 +2137,99 @@ label = "A"
     fn parse_rejects_unknown_kind() {
         let input = "kind = \"diagram\"\n\n[[items]]\nlabel = \"Item\"\n";
         assert!(parse(input).is_err());
+    }
+
+    // --- system tests ---
+
+    fn system(body: &str) -> String {
+        format!("kind = \"system\"\n{body}")
+    }
+
+    const TWO_NODES: &str =
+        "[[nodes]]\nid = \"a\"\nlabel = \"A\"\n[[nodes]]\nid = \"b\"\nlabel = \"B\"\n";
+
+    #[test]
+    fn parse_system_basic() {
+        let input = system(&format!(
+            "{TWO_NODES}[[links]]\nfrom = \"a\"\nto = \"b\"\nlabel = \"calls\"\nrelation = \"indirect\"\ndirection = \"both\"\n"
+        ));
+        let Diagram::System(d) = parse(&input).unwrap() else {
+            panic!("expected System")
+        };
+        assert_eq!(d.nodes.len(), 2);
+        assert_eq!(d.links[0].relation, crate::model::LinkRelation::Indirect);
+        assert_eq!(d.links[0].direction, crate::model::LinkDirection::Both);
+    }
+
+    #[test]
+    fn parse_system_link_may_end_at_a_group() {
+        let input = system("[[groups]]\nid = \"zone\"\nlabel = \"Zone\"\n[[nodes]]\nid = \"a\"\nlabel = \"A\"\ngroup = \"zone\"\n[[nodes]]\nid = \"b\"\nlabel = \"B\"\n[[links]]\nfrom = \"b\"\nto = \"zone\"\n");
+        assert!(parse(&input).is_ok());
+    }
+
+    #[test]
+    fn parse_system_rejects_a_link_between_a_group_and_its_member() {
+        let input = system(
+            "[[groups]]\nid = \"zone\"\nlabel = \"Zone\"\n[[nodes]]\nid = \"a\"\nlabel = \"A\"\ngroup = \"zone\"\n[[nodes]]\nid = \"b\"\nlabel = \"B\"\n[[links]]\nfrom = \"a\"\nto = \"zone\"\n",
+        );
+        assert!(parse(&input).is_err());
+    }
+
+    #[test]
+    fn parse_system_rejects_a_self_link_and_an_unknown_end() {
+        assert!(parse(&system(&format!(
+            "{TWO_NODES}[[links]]\nfrom = \"a\"\nto = \"a\"\n"
+        )))
+        .is_err());
+        assert!(parse(&system(&format!(
+            "{TWO_NODES}[[links]]\nfrom = \"a\"\nto = \"zzz\"\n"
+        )))
+        .is_err());
+    }
+
+    #[test]
+    fn parse_system_limits_are_validation_errors_with_a_way_out() {
+        let mut nodes = String::new();
+        for i in 0..17 {
+            nodes.push_str(&format!("[[nodes]]\nid = \"n{i}\"\nlabel = \"N{i}\"\n"));
+        }
+        let err = parse(&system(&nodes)).unwrap_err().to_string();
+        assert!(err.contains("at most 16 nodes"), "{err}");
+        assert!(err.contains("split"), "{err}");
+
+        let mut links = String::from(TWO_NODES);
+        for _ in 0..25 {
+            links.push_str("[[links]]\nfrom = \"a\"\nto = \"b\"\n");
+        }
+        let err = parse(&system(&links)).unwrap_err().to_string();
+        assert!(err.contains("at most 24 links"), "{err}");
+    }
+
+    #[test]
+    fn parse_system_ids_share_one_namespace() {
+        let input = system(&format!(
+            "[[groups]]\nid = \"a\"\nlabel = \"G\"\n{TWO_NODES}"
+        ));
+        assert!(parse(&input).is_err());
+    }
+
+    #[test]
+    fn parse_system_groups_nest_two_deep_at_most() {
+        let two = "[[groups]]\nid = \"g1\"\nlabel = \"1\"\n[[groups]]\nid = \"g2\"\nlabel = \"2\"\nparent = \"g1\"\n";
+        assert!(parse(&system(&format!("{two}{TWO_NODES}"))).is_ok());
+        let three = format!("{two}[[groups]]\nid = \"g3\"\nlabel = \"3\"\nparent = \"g2\"\n");
+        assert!(parse(&system(&format!("{three}{TWO_NODES}"))).is_err());
+    }
+
+    #[test]
+    fn parse_system_accepts_json() {
+        let input = r#"{"kind":"system","nodes":[{"id":"a","label":"A"},{"id":"b","label":"B","role":"store"}],"links":[{"from":"a","to":"b"}]}"#;
+        assert!(parse_json(input).is_ok());
+    }
+
+    #[test]
+    fn kinds_lists_system() {
+        assert!(KINDS.contains(&"system"));
     }
 
     // --- state tests ---

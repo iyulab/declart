@@ -2,8 +2,8 @@
 //! the alternative text a page gives a diagram it shows as an image.
 
 use crate::model::{
-    Diagram, FlowView, HierarchyDiagram, HierarchyNode, HierarchyView, StateRole, TierView,
-    TimelineWhen, TransitionKind,
+    Diagram, FlowView, HierarchyDiagram, HierarchyNode, HierarchyView, LinkDirection, LinkRelation,
+    StateRole, TierView, TimelineWhen, TransitionKind,
 };
 
 /// A short accessible name for `diagram`: its declared `title`, or its kind and view
@@ -30,6 +30,7 @@ pub fn accessible_name(diagram: &Diagram) -> String {
         Diagram::Timeline(_) => "Timeline",
         Diagram::Comparison(_) => "Comparison",
         Diagram::State(_) => "State",
+        Diagram::System(_) => "System",
     };
     format!("{kind} diagram")
 }
@@ -195,6 +196,72 @@ pub fn describe(diagram: &Diagram) -> String {
             }
             text
         }
+        Diagram::System(d) => {
+            let label_of = |key: &str| {
+                d.nodes
+                    .iter()
+                    .find(|n| n.id == key)
+                    .map(|n| n.label.clone())
+                    .or_else(|| {
+                        d.groups
+                            .iter()
+                            .find(|g| g.id == key)
+                            .map(|g| g.label.clone())
+                    })
+                    .unwrap_or_else(|| key.to_string())
+            };
+            let members = |gid: &str| -> String {
+                let mut parts: Vec<String> = d
+                    .groups
+                    .iter()
+                    .filter(|g| g.parent.as_deref() == Some(gid))
+                    .map(|g| g.label.clone())
+                    .collect();
+                parts.extend(
+                    d.nodes
+                        .iter()
+                        .filter(|n| n.group.as_deref() == Some(gid))
+                        .map(|n| n.label.clone()),
+                );
+                parts.join(", ")
+            };
+            let top: Vec<String> = d
+                .groups
+                .iter()
+                .filter(|g| g.parent.is_none())
+                .map(|g| format!("{} ({})", g.label, members(&g.id)))
+                .chain(
+                    d.nodes
+                        .iter()
+                        .filter(|n| n.group.is_none())
+                        .map(|n| n.label.clone()),
+                )
+                .collect();
+            let mut text = format!("System: {}", top.join(", "));
+            let links: Vec<String> = d
+                .links
+                .iter()
+                .map(|l| {
+                    let arrow = match l.direction {
+                        LinkDirection::Forward => "→",
+                        LinkDirection::Both => "↔",
+                        LinkDirection::None => "—",
+                    };
+                    let mut s = format!("{} {} {}", label_of(&l.from), arrow, label_of(&l.to));
+                    if let Some(label) = &l.label {
+                        s.push_str(&format!(" ({label})"));
+                    }
+                    if l.relation == LinkRelation::Indirect {
+                        s.push_str(" [indirect]");
+                    }
+                    s
+                })
+                .collect();
+            if !links.is_empty() {
+                text.push_str(&format!(". Links: {}", links.join("; ")));
+            }
+            text
+        }
     };
     format!("{body}.")
 }
@@ -210,6 +277,7 @@ fn title(diagram: &Diagram) -> Option<&str> {
         Diagram::Timeline(d) => d.title.as_deref(),
         Diagram::Comparison(d) => d.title.as_deref(),
         Diagram::State(d) => d.title.as_deref(),
+        Diagram::System(d) => d.title.as_deref(),
     }
     .filter(|t| !t.trim().is_empty())
 }

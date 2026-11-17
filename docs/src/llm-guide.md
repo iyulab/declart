@@ -29,6 +29,7 @@ Declart v0.16+ uses a two-level structure:
 | `venn` | — | No view field |
 | `comparison` | — | No view field |
 | `state` | — | No view field. States + directed transitions |
+| `system` | — | No view field. Nodes in nested groups + labelled links. At most 16 nodes, 6 groups, 24 links |
 
 ## Workflow
 
@@ -562,6 +563,77 @@ type = "exception"
 ```
 
 > **Rule**: at least 2 states. At most one `role = "initial"`; multiple `"terminal"` allowed. Reference states in `from`/`to` by `id` (preferred) or `label`. `trigger` is optional (unconditional transition); `type = "exception"` marks error paths. Self-loops (`from` = `to`) are valid.
+
+---
+
+### System — Components in boundaries, joined by links
+
+**Prompt**: *"Generate a Declart system diagram for a zero trust architecture with a control plane and a data plane. Use kind = 'system' with groups, nodes (each in a group) and links between nodes. Use relation = 'indirect' for asynchronous or conditional links and role = 'store' for databases. Choose `system` only when the diagram has boundaries or links beyond a tree — a single line of steps is `flow`, a tree is `hierarchy`, one centre is `hub_spoke`."*
+
+```toml
+kind = "system"
+title = "Zero Trust Architecture"
+
+[[groups]]
+id = "cp"
+label = "Control plane"
+
+[[groups]]
+id = "dp"
+label = "Data plane"
+
+[[nodes]]
+id = "pe"
+label = "Policy engine"
+group = "cp"
+
+[[nodes]]
+id = "pa"
+label = "Policy administrator"
+group = "cp"
+
+[[nodes]]
+id = "subject"
+label = "Subject"
+group = "dp"
+role = "actor"
+
+[[nodes]]
+id = "pep"
+label = "Policy enforcement point"
+group = "dp"
+
+[[nodes]]
+id = "resource"
+label = "Enterprise resource"
+group = "dp"
+
+[[links]]
+from = "pe"
+to = "pa"
+direction = "both"
+
+[[links]]
+from = "subject"
+to = "pep"
+
+[[links]]
+from = "pep"
+to = "resource"
+
+[[links]]
+from = "pa"
+to = "pep"
+label = "allow / deny"
+
+[[links]]
+from = "pep"
+to = "pa"
+label = "access request"
+relation = "indirect"
+```
+
+> **Rule**: at least 2 nodes; at most 16 nodes, 6 groups, 24 links (split a bigger diagram in two). Node and group `id`s share one namespace. `group` / `parent` name a group; groups nest at most two deep. A link's `from` / `to` name a node or a group, never an end and itself, never a group and something inside it. `direction` is `forward` (default), `both` or `none`; `relation` is `direct` (default) or `indirect`; `role` is `store`, `external` or `actor`. Never give coordinates or sizes.
 
 ---
 

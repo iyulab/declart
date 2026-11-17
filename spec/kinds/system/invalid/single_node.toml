@@ -1,0 +1,5 @@
+kind = "system"
+
+[[nodes]]
+id = "a"
+label = "Only"

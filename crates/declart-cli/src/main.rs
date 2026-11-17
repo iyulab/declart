@@ -428,6 +428,51 @@ to = "done"
 trigger = "Approve"
 "#,
         ),
+        "system" => Some(
+            r#"kind = "system"
+title = "My System"
+
+[[groups]]
+id = "backend"
+label = "Backend"
+
+[[nodes]]
+id = "client"
+label = "Client"
+role = "actor"
+
+[[nodes]]
+id = "api"
+label = "API"
+group = "backend"
+
+[[nodes]]
+id = "db"
+label = "Database"
+group = "backend"
+role = "store"
+
+[[nodes]]
+id = "queue"
+label = "Job queue"
+group = "backend"
+
+[[links]]
+from = "client"
+to = "api"
+label = "requests"
+
+[[links]]
+from = "api"
+to = "db"
+
+[[links]]
+from = "api"
+to = "queue"
+label = "jobs"
+relation = "indirect"
+"#,
+        ),
         _ => None,
     }
 }

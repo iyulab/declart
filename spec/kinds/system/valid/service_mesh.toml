@@ -1,0 +1,79 @@
+kind = "system"
+title = "서비스 메시"
+
+[[groups]]
+id = "cp"
+label = "컨트롤 플레인"
+
+[[groups]]
+id = "dp"
+label = "데이터 플레인"
+
+[[groups]]
+id = "pod_a"
+label = "파드 A"
+parent = "dp"
+
+[[groups]]
+id = "pod_b"
+label = "파드 B"
+parent = "dp"
+
+[[nodes]]
+id = "istiod"
+label = "정책·라우팅 규칙·인증서 배포"
+group = "cp"
+
+[[nodes]]
+id = "svc_a"
+label = "서비스 A"
+group = "pod_a"
+
+[[nodes]]
+id = "proxy_a"
+label = "사이드카 프록시"
+group = "pod_a"
+
+[[nodes]]
+id = "svc_b"
+label = "서비스 B"
+group = "pod_b"
+
+[[nodes]]
+id = "proxy_b"
+label = "사이드카 프록시"
+group = "pod_b"
+
+[[links]]
+from = "svc_a"
+to = "proxy_a"
+direction = "none"
+
+[[links]]
+from = "svc_b"
+to = "proxy_b"
+direction = "none"
+
+[[links]]
+from = "proxy_a"
+to = "proxy_b"
+label = "mTLS"
+direction = "both"
+
+[[links]]
+from = "istiod"
+to = "proxy_a"
+label = "설정"
+relation = "indirect"
+
+[[links]]
+from = "istiod"
+to = "proxy_b"
+label = "설정"
+relation = "indirect"
+
+[[links]]
+from = "proxy_a"
+to = "istiod"
+label = "메트릭·추적"
+relation = "indirect"

@@ -1,0 +1,90 @@
+kind = "system"
+title = "Kubernetes"
+
+[[groups]]
+id = "cp"
+label = "컨트롤 플레인"
+
+[[groups]]
+id = "w1"
+label = "워커 노드"
+
+[[nodes]]
+id = "user"
+label = "사용자: kubectl"
+role = "actor"
+
+[[nodes]]
+id = "api"
+label = "API 서버"
+group = "cp"
+
+[[nodes]]
+id = "etcd"
+label = "etcd"
+group = "cp"
+role = "store"
+
+[[nodes]]
+id = "sch"
+label = "스케줄러"
+group = "cp"
+
+[[nodes]]
+id = "cm"
+label = "컨트롤러 매니저"
+group = "cp"
+
+[[nodes]]
+id = "kubelet"
+label = "kubelet"
+group = "w1"
+
+[[nodes]]
+id = "runtime"
+label = "컨테이너 런타임"
+group = "w1"
+
+[[nodes]]
+id = "pod"
+label = "파드"
+group = "w1"
+
+[[nodes]]
+id = "proxy"
+label = "kube-proxy"
+group = "w1"
+
+[[links]]
+from = "user"
+to = "api"
+
+[[links]]
+from = "api"
+to = "etcd"
+direction = "both"
+
+[[links]]
+from = "sch"
+to = "api"
+
+[[links]]
+from = "cm"
+to = "api"
+
+[[links]]
+from = "kubelet"
+to = "runtime"
+
+[[links]]
+from = "runtime"
+to = "pod"
+
+[[links]]
+from = "api"
+to = "kubelet"
+direction = "both"
+
+[[links]]
+from = "api"
+to = "proxy"

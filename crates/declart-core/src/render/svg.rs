@@ -86,6 +86,68 @@ impl SvgBuilder {
         ));
     }
 
+    /// A rounded rectangle, optionally dashed. `rx` is in pixels.
+    #[allow(clippy::too_many_arguments)]
+    pub fn rect_styled(
+        &mut self,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        rx: u32,
+        fill: &str,
+        stroke: &str,
+        stroke_width: f32,
+        dashed: bool,
+    ) {
+        let dash = if dashed {
+            r#" stroke-dasharray="6,3""#
+        } else {
+            ""
+        };
+        self.elements.push(format!(
+            r#"<rect x="{:.1}" y="{:.1}" width="{:.1}" height="{:.1}" rx="{}" fill="{}" stroke="{}" stroke-width="{:.1}"{}/>"#,
+            x, y, width, height, rx, fill, stroke, stroke_width, dash
+        ));
+    }
+
+    /// An SVG path from raw path data.
+    pub fn path(&mut self, d: &str, fill: &str, stroke: &str, stroke_width: f32, dashed: bool) {
+        let dash = if dashed {
+            r#" stroke-dasharray="6,3""#
+        } else {
+            ""
+        };
+        self.elements.push(format!(
+            r#"<path d="{}" fill="{}" stroke="{}" stroke-width="{:.1}"{}/>"#,
+            d, fill, stroke, stroke_width, dash
+        ));
+    }
+
+    /// An unfilled line through `points`, optionally dashed.
+    pub fn polyline(
+        &mut self,
+        points: &[(f32, f32)],
+        stroke: &str,
+        stroke_width: f32,
+        dashed: bool,
+    ) {
+        let pts: String = points
+            .iter()
+            .map(|(x, y)| format!("{:.1},{:.1}", x, y))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let dash = if dashed {
+            r#" stroke-dasharray="6,3""#
+        } else {
+            ""
+        };
+        self.elements.push(format!(
+            r#"<polyline points="{}" fill="none" stroke="{}" stroke-width="{:.1}" stroke-linejoin="round"{}/>"#,
+            pts, stroke, stroke_width, dash
+        ));
+    }
+
     pub fn circle_stroked(
         &mut self,
         cx: f32,

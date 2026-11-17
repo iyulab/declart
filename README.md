@@ -15,9 +15,9 @@ Declart is a **prose diagram** library: diagrams that belong in blog posts, repo
 
 **[📖 Documentation & Spec](https://iyulab.github.io/declart/)** · **[🛝 Live Playground](https://iyulab.github.io/declart/playground/index.html)** — edit a declaration and watch it render in your browser · **[🔌 Obsidian plugin](https://github.com/iyulab/obsidian-declart)** — render `declart` code blocks in your notes
 
-## Nine diagram kinds
+## Ten diagram kinds
 
-<img src="assets/gallery.png" alt="Gallery of the nine diagram kinds: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison and state, each rendered from a short declaration" width="100%">
+<img src="assets/gallery.png" alt="Gallery of the ten diagram kinds: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison, state and system, each rendered from a short declaration" width="100%">
 
 Every diagram above is rendered from a declaration of a few lines; the sources are in [`assets/src/`](assets/src/). See [Scope](#scope) for what each kind covers.
 
@@ -108,7 +108,7 @@ Today, that kind of diagram is stuck in two places:
 - **PowerPoint SmartArt** — binary files, unreachable by Git, automation, and LLM workflows
 - **Design tools (Canva, Figma)** — require design skill, break reproducibility
 
-Declart makes prose diagrams reproducible, version-controlled, and LLM-generatable. We deliberately stop where comprehension stops: no edge labels, no arbitrary graphs, no pixel control. Complexity that exceeds a reader's comprehension is out of scope by design.
+Declart makes prose diagrams reproducible, version-controlled, and LLM-generatable. We deliberately stop where comprehension stops: no arbitrary graphs, no pixel control, and a cap on how much one diagram holds. Complexity that exceeds a reader's comprehension is out of scope by design.
 
 ## Principles
 
@@ -157,6 +157,7 @@ The test: *"What is the relationship between these items?"* If the answer change
 | `venn` | Set intersection | Are items overlapping groups? |
 | `comparison` | Criteria evaluation | Are items evaluated against columns? |
 | `state` | Named lifecycle | Do items move between named states? |
+| `system` | Bounded components and links | Are components grouped in boundaries or linked beyond a tree? |
 
 ### Decision rule
 
@@ -194,6 +195,7 @@ Anchored on the categories PowerPoint SmartArt established, prioritizing what ex
 - **Timeline** (`kind = "timeline"`) — date-anchored milestones and periods (qualitative roadmaps)
 - **Comparison** (`kind = "comparison"`) — item × criteria evaluation table
 - **State** (`kind = "state"`) — system lifecycle as named states and directed transitions
+- **System** (`kind = "system"`) — a conceptual architecture: components in nested boundaries, joined by labelled links (at most 16 nodes, 6 groups and 24 links)
 
 Roadmaps are covered by `timeline` periods (`start` + `end`); precise Gantt scheduling (dependencies, progress, resources) stays out of scope.
 
@@ -217,7 +219,7 @@ Roadmaps are covered by `timeline` periods (`start` + `end`); precise Gantt sche
 Explicit boundaries that protect focus:
 
 - **Not for engineering diagrams.** Flowcharts, sequence diagrams, ER diagrams, executable state machines (guards, entry/exit actions, nested or parallel states) — use Mermaid, D2, or PlantUML. Declart is for prose, not code. The `state` kind is a small named lifecycle for explaining a system in a document: labeled states, optional triggers, and nothing a runtime would need.
-- **Not a free-form drawing tool.** No arbitrary node-edge graphs. Declart renders declared structure, not drawn shapes. Even `state` transitions only connect states you declared, and the engine chooses the layout.
+- **Not a free-form drawing tool.** No arbitrary node-edge graphs. Declart renders declared structure, not drawn shapes. `state` transitions and `system` links only connect items you declared, the engine chooses the layout, and a `system` diagram is capped at 16 nodes, 6 groups and 24 links — a diagram that needs more is two diagrams. `system` is a conceptual architecture for prose, not a deployment, network or runtime specification.
 - **No pixel-level control.** No positions, no per-element colors, no font overrides in source.
 - **Not interactive.** Declart produces static visuals. Animation and interactivity are out of scope.
 - **No WYSIWYG editing.** Declart is source-first. Visual editors are not part of the project.
@@ -225,7 +227,7 @@ Explicit boundaries that protect focus:
 
 ## What's included
 
-- **9 diagram kinds** — `flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`, `state` — with a semantic **view** layer on top.
+- **10 diagram kinds** — `flow`, `tier`, `hierarchy`, `timeline`, `matrix`, `hub_spoke`, `venn`, `comparison`, `state`, `system` — with a semantic **view** layer on top.
 - **Semantic item attributes** — `emphasis` (importance) and `status` (`success`/`normal`/`warning`/`critical` health signal), declared as meaning, not styling. The `status` marker is dual-encoded by **color and shape** (circle/triangle/diamond) so it reads in monochrome and for colorblind readers.
 - **Theming** — 5 built-in themes (`default`, `monochrome`, `accessible`, `warm`, `dark`) plus user-defined TOML themes, and a transparent backdrop for diagrams that sit directly on the page (`--transparent`, `{ transparent: true }`). No visual styling in source files.
 - **TOML and JSON input** — write declarations in either; the engine auto-detects the format.

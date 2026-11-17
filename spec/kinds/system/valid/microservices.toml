@@ -1,0 +1,107 @@
+kind = "system"
+
+[[nodes]]
+id = "client"
+label = "Client"
+role = "actor"
+
+[[nodes]]
+id = "gw"
+label = "API Gateway 인증·라우팅"
+
+[[nodes]]
+id = "order"
+label = "주문 서비스"
+
+[[nodes]]
+id = "pay"
+label = "결제 서비스"
+
+[[nodes]]
+id = "stock"
+label = "재고 서비스"
+
+[[nodes]]
+id = "order_db"
+label = "주문 DB"
+role = "store"
+
+[[nodes]]
+id = "pay_db"
+label = "결제 DB"
+role = "store"
+
+[[nodes]]
+id = "stock_db"
+label = "재고 DB"
+role = "store"
+
+[[nodes]]
+id = "mq"
+label = "메시지 브로커"
+
+[[nodes]]
+id = "sd"
+label = "Service Discovery"
+
+[[nodes]]
+id = "obs"
+label = "관측성: 로그·메트릭·추적"
+
+[[links]]
+from = "client"
+to = "gw"
+
+[[links]]
+from = "gw"
+to = "order"
+
+[[links]]
+from = "gw"
+to = "pay"
+
+[[links]]
+from = "gw"
+to = "stock"
+
+[[links]]
+from = "order"
+to = "order_db"
+
+[[links]]
+from = "pay"
+to = "pay_db"
+
+[[links]]
+from = "stock"
+to = "stock_db"
+
+[[links]]
+from = "order"
+to = "mq"
+label = "이벤트"
+relation = "indirect"
+
+[[links]]
+from = "mq"
+to = "pay"
+label = "이벤트"
+relation = "indirect"
+
+[[links]]
+from = "mq"
+to = "stock"
+label = "이벤트"
+relation = "indirect"
+
+[[links]]
+from = "sd"
+to = "gw"
+direction = "none"
+relation = "indirect"
+
+[[links]]
+from = "obs"
+to = "mq"
+direction = "none"
+relation = "indirect"

@@ -1,0 +1,71 @@
+kind = "system"
+title = "MCP"
+
+[[groups]]
+id = "host"
+label = "MCP 호스트 (AI 애플리케이션)"
+
+[[nodes]]
+id = "llm"
+label = "LLM"
+group = "host"
+
+[[nodes]]
+id = "c1"
+label = "MCP 클라이언트 1"
+group = "host"
+
+[[nodes]]
+id = "c2"
+label = "MCP 클라이언트 2"
+group = "host"
+
+[[nodes]]
+id = "s1"
+label = "MCP 서버: 파일"
+
+[[nodes]]
+id = "s2"
+label = "MCP 서버: DB"
+
+[[nodes]]
+id = "files"
+label = "로컬 파일"
+role = "store"
+
+[[nodes]]
+id = "db"
+label = "업무 DB"
+role = "store"
+
+[[links]]
+from = "llm"
+to = "c1"
+direction = "none"
+
+[[links]]
+from = "llm"
+to = "c2"
+direction = "none"
+
+[[links]]
+from = "c1"
+to = "s1"
+label = "JSON-RPC"
+direction = "both"
+
+[[links]]
+from = "c2"
+to = "s2"
+label = "JSON-RPC"
+direction = "both"
+
+[[links]]
+from = "s1"
+to = "files"
+direction = "none"
+
+[[links]]
+from = "s2"
+to = "db"
+direction = "none"

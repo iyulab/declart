@@ -299,6 +299,79 @@ pub struct StateDiagram {
     pub transitions: Vec<StateTransition>,
 }
 
+/// What a system node stands for, when it is not an ordinary component.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SystemRole {
+    /// Holds data — a database, queue or file store.
+    Store,
+    /// Outside the system's control — a third party or another organisation.
+    External,
+    /// A person or a client that acts on the system.
+    Actor,
+}
+
+/// Which way a system link points.
+#[derive(Debug, Clone, PartialEq)]
+pub enum LinkDirection {
+    /// From `from` to `to` (the default).
+    Forward,
+    /// Both ways.
+    Both,
+    /// An association without a direction.
+    None,
+}
+
+/// How tightly a system link binds its ends.
+#[derive(Debug, Clone, PartialEq)]
+pub enum LinkRelation {
+    /// A call, a flow of data or a containment — drawn as a solid line (the default).
+    Direct,
+    /// Asynchronous, optional or conditional — drawn as a dashed line.
+    Indirect,
+}
+
+/// A boundary in a system diagram that groups nodes (and, one level down, other groups).
+#[derive(Debug, Clone)]
+pub struct SystemGroup {
+    pub id: String,
+    pub label: String,
+    /// The enclosing group's `id`, when this group sits inside another one.
+    pub parent: Option<String>,
+}
+
+/// A component in a system diagram.
+#[derive(Debug, Clone)]
+pub struct SystemNode {
+    pub id: String,
+    pub label: String,
+    /// The `id` of the group this node sits in.
+    pub group: Option<String>,
+    pub role: Option<SystemRole>,
+    pub emphasis: Option<Emphasis>,
+    pub status: Option<Status>,
+}
+
+/// A connection between two nodes — or between a node and a whole group.
+#[derive(Debug, Clone)]
+pub struct SystemLink {
+    /// A node or group `id`.
+    pub from: String,
+    /// A node or group `id`.
+    pub to: String,
+    pub label: Option<String>,
+    pub direction: LinkDirection,
+    pub relation: LinkRelation,
+}
+
+/// Model for the System diagram kind: grouped components joined by labelled links.
+#[derive(Debug, Clone)]
+pub struct SystemDiagram {
+    pub title: Option<String>,
+    pub groups: Vec<SystemGroup>,
+    pub nodes: Vec<SystemNode>,
+    pub links: Vec<SystemLink>,
+}
+
 /// The parsed, validated representation of a diagram declaration.
 #[derive(Debug, Clone)]
 pub enum Diagram {
@@ -311,6 +384,7 @@ pub enum Diagram {
     Timeline(TimelineDiagram),
     Comparison(ComparisonDiagram),
     State(StateDiagram),
+    System(SystemDiagram),
 }
 
 #[cfg(test)]

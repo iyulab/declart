@@ -1,0 +1,43 @@
+kind = "system"
+title = "기능점수 측정 경계"
+
+[[groups]]
+id = "app"
+label = "측정 대상 애플리케이션 (경계)"
+
+[[nodes]]
+id = "user"
+label = "사용자"
+role = "actor"
+
+[[nodes]]
+id = "ilf"
+label = "ILF: 내부논리파일"
+group = "app"
+role = "store"
+
+[[nodes]]
+id = "eif"
+label = "EIF: 외부연계파일 다른 시스템이 관리"
+role = "store"
+
+[[links]]
+from = "user"
+to = "app"
+label = "EI (입력)"
+
+[[links]]
+from = "app"
+to = "user"
+label = "EO (가공 출력)"
+
+[[links]]
+from = "app"
+to = "user"
+label = "EQ (단순 조회)"
+
+[[links]]
+from = "eif"
+to = "app"
+label = "참조"
+relation = "indirect"

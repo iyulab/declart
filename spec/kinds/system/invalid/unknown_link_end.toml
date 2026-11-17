@@ -1,0 +1,13 @@
+kind = "system"
+
+[[nodes]]
+id = "a"
+label = "A"
+
+[[nodes]]
+id = "b"
+label = "B"
+
+[[links]]
+from = "a"
+to = "missing"

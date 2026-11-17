@@ -1,0 +1,24 @@
+kind = "system"
+
+[[groups]]
+id = "outer"
+label = "Outer"
+
+[[groups]]
+id = "middle"
+label = "Middle"
+parent = "outer"
+
+[[groups]]
+id = "inner"
+label = "Inner"
+parent = "middle"
+
+[[nodes]]
+id = "a"
+label = "A"
+group = "inner"
+
+[[nodes]]
+id = "b"
+label = "B"

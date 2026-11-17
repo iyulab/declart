@@ -1,0 +1,40 @@
+kind = "system"
+title = "교착상태"
+
+[[nodes]]
+id = "p1"
+label = "P1"
+
+[[nodes]]
+id = "p2"
+label = "P2"
+
+[[nodes]]
+id = "r1"
+label = "자원 R1"
+role = "store"
+
+[[nodes]]
+id = "r2"
+label = "자원 R2"
+role = "store"
+
+[[links]]
+from = "p1"
+to = "r2"
+label = "요청"
+
+[[links]]
+from = "r2"
+to = "p2"
+label = "할당"
+
+[[links]]
+from = "p2"
+to = "r1"
+label = "요청"
+
+[[links]]
+from = "r1"
+to = "p1"
+label = "할당"

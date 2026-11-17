@@ -155,6 +155,16 @@ fn state_invalid_examples_fail_to_parse() {
     assert_invalid_examples("state");
 }
 
+#[test]
+fn system_valid_examples_parse_successfully() {
+    assert_valid_examples("system");
+}
+
+#[test]
+fn system_invalid_examples_fail_to_parse() {
+    assert_invalid_examples("system");
+}
+
 fn assert_valid_themes() {
     let dir = spec_dir().join("themes/valid");
     let entries: Vec<_> = fs::read_dir(&dir)

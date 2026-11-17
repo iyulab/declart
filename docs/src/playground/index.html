@@ -298,6 +298,7 @@
       <option value="comparison">Comparison — Framework Analysis</option>
       <option value="flow_swimlane">Flow (swimlane) — Order Processing</option>
       <option value="state">State — Order Lifecycle</option>
+      <option value="system">System — Zero Trust Architecture</option>
       <option value="flow_status">Flow (status) — Release Pipeline Health</option>
       <option value="matrix_items">Matrix (items) — BCG Growth-Share</option>
     </select>
@@ -708,6 +709,68 @@ label = "Process Payment"
 [[items]]
 actor = "System"
 label = "Confirm Order"
+`,
+
+  system: `kind = "system"
+title = "Zero Trust Architecture"
+
+[[groups]]
+id = "cp"
+label = "Control plane"
+
+[[groups]]
+id = "dp"
+label = "Data plane"
+
+[[nodes]]
+id = "pe"
+label = "Policy engine"
+group = "cp"
+
+[[nodes]]
+id = "pa"
+label = "Policy administrator"
+group = "cp"
+
+[[nodes]]
+id = "subject"
+label = "Subject: user or device"
+group = "dp"
+role = "actor"
+
+[[nodes]]
+id = "pep"
+label = "Policy enforcement point"
+group = "dp"
+
+[[nodes]]
+id = "resource"
+label = "Enterprise resource"
+group = "dp"
+
+[[links]]
+from = "pe"
+to = "pa"
+direction = "both"
+
+[[links]]
+from = "subject"
+to = "pep"
+
+[[links]]
+from = "pep"
+to = "resource"
+
+[[links]]
+from = "pa"
+to = "pep"
+label = "allow / deny"
+
+[[links]]
+from = "pep"
+to = "pa"
+label = "access request"
+relation = "indirect"
 `,
 
   state: `kind = "state"

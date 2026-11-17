@@ -1,0 +1,74 @@
+kind = "system"
+title = "제로트러스트 아키텍처"
+
+[[groups]]
+id = "cp"
+label = "제어 영역"
+
+[[groups]]
+id = "pdp"
+label = "정책 결정 지점 (PDP)"
+parent = "cp"
+
+[[groups]]
+id = "dp"
+label = "데이터 영역"
+
+[[nodes]]
+id = "pe"
+label = "정책 엔진 PE"
+group = "pdp"
+
+[[nodes]]
+id = "pa"
+label = "정책 관리자 PA"
+group = "pdp"
+
+[[nodes]]
+id = "sig"
+label = "신원·기기 상태·위협 정보·로그"
+group = "cp"
+
+[[nodes]]
+id = "subject"
+label = "주체: 사용자·기기"
+group = "dp"
+role = "actor"
+
+[[nodes]]
+id = "pep"
+label = "정책 시행 지점 PEP"
+group = "dp"
+
+[[nodes]]
+id = "res"
+label = "기업 자원"
+group = "dp"
+
+[[links]]
+from = "pe"
+to = "pa"
+direction = "both"
+
+[[links]]
+from = "sig"
+to = "pe"
+
+[[links]]
+from = "subject"
+to = "pep"
+
+[[links]]
+from = "pep"
+to = "res"
+
+[[links]]
+from = "pa"
+to = "pep"
+label = "허용/차단 명령"
+
+[[links]]
+from = "pep"
+to = "pa"
+label = "접근 요청 전달"
+relation = "indirect"

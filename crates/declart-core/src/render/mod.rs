@@ -15,6 +15,7 @@ pub(crate) mod state;
 pub(crate) mod status;
 mod svg;
 pub(crate) mod swimlane;
+pub(crate) mod system;
 pub mod theme;
 pub(crate) mod timeline;
 pub(crate) mod venn;
@@ -45,6 +46,7 @@ pub fn render_opts(
         Diagram::Timeline(d) => timeline::render(d, theme),
         Diagram::Comparison(d) => comparison::render(d, theme),
         Diagram::State(d) => state::render(d, theme),
+        Diagram::System(d) => system::render(d, theme),
     };
     let svg = with_text_equivalent(svg, diagram);
     if let Some(w) = width {

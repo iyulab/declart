@@ -1,0 +1,77 @@
+kind = "system"
+title = "주공정과 버퍼"
+
+[[groups]]
+id = "cc"
+label = "주공정 (Critical Chain)"
+
+[[groups]]
+id = "fc"
+label = "비주공정 (Feeding Chain)"
+
+[[nodes]]
+id = "a"
+label = "활동 A"
+group = "cc"
+
+[[nodes]]
+id = "b"
+label = "활동 B"
+group = "cc"
+
+[[nodes]]
+id = "c"
+label = "활동 C"
+group = "cc"
+
+[[nodes]]
+id = "pb"
+label = "프로젝트 버퍼"
+group = "cc"
+
+[[nodes]]
+id = "d"
+label = "활동 D"
+group = "fc"
+
+[[nodes]]
+id = "fb"
+label = "합류 버퍼"
+group = "fc"
+
+[[nodes]]
+id = "rb"
+label = "자원 버퍼"
+
+[[nodes]]
+id = "due"
+label = "납기"
+
+[[links]]
+from = "a"
+to = "b"
+
+[[links]]
+from = "b"
+to = "c"
+
+[[links]]
+from = "c"
+to = "pb"
+
+[[links]]
+from = "d"
+to = "fb"
+
+[[links]]
+from = "rb"
+to = "c"
+relation = "indirect"
+
+[[links]]
+from = "fb"
+to = "c"
+
+[[links]]
+from = "pb"
+to = "due"

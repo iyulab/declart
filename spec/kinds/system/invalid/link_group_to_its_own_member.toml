@@ -1,0 +1,18 @@
+kind = "system"
+
+[[groups]]
+id = "zone"
+label = "Zone"
+
+[[nodes]]
+id = "a"
+label = "A"
+group = "zone"
+
+[[nodes]]
+id = "b"
+label = "B"
+
+[[links]]
+from = "zone"
+to = "a"

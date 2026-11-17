@@ -1,0 +1,89 @@
+kind = "system"
+title = "재해복구 센터 구성"
+
+[[groups]]
+id = "aa"
+label = "Active-Active (Mirror)"
+
+[[groups]]
+id = "as"
+label = "Active-Standby (Hot)"
+
+[[nodes]]
+id = "u1"
+label = "사용자"
+group = "aa"
+role = "actor"
+
+[[nodes]]
+id = "g1"
+label = "GSLB"
+group = "aa"
+
+[[nodes]]
+id = "a1"
+label = "센터 A: 운영"
+group = "aa"
+
+[[nodes]]
+id = "b1"
+label = "센터 B: 운영"
+group = "aa"
+
+[[nodes]]
+id = "u2"
+label = "사용자"
+group = "as"
+role = "actor"
+
+[[nodes]]
+id = "g2"
+label = "GSLB"
+group = "as"
+
+[[nodes]]
+id = "a2"
+label = "센터 A: 운영"
+group = "as"
+
+[[nodes]]
+id = "b2"
+label = "센터 B: 대기"
+group = "as"
+
+[[links]]
+from = "u1"
+to = "g1"
+
+[[links]]
+from = "g1"
+to = "a1"
+
+[[links]]
+from = "g1"
+to = "b1"
+
+[[links]]
+from = "a1"
+to = "b1"
+label = "동기 복제"
+direction = "both"
+
+[[links]]
+from = "u2"
+to = "g2"
+
+[[links]]
+from = "g2"
+to = "a2"
+
+[[links]]
+from = "g2"
+to = "b2"
+label = "재해 시 전환"
+relation = "indirect"
+
+[[links]]
+from = "a2"
+to = "b2"
+label = "실시간 복제"

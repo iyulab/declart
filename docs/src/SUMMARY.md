@@ -29,3 +29,4 @@
 - [Venn](kinds/venn.md)
 - [Comparison](kinds/comparison.md)
 - [State](kinds/state.md)
+- [System](kinds/system.md)
