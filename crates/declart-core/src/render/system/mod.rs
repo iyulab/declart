@@ -25,7 +25,11 @@ const NODE_PAD_X: f32 = 14.0;
 const NODE_MIN_W: f32 = 90.0;
 const NODE_MAX_W: f32 = 230.0;
 const NODE_MIN_H: f32 = 40.0;
+const NODE_MAX_H: f32 = 400.0;
 const LINK_LABEL_MAX_W: f32 = 180.0;
+/// Widest a group's label is set; a longer one is shrunk or cut, so one label cannot stretch
+/// the whole diagram.
+const GROUP_LABEL_MAX_W: f32 = 320.0;
 const ARROW_LEN: f32 = 9.0;
 const ARROW_HALF: f32 = 4.5;
 const TARGET_ASPECT: f32 = 1.6;
@@ -79,6 +83,8 @@ pub(crate) struct NodeBox {
 }
 
 pub(crate) struct GroupBox {
+    pub text: String,
+    pub size: f32,
     pub rect: Rect,
     pub label_rect: Rect,
     pub depth: usize,
@@ -114,9 +120,50 @@ pub(crate) struct Scene {
 /// Label sizes, measured once and shared by both orientations.
 struct Measured {
     nodes: Vec<(f32, f32, Vec<String>, f32)>,
-    group_label_w: Vec<f32>,
+    /// (text as set, width) per group label.
+    group_labels: Vec<(String, f32, f32)>,
     /// (text as set, size, width, height) per link label.
     links: Vec<Option<(String, f32, f32, f32)>>,
+}
+
+/// Most characters of a label that are looked at. A box holds a few dozen characters at most,
+/// so anything past this is cut, and fitting a longer text only costs time.
+const LABEL_MAX_CHARS: usize = 300;
+
+/// `text` cut to [`LABEL_MAX_CHARS`] characters (with an ellipsis), and whether it was cut.
+fn bounded(text: &str) -> (String, bool) {
+    if text.chars().count() <= LABEL_MAX_CHARS {
+        return (text.to_string(), false);
+    }
+    let cut: String = text.chars().take(LABEL_MAX_CHARS).collect();
+    (format!("{cut}…"), true)
+}
+
+/// [`font::fit_lines`] for a label of any length, reporting the label as declared.
+fn fit_label(
+    text: &str,
+    font_size: f32,
+    min_size: f32,
+    max_width: f32,
+    max_height: f32,
+) -> (Vec<String>, f32) {
+    let (cut, was_cut) = bounded(text);
+    let (lines, size, outcome) = font::fit_probe(&cut, font_size, min_size, max_width, max_height);
+    let outcome = if was_cut {
+        font::FitOutcome::Truncated
+    } else {
+        outcome
+    };
+    match outcome {
+        font::FitOutcome::AsIs => {}
+        font::FitOutcome::Shrunk => {
+            crate::diagnostic::record(crate::DiagnosticCode::LabelShrunk, text)
+        }
+        font::FitOutcome::Truncated => {
+            crate::diagnostic::record(crate::DiagnosticCode::LabelTruncated, text)
+        }
+    }
+    (lines, size)
 }
 
 fn longest_word(text: &str, size: f32) -> f32 {
@@ -133,11 +180,12 @@ fn measure(d: &SystemDiagram, theme: &Theme) -> Measured {
         .nodes
         .iter()
         .map(|n| {
+            let (label, _) = bounded(&n.label);
             let mut w = NODE_MIN_W;
             let fits = loop {
                 let inner = w - 2.0 * NODE_PAD_X;
-                let (_, size, outcome) = font::fit_probe(&n.label, base, min, inner, max_h);
-                if outcome == font::FitOutcome::AsIs && longest_word(&n.label, size) <= inner {
+                let (_, size, outcome) = font::fit_probe(&label, base, min, inner, max_h);
+                if outcome == font::FitOutcome::AsIs && longest_word(&label, size) <= inner {
                     break true;
                 }
                 if w >= NODE_MAX_W {
@@ -148,15 +196,37 @@ fn measure(d: &SystemDiagram, theme: &Theme) -> Measured {
             if !fits {
                 w = NODE_MAX_W;
             }
-            let (lines, size) = font::fit_lines(&n.label, base, min, w - 2.0 * NODE_PAD_X, max_h);
-            let h = snap_up((lines.len() as f32 * size * font::LINE_HEIGHT + 20.0).max(NODE_MIN_H));
+            let (lines, size) = fit_label(&n.label, base, min, w - 2.0 * NODE_PAD_X, max_h);
+            // A node many links meet is as tall as it needs to give each one a slot.
+            let degree = d
+                .links
+                .iter()
+                .filter(|l| l.from == n.id || l.to == n.id)
+                .count();
+            let slots_h = (20.0 + 20.0 * (degree as f32 / 2.0).ceil()).min(NODE_MAX_H);
+            let h = snap_up(
+                (lines.len() as f32 * size * font::LINE_HEIGHT + 20.0)
+                    .max(NODE_MIN_H)
+                    .max(slots_h),
+            );
             (w, h, lines, size)
         })
         .collect();
-    let group_label_w = d
+    let group_labels = d
         .groups
         .iter()
-        .map(|g| font::measure_text(&g.label, base) + 8.0)
+        .map(|g| {
+            let (lines, size) = fit_label(
+                &g.label,
+                base,
+                min,
+                GROUP_LABEL_MAX_W,
+                base * font::LINE_HEIGHT + 1.0,
+            );
+            let line = lines.into_iter().next().unwrap_or_default();
+            let w = font::measure_text(&line, size) + 8.0;
+            (line, w, size)
+        })
         .collect();
     let link_size = (base * 0.85).max(min);
     let links = d
@@ -164,7 +234,7 @@ fn measure(d: &SystemDiagram, theme: &Theme) -> Measured {
         .iter()
         .map(|l| {
             l.label.as_ref().map(|text| {
-                let (lines, size) = font::fit_lines(
+                let (lines, size) = fit_label(
                     text,
                     link_size,
                     min * 0.85,
@@ -179,7 +249,7 @@ fn measure(d: &SystemDiagram, theme: &Theme) -> Measured {
         .collect();
     Measured {
         nodes,
-        group_label_w,
+        group_labels,
         links,
     }
 }
@@ -271,7 +341,7 @@ impl<'a> Builder<'a> {
     fn group_size(&mut self, g: usize) -> (f32, f32) {
         self.place(g);
         let p = self.placed[g].as_ref().expect("placed");
-        let w = snap_up((p.w + 2.0 * GROUP_PAD).max(self.m.group_label_w[g] + 2.0 * GROUP_PAD));
+        let w = snap_up((p.w + 2.0 * GROUP_PAD).max(self.m.group_labels[g].1 + 2.0 * GROUP_PAD));
         let h = snap_up(p.h + GROUP_HEADER + GROUP_PAD);
         (w, h)
     }
@@ -450,8 +520,10 @@ fn build(d: &SystemDiagram, m: &Measured, a: &Arranged) -> Scene {
     let groups: Vec<GroupBox> = (0..d.groups.len())
         .map(|g| {
             let r = rects[n + g];
-            let lw = m.group_label_w[g];
+            let lw = m.group_labels[g].1;
             GroupBox {
+                text: m.group_labels[g].0.clone(),
+                size: m.group_labels[g].2,
                 rect: r,
                 label_rect: Rect::new(r.x + (r.w - lw) / 2.0, r.y + 6.0, lw, 18.0),
                 depth: depths[g],
@@ -490,12 +562,14 @@ fn build(d: &SystemDiagram, m: &Measured, a: &Arranged) -> Scene {
             std::mem::take(&mut taken[a]),
             std::mem::take(&mut taken[bi]),
         );
-        paths[l] = router.route(
-            &End { rect: rects[a] },
-            &mut ta,
-            &End { rect: rects[bi] },
-            &mut tb,
-        );
+        paths[l] = router.as_mut().and_then(|r| {
+            r.route(
+                &End { rect: rects[a] },
+                &mut ta,
+                &End { rect: rects[bi] },
+                &mut tb,
+            )
+        });
         taken[a] = ta;
         taken[bi] = tb;
     }
@@ -705,7 +779,6 @@ fn segments_cross(a0: (f32, f32), a1: (f32, f32), b0: (f32, f32), b1: (f32, f32)
 pub(crate) fn render(d: &SystemDiagram, theme: &Theme) -> String {
     let scene = scene(d, theme);
     let mut b = SvgBuilder::new(scene.width, scene.height);
-    let label_size = theme.typography.label_size;
     let line = theme.layers.apex.to_hex();
 
     if let Some(title) = &d.title {
@@ -738,13 +811,13 @@ pub(crate) fn render(d: &SystemDiagram, theme: &Theme) -> String {
             false,
         );
     }
-    for (g, gb) in scene.groups.iter().enumerate() {
+    for gb in &scene.groups {
         b.text_weighted(
             gb.label_rect.x + gb.label_rect.w / 2.0,
             gb.label_rect.y + gb.label_rect.h / 2.0,
-            &d.groups[g].label,
+            &gb.text,
             &theme.title_color.to_hex(),
-            label_size,
+            gb.size,
             true,
         );
     }
@@ -753,7 +826,19 @@ pub(crate) fn render(d: &SystemDiagram, theme: &Theme) -> String {
     for (l, lp) in scene.links.iter().enumerate() {
         let link = &d.links[l];
         let dashed = link.relation == LinkRelation::Indirect;
-        b.polyline(&lp.points, &line, 1.5, dashed);
+        // The line is broken where the label sits, so the label needs no plate behind it and
+        // reads on any page colour.
+        match lp
+            .label
+            .as_ref()
+            .and_then(|x| open_gap(&lp.points, &x.rect))
+        {
+            Some((before, after)) => {
+                b.polyline(&before, &line, 1.5, dashed);
+                b.polyline(&after, &line, 1.5, dashed);
+            }
+            None => b.polyline(&lp.points, &line, 1.5, dashed),
+        }
         let n = lp.points.len();
         if n >= 2 {
             if link.direction != LinkDirection::None {
@@ -863,21 +948,10 @@ pub(crate) fn render(d: &SystemDiagram, theme: &Theme) -> String {
         status::draw_marker(&mut b, &node.status, r.x + r.w, r.y, theme);
     }
 
-    // Link labels sit on a plate of the page colour so the line behind stays readable.
+    // Link labels sit in the gap left in their link.
     for lp in &scene.links {
         if let Some(label) = &lp.label {
             let r = label.rect;
-            b.rect_styled(
-                r.x,
-                r.y,
-                r.w,
-                r.h,
-                4,
-                &theme.background.to_hex(),
-                "none",
-                0.0,
-                false,
-            );
             b.text(
                 r.x + r.w / 2.0,
                 r.y + r.h / 2.0,
@@ -888,6 +962,39 @@ pub(crate) fn render(d: &SystemDiagram, theme: &Theme) -> String {
         }
     }
     b.build(theme.backdrop_fill().as_deref())
+}
+
+/// Splits `points` into the part before and the part after `rect`, which the path crosses on one
+/// straight segment. `None` when no segment can be cut (a diagonal stand-in line).
+type Polyline = Vec<(f32, f32)>;
+
+fn open_gap(points: &[(f32, f32)], rect: &Rect) -> Option<(Polyline, Polyline)> {
+    const PAD: f32 = 3.0;
+    for (i, s) in points.windows(2).enumerate() {
+        let (a, b) = (s[0], s[1]);
+        if !rect.hit_by(a, b) {
+            continue;
+        }
+        let horizontal = a.1 == b.1;
+        let vertical = a.0 == b.0;
+        if !horizontal && !vertical {
+            return None;
+        }
+        let (lo, hi, from, to) = if horizontal {
+            (rect.x - PAD, rect.x1() + PAD, a.0, b.0)
+        } else {
+            (rect.y - PAD, rect.y1() + PAD, a.1, b.1)
+        };
+        // Walking from `a` to `b`, the line ends at the near side of the gap and resumes at the far.
+        let (near, far) = if from <= to { (lo, hi) } else { (hi, lo) };
+        let at = |v: f32| if horizontal { (v, a.1) } else { (a.0, v) };
+        let mut before: Vec<(f32, f32)> = points[..=i].to_vec();
+        before.push(at(near.clamp(from.min(to), from.max(to))));
+        let mut after: Vec<(f32, f32)> = vec![at(far.clamp(from.min(to), from.max(to)))];
+        after.extend_from_slice(&points[i + 1..]);
+        return Some((before, after));
+    }
+    None
 }
 
 /// A filled arrowhead whose tip is `tip`, pointing away from `from`.

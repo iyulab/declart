@@ -363,3 +363,167 @@ fn both_orientations() {
         }
     }
 }
+
+fn laid_out(text: &str) -> (SystemDiagram, Scene) {
+    let Diagram::System(d) = parse(text).expect("parses") else {
+        panic!("system");
+    };
+    let s = scene(&d, &DEFAULT_THEME);
+    (d, s)
+}
+
+/// Inputs inside the limits that stress the router: a hub with every link, the same pair linked
+/// both ways and repeatedly, links to whole groups, an empty group and very long labels.
+fn awkward_inputs() -> Vec<(&'static str, String)> {
+    let mut hub = String::from("kind = \"system\"\n[[nodes]]\nid = \"hub\"\nlabel = \"Hub\"\n");
+    for i in 0..15 {
+        hub += &format!("[[nodes]]\nid = \"n{i}\"\nlabel = \"Leaf {i}\"\n");
+    }
+    for i in 0..15 {
+        hub += &format!("[[links]]\nfrom = \"hub\"\nto = \"n{i}\"\nlabel = \"link {i}\"\n");
+    }
+    for i in 0..9 {
+        hub += &format!("[[links]]\nfrom = \"n{i}\"\nto = \"hub\"\n");
+    }
+
+    let mut repeated = String::from(
+        "kind = \"system\"\n[[nodes]]\nid = \"a\"\nlabel = \"A\"\n[[nodes]]\nid = \"b\"\nlabel = \"B\"\n",
+    );
+    for i in 0..24 {
+        let (from, to) = if i % 2 == 0 { ("a", "b") } else { ("b", "a") };
+        repeated += &format!("[[links]]\nfrom = \"{from}\"\nto = \"{to}\"\nlabel = \"call {i}\"\n");
+    }
+
+    let groups = r#"kind = "system"
+[[groups]]
+id = "g1"
+label = "Zone one"
+[[groups]]
+id = "g2"
+label = "Zone two"
+[[groups]]
+id = "empty"
+label = "A group nothing sits in"
+[[nodes]]
+id = "a"
+label = "A"
+group = "g1"
+[[nodes]]
+id = "b"
+label = "B"
+group = "g2"
+[[nodes]]
+id = "c"
+label = "C"
+[[links]]
+from = "g1"
+to = "g2"
+label = "between zones"
+[[links]]
+from = "c"
+to = "g1"
+[[links]]
+from = "g2"
+to = "c"
+[[links]]
+from = "empty"
+to = "c"
+"#
+    .to_string();
+
+    let long = format!(
+        "kind = \"system\"\n[[groups]]\nid = \"g\"\nlabel = \"{}\"\n[[nodes]]\nid = \"a\"\nlabel = \"{}\"\ngroup = \"g\"\n[[nodes]]\nid = \"b\"\nlabel = \"Short\"\n[[links]]\nfrom = \"a\"\nto = \"b\"\nlabel = \"{}\"\n",
+        "A group label that is far longer than any sensible boundary name would be ".repeat(3),
+        "Awaiting approval from every regional compliance reviewer before release ".repeat(3),
+        "a link label that runs on and on ".repeat(6),
+    );
+    vec![
+        ("hub", hub),
+        ("repeated", repeated),
+        ("group ends", groups),
+        ("long labels", long),
+    ]
+}
+
+#[test]
+fn awkward_inputs_route_every_link_and_never_panic() {
+    for (name, text) in awkward_inputs() {
+        let (d, s) = laid_out(&text);
+        let p = problems(&d, &s);
+        for line in p.iter().take(6) {
+            println!("{name}: {line}");
+        }
+        let unrouted = s.links.iter().filter(|l| !l.routed).count();
+        assert_eq!(unrouted, 0, "{name}: {unrouted} link(s) have no route");
+        // Two nodes joined by two dozen labelled links leave no room for every label: the
+        // labels may then crowd each other, but every link must still be routed around the nodes.
+        let hard: Vec<&String> = p
+            .iter()
+            .filter(|l| !l.contains("covers link"))
+            .filter(|l| name != "repeated" || !l.contains("label"))
+            .collect();
+        assert!(hard.is_empty(), "{name}: {hard:?}");
+    }
+}
+
+#[test]
+fn every_path_starts_and_ends_on_the_box_it_joins() {
+    for (name, d) in corpus() {
+        let s = scene(&d, &DEFAULT_THEME);
+        let n = d.nodes.len();
+        for (l, lp) in s.links.iter().enumerate() {
+            let rect_of = |id: &str| -> Rect {
+                match d.nodes.iter().position(|x| x.id == id) {
+                    Some(i) => s.nodes[i].rect,
+                    None => s.groups[d.groups.iter().position(|g| g.id == id).unwrap()].rect,
+                }
+            };
+            let on_border = |p: (f32, f32), r: Rect| {
+                let inside_x = p.0 >= r.x && p.0 <= r.x1();
+                let inside_y = p.1 >= r.y && p.1 <= r.y1();
+                inside_x && inside_y && (p.0 == r.x || p.0 == r.x1() || p.1 == r.y || p.1 == r.y1())
+            };
+            let _ = n;
+            assert!(
+                on_border(lp.points[0], rect_of(&d.links[l].from)),
+                "{name} link {l} does not start on its source"
+            );
+            assert!(
+                on_border(*lp.points.last().unwrap(), rect_of(&d.links[l].to)),
+                "{name} link {l} does not end on its target"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_system_diagram_describes_its_groups_and_links() {
+    let text = "kind = \"system\"\ntitle = \"Shop\"\n[[groups]]\nid = \"back\"\nlabel = \"Back end\"\n[[nodes]]\nid = \"api\"\nlabel = \"API\"\ngroup = \"back\"\n[[nodes]]\nid = \"user\"\nlabel = \"User\"\nrole = \"actor\"\n[[links]]\nfrom = \"user\"\nto = \"back\"\nlabel = \"orders\"\n[[links]]\nfrom = \"api\"\nto = \"user\"\nrelation = \"indirect\"\ndirection = \"both\"\n";
+    let diagram = parse(text).unwrap();
+    assert_eq!(crate::describe::accessible_name(&diagram), "Shop");
+    assert_eq!(
+        crate::describe::describe(&diagram),
+        "System: Back end (API), User. Links: User → Back end (orders); API ↔ User [indirect]."
+    );
+    let svg = crate::render::render(&diagram, &DEFAULT_THEME).unwrap();
+    assert!(svg.contains("role=\"img\"") && svg.contains("<desc>"));
+}
+
+#[test]
+fn enormous_labels_cannot_stretch_the_diagram() {
+    let huge = "wide ".repeat(4000);
+    let text = format!(
+        "kind = \"system\"\n[[groups]]\nid = \"g\"\nlabel = \"{huge}\"\n[[nodes]]\nid = \"a\"\nlabel = \"{huge}\"\ngroup = \"g\"\n[[nodes]]\nid = \"b\"\nlabel = \"B\"\n[[links]]\nfrom = \"a\"\nto = \"b\"\nlabel = \"{huge}\"\n"
+    );
+    let start = Instant::now();
+    let (d, s) = laid_out(&text);
+    assert!(
+        s.width < 1500.0 && s.height < 1500.0,
+        "{}x{}",
+        s.width,
+        s.height
+    );
+    assert!(s.links.iter().all(|l| l.routed));
+    assert!(problems(&d, &s).is_empty());
+    assert!(start.elapsed().as_secs() < 5);
+}

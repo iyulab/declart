@@ -11,6 +11,9 @@ use super::Rect;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
+/// Most grid points a canvas may have — about 5000 × 5000 px — past which links are drawn
+/// straight rather than routed.
+const MAX_CELLS: i64 = 300_000;
 const STEP: u32 = 10;
 const BEND: u32 = 60;
 const HALO: u32 = 20;
@@ -65,9 +68,14 @@ fn to_p(v: f32) -> i32 {
 }
 
 impl Router {
-    pub(crate) fn new(width: f32, height: f32, obs: &Obstacles) -> Self {
-        let cols = to_p(width) + 1;
-        let rows = to_p(height) + 1;
+    /// `None` when the canvas is too large to route on (the search tables grow with it).
+    pub(crate) fn new(width: f32, height: f32, obs: &Obstacles) -> Option<Self> {
+        let cols = to_p(width) as i64 + 1;
+        let rows = to_p(height) as i64 + 1;
+        if cols * rows > MAX_CELLS {
+            return None;
+        }
+        let (cols, rows) = (cols as i32, rows as i32);
         let n = (cols * rows) as usize;
         let mut r = Router {
             cols,
@@ -112,7 +120,7 @@ impl Router {
                 }
             }
         }
-        r
+        Some(r)
     }
 
     fn bounds(&self, rect: &Rect) -> (i32, i32, i32, i32) {
@@ -189,6 +197,12 @@ impl Router {
         }
         if to_taken.len() != to_slots.len() {
             *to_taken = vec![0; to_slots.len()];
+        }
+        // A node whose slots are all taken shares them rather than leave a link unrouted.
+        for taken in [&mut *from_taken, &mut *to_taken] {
+            if taken.iter().all(|&s| s >= 2) {
+                taken.iter_mut().for_each(|s| *s = 1);
+            }
         }
         let n = (self.cols * self.rows) as usize;
 

@@ -84,9 +84,11 @@ back is a `state` diagram).
   or group.
 - Every link needs two different ends, neither inside the other.
 - The engine chooses the layout. It lays each group out first and then treats it as one box, so
-  boxes never overlap; links run along straight horizontal and vertical lines and go around
-  components, not through them. Every label is set whole — a label too long for a box makes the
-  box wider — and `render_diagnosed` reports the rare label that still had to be shrunk or cut.
+  boxes never overlap; links run along horizontal and vertical lines and go around components, not
+  through them, and each link label is set on a free stretch of its link. Every label is set
+  whole — a label too long for a box makes the box wider — and `render_diagnosed` reports the
+  rare label that still had to be shrunk or cut. A group label is set on one line, at most about
+  320 px wide, and a link label at most about 180 px.
 
 ## Example
 
