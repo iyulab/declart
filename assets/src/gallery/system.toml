@@ -1,74 +1,59 @@
 kind = "system"
-title = "Zero Trust Architecture"
+title = "Order platform"
 
 [[groups]]
-id = "cp"
-label = "Control plane"
-
-[[groups]]
-id = "pdp"
-label = "Policy decision point"
-parent = "cp"
-
-[[groups]]
-id = "dp"
-label = "Data plane"
+id = "services"
+label = "Services"
 
 [[nodes]]
-id = "pe"
-label = "Policy engine"
-group = "pdp"
-
-[[nodes]]
-id = "pa"
-label = "Policy administrator"
-group = "pdp"
-
-[[nodes]]
-id = "signals"
-label = "Identity, device state, threat intelligence, logs"
-group = "cp"
-
-[[nodes]]
-id = "subject"
-label = "Subject: user or device"
-group = "dp"
+id = "client"
+label = "Web client"
 role = "actor"
 
 [[nodes]]
-id = "pep"
-label = "Policy enforcement point"
-group = "dp"
+id = "api"
+label = "API gateway"
 
 [[nodes]]
-id = "resource"
-label = "Enterprise resource"
-group = "dp"
+id = "orders"
+label = "Orders"
+group = "services"
+
+[[nodes]]
+id = "billing"
+label = "Billing"
+group = "services"
+
+[[nodes]]
+id = "db"
+label = "Orders DB"
+role = "store"
+
+[[nodes]]
+id = "payments"
+label = "Payment provider"
+role = "external"
 
 [[links]]
-from = "pe"
-to = "pa"
-direction = "both"
+from = "client"
+to = "api"
+label = "HTTPS"
 
 [[links]]
-from = "signals"
-to = "pe"
+from = "api"
+to = "services"
 
 [[links]]
-from = "subject"
-to = "pep"
-
-[[links]]
-from = "pep"
-to = "resource"
-
-[[links]]
-from = "pa"
-to = "pep"
-label = "allow / deny"
-
-[[links]]
-from = "pep"
-to = "pa"
-label = "access request"
+from = "orders"
+to = "billing"
+label = "events"
 relation = "indirect"
+
+[[links]]
+from = "services"
+to = "db"
+
+[[links]]
+from = "billing"
+to = "payments"
+label = "charge"

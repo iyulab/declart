@@ -15,7 +15,7 @@ $tmp = Join-Path $here '.tmp'
 New-Item -ItemType Directory -Force $tmp | Out-Null
 & $cli render (Join-Path $here 'hero.toml') --format png --width 900 -o (Join-Path $tmp 'hero.png')
 Get-ChildItem (Join-Path $here 'gallery/*.toml') | ForEach-Object {
-  $w = if ($_.BaseName -eq 'system') { 1500 } else { 1000 }
+  $w = if ($_.BaseName -like 'system*') { 1100 } else { 1000 }
   & $cli render $_.FullName --format png --width $w -o (Join-Path $tmp "$($_.BaseName).png")
 }
 
@@ -35,5 +35,5 @@ function Capture($page, $out, $w, $h) {
   $dst.Dispose()
 }
 Capture 'hero.html' (Join-Path $root 'assets/hero.png') 1600 900
-Capture 'gallery.html' (Join-Path $root 'assets/gallery.png') 1500 1860
+Capture 'gallery.html' (Join-Path $root 'assets/gallery.png') 1500 2080
 Remove-Item -Recurse -Force $tmp

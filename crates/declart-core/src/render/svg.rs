@@ -111,6 +111,24 @@ impl SvgBuilder {
         ));
     }
 
+    /// A rounded rectangle tinted with `ink` at the given opacities, so it takes on whatever it
+    /// sits on — a light page, a dark one or none at all.
+    #[allow(clippy::too_many_arguments)]
+    pub fn rect_tinted(
+        &mut self,
+        (x, y, width, height): (f32, f32, f32, f32),
+        rx: u32,
+        ink: &str,
+        fill_opacity: f32,
+        stroke_opacity: f32,
+        stroke_width: f32,
+    ) {
+        self.elements.push(format!(
+            r#"<rect x="{:.1}" y="{:.1}" width="{:.1}" height="{:.1}" rx="{}" fill="{}" fill-opacity="{:.2}" stroke="{}" stroke-opacity="{:.2}" stroke-width="{:.1}"/>"#,
+            x, y, width, height, rx, ink, fill_opacity, ink, stroke_opacity, stroke_width
+        ));
+    }
+
     /// An SVG path from raw path data.
     pub fn path(&mut self, d: &str, fill: &str, stroke: &str, stroke_width: f32, dashed: bool) {
         let dash = if dashed {

@@ -13,16 +13,32 @@ use std::collections::BinaryHeap;
 
 /// Most grid points a canvas may have — about 5000 × 5000 px — past which links are drawn
 /// straight rather than routed.
-const MAX_CELLS: i64 = 300_000;
+const MAX_CELLS: i64 = 150_000;
 const STEP: u32 = 10;
+/// Weight on the distance estimate (as quarters): above 1 the search heads for the goal faster and may settle
+/// for a path a little dearer than the cheapest.
+const HEURISTIC_WEIGHT: u32 = 5; // in quarters: 5/4
+/// The weight for a layout too big to search carefully in good time: 2.
+const HURRY_WEIGHT: u32 = 8;
 const BEND: u32 = 60;
+/// A turn right after a turn leaves a one-step jog in the line, which reads as a slip.
+const JOG: u32 = 200;
+/// The run state of a segment that is long enough to turn off.
+const LONG_RUN: u32 = 2;
 const HALO: u32 = 20;
-const GROUP_BORDER: u32 = 25;
+const GROUP_BORDER: u32 = 40;
+const GROUP_BESIDE: u32 = 25;
 const GROUP_LABEL: u32 = 300;
 const OVERLAP: u32 = 300;
 const CROSS: u32 = 80;
-const NEXT_TO_USED_SLOT: u32 = 50;
-const NEXT_TO_LINK: u32 = 60;
+/// Cost of running on the line of another link, within a few steps of where it ends.
+const BEYOND: u32 = 150;
+const BEYOND_STEPS: i32 = 4;
+/// Cost of taking a port beside a used one (1 step away) or two steps away: two links leaving
+/// side by side run so close that a label cannot sit between them.
+const NEXT_TO_USED_SLOT: u32 = 150;
+const NEAR_USED_SLOT: u32 = 70;
+const NEXT_TO_LINK: u32 = 120;
 
 /// A grid point as (column, row).
 type P = (i32, i32);
@@ -61,6 +77,17 @@ pub(crate) struct Router {
     base: Vec<u32>,
     h_used: Vec<u8>,
     v_used: Vec<u8>,
+    /// Points just beyond the end of a routed horizontal / vertical run: a second link on the
+    /// same line there would read as the first one carrying on.
+    h_beyond: Vec<u8>,
+    v_beyond: Vec<u8>,
+    // Search tables, kept between links and cleaned up after each (only the entries a search
+    // touched), so routing many links does not allocate and clear them again and again.
+    dist: Vec<u32>,
+    prev: Vec<u32>,
+    goal: Vec<i32>,
+    /// Weight on the distance estimate, in quarters.
+    heuristic: u32,
 }
 
 fn to_p(v: f32) -> i32 {
@@ -69,7 +96,7 @@ fn to_p(v: f32) -> i32 {
 
 impl Router {
     /// `None` when the canvas is too large to route on (the search tables grow with it).
-    pub(crate) fn new(width: f32, height: f32, obs: &Obstacles) -> Option<Self> {
+    pub(crate) fn new(width: f32, height: f32, obs: &Obstacles, hurry: bool) -> Option<Self> {
         let cols = to_p(width) as i64 + 1;
         let rows = to_p(height) as i64 + 1;
         if cols * rows > MAX_CELLS {
@@ -84,6 +111,16 @@ impl Router {
             base: vec![0; n],
             h_used: vec![0; n],
             v_used: vec![0; n],
+            h_beyond: vec![0; n],
+            v_beyond: vec![0; n],
+            dist: vec![u32::MAX; n * 12],
+            prev: vec![u32::MAX; n * 12],
+            goal: vec![-1; n],
+            heuristic: if hurry {
+                HURRY_WEIGHT
+            } else {
+                HEURISTIC_WEIGHT
+            },
         };
         for rect in obs.nodes {
             let (x0, y0, x1, y1) = r.bounds(rect);
@@ -100,13 +137,21 @@ impl Router {
         }
         for rect in obs.groups {
             let (x0, y0, x1, y1) = r.bounds(rect);
+            // The border itself, and the line of points on either side of it: a link there reads
+            // as part of the border.
             for i in x0..=x1 {
-                r.add_base((i, y0), GROUP_BORDER);
-                r.add_base((i, y1), GROUP_BORDER);
+                for y in [y0, y1] {
+                    r.add_base((i, y), GROUP_BORDER);
+                    r.add_base((i, y + 1), GROUP_BESIDE);
+                    r.add_base((i, y - 1), GROUP_BESIDE);
+                }
             }
             for j in y0..=y1 {
-                r.add_base((x0, j), GROUP_BORDER);
-                r.add_base((x1, j), GROUP_BORDER);
+                for x in [x0, x1] {
+                    r.add_base((x, j), GROUP_BORDER);
+                    r.add_base((x + 1, j), GROUP_BESIDE);
+                    r.add_base((x - 1, j), GROUP_BESIDE);
+                }
             }
         }
         for rect in obs.group_labels {
@@ -121,6 +166,29 @@ impl Router {
             }
         }
         Some(r)
+    }
+
+    /// Puts the search tables back, cleaned of what the last search touched.
+    fn release(
+        &mut self,
+        mut dist: Vec<u32>,
+        mut prev: Vec<u32>,
+        mut goal: Vec<i32>,
+        touched: &[u32],
+        to_slots: &[Slot],
+    ) {
+        for &s in touched {
+            dist[s as usize] = u32::MAX;
+            prev[s as usize] = u32::MAX;
+        }
+        for slot in to_slots {
+            if let Some(k) = self.idx(slot.outside) {
+                goal[k] = -1;
+            }
+        }
+        self.dist = dist;
+        self.prev = prev;
+        self.goal = goal;
     }
 
     fn bounds(&self, rect: &Rect) -> (i32, i32, i32, i32) {
@@ -204,10 +272,9 @@ impl Router {
                 taken.iter_mut().for_each(|s| *s = 1);
             }
         }
-        let n = (self.cols * self.rows) as usize;
 
         // Goal points: the free points just outside the target's slots.
-        let mut goal: Vec<i32> = vec![-1; n];
+        let mut goal = std::mem::take(&mut self.goal);
         for (s, slot) in to_slots.iter().enumerate() {
             if to_taken[s] < 2 {
                 if let Some(k) = self.idx(slot.outside) {
@@ -216,14 +283,16 @@ impl Router {
             }
         }
         let (tx0, ty0, tx1, ty1) = self.bounds(&to.rect);
+        let weight = self.heuristic;
         let heur = |p: P| -> u32 {
             let dx = (tx0 - p.0).max(0).max(p.0 - tx1);
             let dy = (ty0 - p.1).max(0).max(p.1 - ty1);
-            (dx + dy) as u32 * STEP
+            (dx + dy) as u32 * STEP * weight / 4
         };
 
-        let mut dist: Vec<u32> = vec![u32::MAX; n * 4];
-        let mut prev: Vec<u32> = vec![u32::MAX; n * 4];
+        let mut dist = std::mem::take(&mut self.dist);
+        let mut prev = std::mem::take(&mut self.prev);
+        let mut touched: Vec<u32> = Vec::new();
         let mut heap: BinaryHeap<Reverse<(u32, u32, u32)>> = BinaryHeap::new();
         for (s, slot) in from_slots.iter().enumerate() {
             if from_taken[s] >= 2 {
@@ -232,14 +301,11 @@ impl Router {
             let Some(k) = self.idx(slot.outside) else {
                 continue;
             };
-            let g = if from_taken[s] == 1 {
-                NEXT_TO_USED_SLOT
-            } else {
-                0
-            };
-            let st = (k * 4 + slot.out_dir) as u32;
+            let g = slot_cost(from_taken[s]);
+            let st = ((k * 4 + slot.out_dir) * 3 + LONG_RUN as usize) as u32;
             if g < dist[st as usize] {
                 dist[st as usize] = g;
+                touched.push(st);
                 heap.push(Reverse((g + heur(slot.outside), g, st)));
             }
         }
@@ -249,8 +315,12 @@ impl Router {
             if g > dist[st as usize] {
                 continue;
             }
-            let k = (st / 4) as usize;
-            let dir = (st % 4) as usize;
+            let k = (st / 12) as usize;
+            let dir = ((st / 3) % 4) as usize;
+            // Steps taken on the segment being walked, less one, up to a long run: 0 and 1 are a
+            // segment too short to turn off without leaving a jog.
+            let run = (st % 3) as usize;
+            let short = run < LONG_RUN as usize;
             if goal[k] >= 0 {
                 found = Some(st);
                 break;
@@ -268,6 +338,9 @@ impl Router {
                 let mut cost = STEP + self.base[qk];
                 if nd != dir {
                     cost += BEND;
+                    if short {
+                        cost += JOG;
+                    }
                 }
                 let horizontal = nd % 2 == 1;
                 if horizontal {
@@ -277,12 +350,18 @@ impl Router {
                     if self.v_used[qk] > 0 {
                         cost += CROSS;
                     }
+                    if self.h_beyond[qk] > 0 {
+                        cost += BEYOND;
+                    }
                 } else {
                     if self.v_used[qk] > 0 || self.v_used[k] > 0 {
                         cost += OVERLAP;
                     }
                     if self.h_used[qk] > 0 {
                         cost += CROSS;
+                    }
+                    if self.v_beyond[qk] > 0 {
+                        cost += BEYOND;
                     }
                 }
                 // Keep parallel links apart, so a label fits between two of them.
@@ -309,27 +388,38 @@ impl Router {
                     // The last step into the border runs against `out_dir`.
                     if nd != (slot.out_dir + 2) % 4 {
                         cost += BEND;
+                        if nd != dir && short {
+                            cost += JOG;
+                        }
                     }
-                    if to_taken[goal[qk] as usize] == 1 {
-                        cost += NEXT_TO_USED_SLOT;
-                    }
+                    cost += slot_cost(to_taken[goal[qk] as usize]);
                 }
                 let ng = g + cost;
-                let ns = (qk * 4 + nd) as u32;
+                let next_run = if nd == dir {
+                    (run + 1).min(LONG_RUN as usize)
+                } else {
+                    0
+                };
+                let ns = ((qk * 4 + nd) * 3 + next_run) as u32;
                 if ng < dist[ns as usize] {
                     dist[ns as usize] = ng;
+                    touched.push(ns);
                     prev[ns as usize] = st;
                     heap.push(Reverse((ng + heur(q), ng, ns)));
                 }
             }
         }
-        let end = found?;
+        let Some(end) = found else {
+            self.release(dist, prev, goal, &touched, &to_slots);
+            return None;
+        };
+        let to_slot = goal[(end / 12) as usize] as usize;
 
         // Walk back to the start.
         let mut points: Vec<P> = Vec::new();
         let mut cur = end;
         loop {
-            let k = (cur / 4) as usize;
+            let k = (cur / 12) as usize;
             points.push(((k as i32) % self.cols, (k as i32) / self.cols));
             if prev[cur as usize] == u32::MAX {
                 break;
@@ -337,6 +427,7 @@ impl Router {
             cur = prev[cur as usize];
         }
         points.reverse();
+        self.release(dist, prev, goal, &touched, &to_slots);
 
         let start_k = self.idx(points[0]).expect("start inside grid");
         let from_slot = from_slots
@@ -345,7 +436,6 @@ impl Router {
             .find(|(s, sl)| from_taken[*s] < 2 && self.idx(sl.outside) == Some(start_k))
             .map(|(s, _)| s)
             .expect("start is an outside point of a source slot");
-        let to_slot = goal[(end / 4) as usize] as usize;
 
         let mut poly: Vec<P> = vec![from_slots[from_slot].border];
         poly.extend(points.iter().copied());
@@ -365,6 +455,31 @@ impl Router {
                 }
             }
         }
+        // The stretch beyond each end of a run, on its line.
+        for w in poly.windows(2) {
+            let (a, b) = (w[0], w[1]);
+            if a == b {
+                continue;
+            }
+            let horizontal = a.1 == b.1;
+            let (lo, hi) = if horizontal {
+                (a.0.min(b.0), a.0.max(b.0))
+            } else {
+                (a.1.min(b.1), a.1.max(b.1))
+            };
+            for e in 1..=BEYOND_STEPS {
+                for at in [lo - e, hi + e] {
+                    let p = if horizontal { (at, a.1) } else { (a.0, at) };
+                    if let Some(k) = self.idx(p) {
+                        if horizontal {
+                            self.h_beyond[k] = self.h_beyond[k].saturating_add(1);
+                        } else {
+                            self.v_beyond[k] = self.v_beyond[k].saturating_add(1);
+                        }
+                    }
+                }
+            }
+        }
         take(from_taken, &from_slots, from_slot);
         take(to_taken, &to_slots, to_slot);
 
@@ -372,12 +487,27 @@ impl Router {
     }
 }
 
-/// Marks slot `s` used and the slots next to it on the same side as discouraged.
+/// What taking a port costs: 0 free, 1 next to a used one, 3 two steps from one, 2 used.
+fn slot_cost(state: u8) -> u32 {
+    match state {
+        1 => NEXT_TO_USED_SLOT,
+        3 => NEAR_USED_SLOT,
+        _ => 0,
+    }
+}
+
+/// Marks slot `s` used, and the slots near it on the same side as discouraged.
 fn take(state: &mut [u8], slots: &[Slot], s: usize) {
     state[s] = 2;
-    for t in [s.wrapping_sub(2), s.wrapping_sub(1), s + 1, s + 2] {
-        if t < slots.len() && slots[t].out_dir == slots[s].out_dir && state[t] == 0 {
-            state[t] = 1;
+    for (t, mark) in [
+        (s.wrapping_sub(2), 3),
+        (s.wrapping_sub(1), 1),
+        (s + 1, 1),
+        (s + 2, 3),
+    ] {
+        if t < slots.len() && slots[t].out_dir == slots[s].out_dir && state[t] != 2 {
+            // The nearer mark wins over the farther one.
+            state[t] = if state[t] == 1 { 1 } else { mark };
         }
     }
 }

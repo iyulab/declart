@@ -180,6 +180,56 @@ fn problems(d: &SystemDiagram, s: &Scene) -> Vec<String> {
         }
     }
 
+    // No small steps: a line that jogs sideways by a few pixels and carries on reads as a slip.
+    for (l, lp) in s.links.iter().enumerate() {
+        for w in lp.points.windows(4) {
+            let (a, b, c, d) = (w[0], w[1], w[2], w[3]);
+            let h_v_h = a.1 == b.1 && b.0 == c.0 && c.1 == d.1;
+            let v_h_v = a.0 == b.0 && b.1 == c.1 && c.0 == d.0;
+            let step = if h_v_h {
+                (b.1 - c.1).abs()
+            } else if v_h_v {
+                (b.0 - c.0).abs()
+            } else {
+                continue;
+            };
+            if step > 0.0 && step <= 20.0 {
+                out.push(format!("link {l} has a small step of {step} px"));
+            }
+        }
+    }
+
+    // A line must not run along the border of a group: it reads as part of the border.
+    for (l, lp) in s.links.iter().enumerate() {
+        for seg in lp.points.windows(2) {
+            let len = (seg[1].0 - seg[0].0).abs() + (seg[1].1 - seg[0].1).abs();
+            if len < 30.0 {
+                continue;
+            }
+            for (g, gb) in s.groups.iter().enumerate() {
+                if along(seg[0], seg[1], &gb.rect, 10.0) {
+                    out.push(format!(
+                        "link {l} runs along the border of group {}",
+                        d.groups[g].id
+                    ));
+                }
+            }
+        }
+    }
+
+    // Two links on one line with only a short gap between them read as one line.
+    for (l, a) in s.links.iter().enumerate() {
+        for (k, b) in s.links.iter().enumerate().skip(l + 1) {
+            for sa in a.points.windows(2) {
+                for sb in b.points.windows(2) {
+                    if collinear_near(sa[0], sa[1], sb[0], sb[1], 40.0) {
+                        out.push(format!("links {l} and {k} run into each other on one line"));
+                    }
+                }
+            }
+        }
+    }
+
     // Two links must not run on top of each other.
     for (l, a) in s.links.iter().enumerate() {
         for (k, b) in s.links.iter().enumerate().skip(l + 1) {
@@ -193,6 +243,65 @@ fn problems(d: &SystemDiagram, s: &Scene) -> Vec<String> {
         }
     }
     out
+}
+
+/// Whether the axis-aligned segment `a`–`b` lies within `tol` of one of `r`'s four sides and
+/// alongside it (not just crossing it).
+fn along(a: (f32, f32), b: (f32, f32), r: &Rect, tol: f32) -> bool {
+    if a.1 == b.1 {
+        let (lo, hi) = (a.0.min(b.0), a.0.max(b.0));
+        let overlap = lo.max(r.x) < hi.min(r.x1());
+        overlap && ((a.1 - r.y).abs() <= tol || (a.1 - r.y1()).abs() <= tol)
+    } else if a.0 == b.0 {
+        let (lo, hi) = (a.1.min(b.1), a.1.max(b.1));
+        let overlap = lo.max(r.y) < hi.min(r.y1());
+        overlap && ((a.0 - r.x).abs() <= tol || (a.0 - r.x1()).abs() <= tol)
+    } else {
+        false
+    }
+}
+
+/// Whether two segments on one line are separated by a gap of less than `tol` (and do not touch).
+fn collinear_near(
+    a0: (f32, f32),
+    a1: (f32, f32),
+    b0: (f32, f32),
+    b1: (f32, f32),
+    tol: f32,
+) -> bool {
+    let gap = |alo: f32, ahi: f32, blo: f32, bhi: f32| blo.max(alo) - ahi.min(bhi);
+    if a0.1 == a1.1 && b0.1 == b1.1 && a0.1 == b0.1 {
+        let g = gap(
+            a0.0.min(a1.0),
+            a0.0.max(a1.0),
+            b0.0.min(b1.0),
+            b0.0.max(b1.0),
+        );
+        return g > 0.0 && g < tol;
+    }
+    if a0.0 == a1.0 && b0.0 == b1.0 && a0.0 == b0.0 {
+        let g = gap(
+            a0.1.min(a1.1),
+            a0.1.max(a1.1),
+            b0.1.min(b1.1),
+            b0.1.max(b1.1),
+        );
+        return g > 0.0 && g < tol;
+    }
+    false
+}
+
+/// Findings that spoil the look of a crowded diagram without breaking it: a line that steps
+/// aside, runs near a border or near another line, or a label that sits by a neighbouring link.
+fn is_cosmetic(line: &str) -> bool {
+    [
+        "covers link",
+        "small step",
+        "run into each other",
+        "along the border",
+    ]
+    .iter()
+    .any(|k| line.contains(k))
 }
 
 fn collinear_overlap(a0: (f32, f32), a1: (f32, f32), b0: (f32, f32), b1: (f32, f32)) -> bool {
@@ -314,7 +423,7 @@ fn a_diagram_at_the_limits_lays_out_cleanly_and_quickly() {
         }
         // A label that sits on a neighbouring link is soft in a graph this dense; anything
         // else — an overlap, a link through a node, an unrouted link — is not.
-        let hard: Vec<&String> = p.iter().filter(|l| !l.contains("covers link")).collect();
+        let hard: Vec<&String> = p.iter().filter(|l| !is_cosmetic(l)).collect();
         assert!(hard.is_empty(), "seed {seed}: {hard:?}");
     }
     println!("slowest: {slowest} ms");
@@ -339,7 +448,7 @@ fn the_corpus_shows_every_label_whole() {
 fn both_orientations() {
     for (name, d) in corpus() {
         let m = measure(&d, &DEFAULT_THEME);
-        for mode in [Some(true), Some(false), None] {
+        for mode in [Some(true), None, Some(false)] {
             let s = build(&d, &m, &arrange(&d, &m, mode));
             let bends: usize = s
                 .links
@@ -351,7 +460,7 @@ fn both_orientations() {
                 match mode { Some(true) => "LR", Some(false) => "TB", None => "AUTO" },
                 s.width,
                 s.height,
-                score(&s),
+                score(&s, m.base),
                 crossings(&s),
                 bends,
                 s.links.iter().filter(|l| !l.routed).count(),
@@ -459,7 +568,7 @@ fn awkward_inputs_route_every_link_and_never_panic() {
         // labels may then crowd each other, but every link must still be routed around the nodes.
         let hard: Vec<&String> = p
             .iter()
-            .filter(|l| !l.contains("covers link"))
+            .filter(|l| !is_cosmetic(l))
             .filter(|l| name != "repeated" || !l.contains("label"))
             .collect();
         assert!(hard.is_empty(), "{name}: {hard:?}");

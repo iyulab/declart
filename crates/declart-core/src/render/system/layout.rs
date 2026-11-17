@@ -20,6 +20,13 @@ pub(crate) fn snap_up(v: f32) -> f32 {
     (v / G).ceil() * G
 }
 
+/// Rounds up to a multiple of two grid steps. A box of such a size has a grid point at its
+/// centre, so two boxes whose centres line up also have ports that line up and the link between
+/// them is a straight line rather than a line with a small step in it.
+pub(crate) fn snap_up_even(v: f32) -> f32 {
+    (v / (2.0 * G)).ceil() * 2.0 * G
+}
+
 /// Distance between layers.
 const RANK_GAP: f32 = 80.0;
 /// Distance between two items of one layer.

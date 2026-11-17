@@ -13,7 +13,7 @@ mod route;
 use super::{font, status, svg::SvgBuilder};
 use crate::model::{Emphasis, LinkDirection, LinkRelation, SystemDiagram, SystemRole};
 use crate::render::theme::Theme;
-use layout::{layout_level, snap, snap_up, LevelEdge, G};
+use layout::{layout_level, snap, snap_up, snap_up_even, LevelEdge, G};
 use route::{End, Obstacles, Router};
 use std::collections::HashMap;
 
@@ -22,10 +22,12 @@ const TITLE_AREA: f32 = 50.0;
 const GROUP_PAD: f32 = 20.0;
 const GROUP_HEADER: f32 = 30.0;
 const NODE_PAD_X: f32 = 14.0;
-const NODE_MIN_W: f32 = 90.0;
-const NODE_MAX_W: f32 = 230.0;
+const NODE_MIN_W: f32 = 100.0;
+const NODE_MAX_W: f32 = 240.0;
 const NODE_MIN_H: f32 = 40.0;
 const NODE_MAX_H: f32 = 400.0;
+/// Half the height of a data store's elliptical lid.
+const LID: f32 = 8.0;
 const LINK_LABEL_MAX_W: f32 = 180.0;
 /// Widest a group's label is set; a longer one is shrunk or cut, so one label cannot stretch
 /// the whole diagram.
@@ -33,6 +35,12 @@ const GROUP_LABEL_MAX_W: f32 = 320.0;
 const ARROW_LEN: f32 = 9.0;
 const ARROW_HALF: f32 = 4.5;
 const TARGET_ASPECT: f32 = 1.6;
+/// The width of a typical page column, and the smallest label size that still reads in it.
+/// Most (grid points × links) a layout may be before the engine stops trying alternatives: the
+/// first routing is always done, but more tries would cost more than they are worth.
+const RETRY_BUDGET: f32 = 150_000.0;
+const BODY_WIDTH: f32 = 780.0;
+const MIN_READABLE_PX: f32 = 11.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Rect {
@@ -122,6 +130,8 @@ struct Measured {
     nodes: Vec<(f32, f32, Vec<String>, f32)>,
     /// (text as set, width) per group label.
     group_labels: Vec<(String, f32, f32)>,
+    /// The label size, before any shrinking.
+    base: f32,
     /// (text as set, size, width, height) per link label.
     links: Vec<Option<(String, f32, f32, f32)>>,
 }
@@ -191,7 +201,7 @@ fn measure(d: &SystemDiagram, theme: &Theme) -> Measured {
                 if w >= NODE_MAX_W {
                     break false;
                 }
-                w += G;
+                w += 2.0 * G;
             };
             if !fits {
                 w = NODE_MAX_W;
@@ -204,8 +214,14 @@ fn measure(d: &SystemDiagram, theme: &Theme) -> Measured {
                 .filter(|l| l.from == n.id || l.to == n.id)
                 .count();
             let slots_h = (20.0 + 20.0 * (degree as f32 / 2.0).ceil()).min(NODE_MAX_H);
-            let h = snap_up(
-                (lines.len() as f32 * size * font::LINE_HEIGHT + 20.0)
+            // A data store has an elliptical lid the label must clear.
+            let lid = if matches!(n.role, Some(SystemRole::Store)) {
+                2.0 * LID
+            } else {
+                0.0
+            };
+            let h = snap_up_even(
+                (lines.len() as f32 * size * font::LINE_HEIGHT + 20.0 + lid)
                     .max(NODE_MIN_H)
                     .max(slots_h),
             );
@@ -250,6 +266,7 @@ fn measure(d: &SystemDiagram, theme: &Theme) -> Measured {
     Measured {
         nodes,
         group_labels,
+        base,
         links,
     }
 }
@@ -341,8 +358,9 @@ impl<'a> Builder<'a> {
     fn group_size(&mut self, g: usize) -> (f32, f32) {
         self.place(g);
         let p = self.placed[g].as_ref().expect("placed");
-        let w = snap_up((p.w + 2.0 * GROUP_PAD).max(self.m.group_labels[g].1 + 2.0 * GROUP_PAD));
-        let h = snap_up(p.h + GROUP_HEADER + GROUP_PAD);
+        let w =
+            snap_up_even((p.w + 2.0 * GROUP_PAD).max(self.m.group_labels[g].1 + 2.0 * GROUP_PAD));
+        let h = snap_up_even(p.h + GROUP_HEADER + GROUP_PAD);
         (w, h)
     }
 
@@ -433,17 +451,47 @@ pub(crate) fn scene(d: &SystemDiagram, theme: &Theme) -> Scene {
     let m = measure(d, theme);
     let left_to_right = arrange(d, &m, Some(true));
     let mixed = arrange(d, &m, None);
-    let first = build(d, &m, &left_to_right);
-    // A flat diagram lays out the same either way; route it once.
-    if mixed == left_to_right {
-        return first;
+    // Routing costs time in proportion to the canvas and the links. When there is room for only
+    // one routing, route the layout that reads better, judged by its size alone.
+    let effort = |a: &Arranged| (a.width / G) * (a.height / G) * d.links.len() as f32;
+    if effort(&left_to_right).max(effort(&mixed)) * 2.0 > RETRY_BUDGET {
+        let reads = |a: &Arranged| size_cost(a.width, a.height, m.base);
+        let pick = if reads(&mixed) < reads(&left_to_right) {
+            &mixed
+        } else {
+            &left_to_right
+        };
+        return build(d, &m, pick);
     }
-    let second = build(d, &m, &mixed);
-    if score(&second) < score(&first) {
-        second
-    } else {
-        first
+    let mut seen: Vec<Arranged> = Vec::new();
+    let mut best: Option<(f32, Scene)> = None;
+    let consider = |arr: Arranged, best: &mut Option<(f32, Scene)>, seen: &mut Vec<Arranged>| {
+        // A flat diagram lays out the same in every direction; route each layout once.
+        if seen.contains(&arr) {
+            return;
+        }
+        let s = build(d, &m, &arr);
+        let sc = score(&s, m.base);
+        seen.push(arr);
+        if best.as_ref().is_none_or(|(b, _)| sc < *b) {
+            *best = Some((sc, s));
+        }
+    };
+    consider(left_to_right, &mut best, &mut seen);
+    consider(mixed, &mut best, &mut seen);
+    // A layout that reads small on a page, or that crosses itself, is worth a third try: every
+    // level top to bottom.
+    if best.as_ref().is_some_and(|(sc, _)| *sc >= 400.0) {
+        consider(arrange(d, &m, Some(false)), &mut best, &mut seen);
     }
+    best.expect("at least one layout").1
+}
+
+/// How badly proportioned and how small-set a layout of this size is — lower is better.
+fn size_cost(width: f32, height: f32, base: f32) -> f32 {
+    let aspect = (width / height / TARGET_ASPECT).ln().abs();
+    let shown = base * (BODY_WIDTH / width).min(1.0);
+    aspect * 500.0 + (MIN_READABLE_PX - shown).max(0.0) * 150.0
 }
 
 /// How badly a laid-out level is proportioned and how much room it takes — lower is better.
@@ -452,6 +500,40 @@ fn shape_cost(l: &layout::LevelLayout) -> f32 {
         return 0.0;
     }
     (l.w / l.h / TARGET_ASPECT).ln().abs() + 0.4 * (l.w * l.h).ln()
+}
+
+type Polyline = Vec<(f32, f32)>;
+
+/// How good a set of routed paths is — lower is better: links without a route, crossings and small
+/// steps, then bends and length.
+fn quality(paths: &[Option<Polyline>]) -> (usize, usize, u32) {
+    let unrouted = paths.iter().filter(|p| p.is_none()).count();
+    let lines: Vec<&Polyline> = paths.iter().flatten().collect();
+    let mut crossing = 0;
+    for (i, a) in lines.iter().enumerate() {
+        for b in &lines[i + 1..] {
+            for sa in a.windows(2) {
+                for sb in b.windows(2) {
+                    if segments_cross(sa[0], sa[1], sb[0], sb[1]) {
+                        crossing += 1;
+                    }
+                }
+            }
+        }
+    }
+    let cost: f32 = lines
+        .iter()
+        .map(|l| {
+            l.len().saturating_sub(2) as f32 * 5.0
+                + l.windows(2)
+                    .map(|w| (w[1].0 - w[0].0).abs() + (w[1].1 - w[0].1).abs())
+                    .sum::<f32>()
+                    * 0.1
+        })
+        .sum();
+    let steps: usize = lines.iter().map(|l| small_steps(l)).sum();
+    // A crossing is as bad as two small steps.
+    (unrouted, crossing * 2 + steps, cost as u32)
 }
 
 /// Where every node and group sits, before any link is routed.
@@ -535,43 +617,79 @@ fn build(d: &SystemDiagram, m: &Measured, a: &Arranged) -> Scene {
     let node_rects: Vec<Rect> = nodes.iter().map(|n| n.rect).collect();
     let group_rects: Vec<Rect> = groups.iter().map(|g| g.rect).collect();
     let label_rects: Vec<Rect> = groups.iter().map(|g| g.label_rect).collect();
-    let mut router = Router::new(
-        width,
-        height,
-        &Obstacles {
-            nodes: &node_rects,
-            groups: &group_rects,
-            group_labels: &label_rects,
-        },
-    );
     let centre = |r: &Rect| (r.x + r.w / 2.0, r.y + r.h / 2.0);
-    let mut order: Vec<usize> = (0..d.links.len()).collect();
-    order.sort_by(|&x, &y| {
-        let dist = |l: usize| {
-            let (a, b) = end_item[l];
-            let (ca, cb) = (centre(&rects[a]), centre(&rects[b]));
-            (ca.0 - cb.0).abs() + (ca.1 - cb.1).abs()
-        };
-        dist(x).total_cmp(&dist(y)).then(x.cmp(&y))
-    });
-    let mut taken: Vec<Vec<u8>> = vec![vec![]; total];
-    let mut paths: Vec<Option<Vec<(f32, f32)>>> = vec![None; d.links.len()];
-    for &l in &order {
-        let (a, bi) = end_item[l];
-        let (mut ta, mut tb) = (
-            std::mem::take(&mut taken[a]),
-            std::mem::take(&mut taken[bi]),
+    // A big diagram is searched with a looser estimate, which is quicker and a little rougher.
+    let hurry = (width / G) * (height / G) * d.links.len() as f32 > RETRY_BUDGET;
+    let route_all = |order: &[usize]| -> Vec<Option<Polyline>> {
+        let mut router = Router::new(
+            width,
+            height,
+            &Obstacles {
+                nodes: &node_rects,
+                groups: &group_rects,
+                group_labels: &label_rects,
+            },
+            hurry,
         );
-        paths[l] = router.as_mut().and_then(|r| {
-            r.route(
-                &End { rect: rects[a] },
-                &mut ta,
-                &End { rect: rects[bi] },
-                &mut tb,
-            )
-        });
-        taken[a] = ta;
-        taken[bi] = tb;
+        let mut taken: Vec<Vec<u8>> = vec![vec![]; total];
+        let mut paths: Vec<Option<Polyline>> = vec![None; d.links.len()];
+        for &l in order {
+            let (a, bi) = end_item[l];
+            let (mut ta, mut tb) = (
+                std::mem::take(&mut taken[a]),
+                std::mem::take(&mut taken[bi]),
+            );
+            paths[l] = router.as_mut().and_then(|r| {
+                r.route(
+                    &End { rect: rects[a] },
+                    &mut ta,
+                    &End { rect: rects[bi] },
+                    &mut tb,
+                )
+            });
+            taken[a] = ta;
+            taken[bi] = tb;
+        }
+        paths
+    };
+    let distance = |l: usize| {
+        let (a, b) = end_item[l];
+        let (ca, cb) = (centre(&rects[a]), centre(&rects[b]));
+        (ca.0 - cb.0).abs() + (ca.1 - cb.1).abs()
+    };
+    let n_links = d.links.len();
+    let mut shortest_first: Vec<usize> = (0..n_links).collect();
+    // A link whose ends line up can run straight, but only if it takes the middle port of each
+    // end before another link does; those are routed first, then the rest shortest first.
+    let aligned = |l: usize| {
+        let (a, b) = end_item[l];
+        let (ca, cb) = (centre(&rects[a]), centre(&rects[b]));
+        (ca.0 - cb.0).abs() < 1.0 || (ca.1 - cb.1).abs() < 1.0
+    };
+    shortest_first.sort_by(|&x, &y| {
+        (!aligned(x))
+            .cmp(&!aligned(y))
+            .then(distance(x).total_cmp(&distance(y)))
+            .then(x.cmp(&y))
+    });
+    let mut paths = route_all(&shortest_first);
+    // Links take their ports in the order they are routed, so a different order can untangle a
+    // crossing the first one left. Try a few more orders when only a few links cross.
+    let mut best = quality(&paths);
+    let cells = (width / G) * (height / G);
+    let affordable = cells * n_links as f32 <= RETRY_BUDGET;
+    if affordable && ((1..=8).contains(&best.1) || (best.0 > 0 && best.1 <= 8)) {
+        let longest_first: Vec<usize> = shortest_first.iter().rev().copied().collect();
+        let declared: Vec<usize> = (0..n_links).collect();
+        let declared_rev: Vec<usize> = (0..n_links).rev().collect();
+        for order in [longest_first, declared, declared_rev] {
+            let attempt = route_all(&order);
+            let q = quality(&attempt);
+            if q < best {
+                best = q;
+                paths = attempt;
+            }
+        }
     }
     let mut links: Vec<LinkPath> = (0..d.links.len())
         .map(|l| match paths[l].take() {
@@ -649,8 +767,20 @@ fn place_label(
         if len < 20.0 {
             continue;
         }
-        for t in [0.5f32, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8] {
-            let (cx, cy) = (a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t);
+        // On the line (it is broken to make room), or just beside it on either side — beside is
+        // the way out where another link runs close alongside.
+        for (t, side) in [0.5f32, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8]
+            .into_iter()
+            .flat_map(|t| [(t, 0.0f32), (t, 1.0), (t, -1.0)])
+        {
+            let (mut cx, mut cy) = (a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t);
+            if side != 0.0 {
+                if a.1 == b.1 {
+                    cy += side * (h / 2.0 + 4.0);
+                } else {
+                    cx += side * (w / 2.0 + 4.0);
+                }
+            }
             // Keep clear of the arrowheads at both ends of the path.
             let from_end = |p: (f32, f32)| (cx - p.0).abs() + (cy - p.1).abs();
             if from_end(pts[0]) < 14.0 || from_end(pts[pts.len() - 1]) < 14.0 {
@@ -665,7 +795,9 @@ fn place_label(
             hard += nodes.iter().filter(|r| r.overlaps(&padded)).count() as f32;
             hard += group_labels.iter().filter(|r| r.overlaps(&padded)).count() as f32;
             hard += placed.iter().filter(|r| r.overlaps(&padded)).count() as f32;
-            let mut soft = (1.0 - (len.min(200.0) / 200.0)) * 20.0 + (t - 0.5).abs() * 10.0;
+            let mut soft = (1.0 - (len.min(200.0) / 200.0)) * 20.0
+                + (t - 0.5).abs() * 10.0
+                + if side != 0.0 { 8.0 } else { 0.0 };
             let mut covers = 0;
             for (k, other) in links.iter().enumerate() {
                 for seg in other.points.windows(2) {
@@ -705,7 +837,7 @@ fn place_label(
 }
 
 /// How good a laid-out scene is — lower is better.
-fn score(s: &Scene) -> f32 {
+fn score(s: &Scene, base: f32) -> f32 {
     let unrouted = s.links.iter().filter(|l| !l.routed).count() as f32;
     let unplaced = s
         .links
@@ -733,13 +865,33 @@ fn score(s: &Scene) -> f32 {
         })
         .sum();
     let aspect = (s.width / s.height / TARGET_ASPECT).ln().abs();
+    let steps: usize = s.links.iter().map(|l| small_steps(&l.points)).sum();
+    // A diagram shown at the width of a page column is scaled down: a label that ends up smaller
+    // than a readable size costs the layout.
+    let shown = base * (BODY_WIDTH / s.width).min(1.0);
+    let unreadable = (MIN_READABLE_PX - shown).max(0.0);
     unrouted * 1e5
+        + steps as f32 * 500.0
+        + unreadable * 150.0
         + unplaced * 1e4
         + covered as f32 * 2e3
         + crossings(s) as f32 * 400.0
         + bends as f32 * 5.0
         + length * 0.1
         + aspect * 500.0
+}
+
+/// Places where a line steps sideways by a few pixels and carries on.
+fn small_steps(points: &[(f32, f32)]) -> usize {
+    points
+        .windows(4)
+        .filter(|w| {
+            let (a, b, c, d) = (w[0], w[1], w[2], w[3]);
+            let h = a.1 == b.1 && b.0 == c.0 && c.1 == d.1 && (b.1 - c.1).abs() <= 20.0;
+            let v = a.0 == b.0 && b.1 == c.1 && c.0 == d.0 && (b.0 - c.0).abs() <= 20.0;
+            h || v
+        })
+        .count()
 }
 
 /// Pairs of link segments that cross each other.
@@ -796,19 +948,13 @@ pub(crate) fn render(d: &SystemDiagram, theme: &Theme) -> String {
     order.sort_by_key(|&g| (scene.groups[g].depth, g));
     for g in order {
         let gb = &scene.groups[g];
-        let mix = 0.9 - 0.07 * gb.depth as f32;
-        let fill = theme.layers.base.interpolate(&theme.background, mix);
-        let stroke = theme.layers.base.interpolate(&theme.background, 0.45);
-        b.rect_styled(
-            gb.rect.x,
-            gb.rect.y,
-            gb.rect.w,
-            gb.rect.h,
+        b.rect_tinted(
+            (gb.rect.x, gb.rect.y, gb.rect.w, gb.rect.h),
             12,
-            &fill.to_hex(),
-            &stroke.to_hex(),
+            &theme.title_color.to_hex(),
+            0.05 + 0.03 * gb.depth as f32,
+            0.28,
             1.5,
-            false,
         );
     }
     for gb in &scene.groups {
@@ -867,7 +1013,7 @@ pub(crate) fn render(d: &SystemDiagram, theme: &Theme) -> String {
         match node.role {
             Some(SystemRole::Store) => {
                 fill = theme.layers.base.interpolate(&theme.background, 0.5);
-                let e = 8.0;
+                let e = LID;
                 let (x, y, w, h) = (r.x, r.y, r.w, r.h);
                 let body = format!(
                     "M{:.1},{:.1} a{:.1},{e:.1} 0 0 1 {:.1},0 v{:.1} a{:.1},{e:.1} 0 0 1 -{:.1},0 z",
@@ -933,7 +1079,8 @@ pub(crate) fn render(d: &SystemDiagram, theme: &Theme) -> String {
         let text_color = theme.text_on(&fill);
         let bold = matches!(node.emphasis, Some(Emphasis::Primary));
         let cy = if matches!(node.role, Some(SystemRole::Store)) {
-            r.y + r.h / 2.0 + 4.0
+            // Centre the label in the body below the lid.
+            r.y + r.h / 2.0 + LID
         } else {
             r.y + r.h / 2.0
         };
@@ -966,8 +1113,6 @@ pub(crate) fn render(d: &SystemDiagram, theme: &Theme) -> String {
 
 /// Splits `points` into the part before and the part after `rect`, which the path crosses on one
 /// straight segment. `None` when no segment can be cut (a diagonal stand-in line).
-type Polyline = Vec<(f32, f32)>;
-
 fn open_gap(points: &[(f32, f32)], rect: &Rect) -> Option<(Polyline, Polyline)> {
     const PAD: f32 = 3.0;
     for (i, s) in points.windows(2).enumerate() {
