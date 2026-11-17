@@ -113,26 +113,66 @@ pub fn fit_lines(
     max_width: f32,
     max_height: f32,
 ) -> (Vec<String>, f32) {
+    let (lines, size, outcome) = fit(text, font_size, min_size, max_width, max_height);
+    match outcome {
+        FitOutcome::AsIs => {}
+        FitOutcome::Shrunk => diagnostic::record(DiagnosticCode::LabelShrunk, text),
+        FitOutcome::Truncated => diagnostic::record(DiagnosticCode::LabelTruncated, text),
+    }
+    (lines, size)
+}
+
+/// What [`fit_lines`] had to do to a label.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FitOutcome {
+    /// Set at the requested size, on one line or wrapped.
+    AsIs,
+    /// Set smaller than requested.
+    Shrunk,
+    /// Cut short with an ellipsis.
+    Truncated,
+}
+
+/// [`fit_lines`] without recording a diagnostic — for a renderer that tries several box sizes
+/// and records only the one it keeps.
+pub(crate) fn fit_probe(
+    text: &str,
+    font_size: f32,
+    min_size: f32,
+    max_width: f32,
+    max_height: f32,
+) -> (Vec<String>, f32, FitOutcome) {
+    fit(text, font_size, min_size, max_width, max_height)
+}
+
+fn fit(
+    text: &str,
+    font_size: f32,
+    min_size: f32,
+    max_width: f32,
+    max_height: f32,
+) -> (Vec<String>, f32, FitOutcome) {
     let width = measure_text(text, font_size);
     if max_width <= 0.0 || width <= max_width {
-        return (vec![text.to_string()], font_size);
+        return (vec![text.to_string()], font_size, FitOutcome::AsIs);
     }
     let min_size = min_size.min(font_size);
     // A label that needs only a slight shrink stays on one line.
     let one_line_size = font_size * max_width / width;
     if one_line_size >= (font_size * ONE_LINE_SHRINK).max(min_size) {
-        diagnostic::record(DiagnosticCode::LabelShrunk, text);
-        return (vec![text.to_string()], one_line_size);
+        return (vec![text.to_string()], one_line_size, FitOutcome::Shrunk);
     }
     let mut size = font_size;
     loop {
         let room = lines_that_fit(size, max_height);
         let lines = wrap(text, size, max_width);
         if lines.len() <= room {
-            if size < font_size {
-                diagnostic::record(DiagnosticCode::LabelShrunk, text);
-            }
-            return (lines, size);
+            let outcome = if size < font_size {
+                FitOutcome::Shrunk
+            } else {
+                FitOutcome::AsIs
+            };
+            return (lines, size, outcome);
         }
         if size <= min_size {
             let mut kept: Vec<String> = lines.into_iter().take(room).collect();
@@ -142,8 +182,7 @@ pub fn fit_lines(
                 let tail = format!("{}{}", last, rest.trim_start());
                 *last = truncate_unrecorded(&tail, size, max_width);
             }
-            diagnostic::record(DiagnosticCode::LabelTruncated, text);
-            return (kept, size);
+            return (kept, size, FitOutcome::Truncated);
         }
         size = (size - SIZE_STEP).max(min_size);
     }

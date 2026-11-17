@@ -67,6 +67,25 @@ impl SvgBuilder {
         ));
     }
 
+    /// A cubic Bézier curve from `p0` to `p1` with control points `c1` and `c2`, unfilled.
+    pub fn path_cubic(
+        &mut self,
+        [p0, c1, c2, p1]: [(f32, f32); 4],
+        stroke: &str,
+        stroke_width: f32,
+        dashed: bool,
+    ) {
+        let dash = if dashed {
+            r#" stroke-dasharray="6,3""#
+        } else {
+            ""
+        };
+        self.elements.push(format!(
+            r#"<path d="M{:.1},{:.1} C{:.1},{:.1} {:.1},{:.1} {:.1},{:.1}" fill="none" stroke="{}" stroke-width="{:.1}"{}/>"#,
+            p0.0, p0.1, c1.0, c1.1, c2.0, c2.1, p1.0, p1.1, stroke, stroke_width, dash
+        ));
+    }
+
     pub fn circle_stroked(
         &mut self,
         cx: f32,

@@ -1,0 +1,50 @@
+kind = "state"
+title = "TCP Congestion Control"
+
+[[states]]
+id = "slow_start"
+label = "Slow start"
+role = "initial"
+
+[[states]]
+id = "avoidance"
+label = "Congestion avoidance"
+
+[[states]]
+id = "recovery"
+label = "Fast recovery"
+
+[[transitions]]
+from = "slow_start"
+to = "avoidance"
+trigger = "cwnd reaches ssthresh"
+
+[[transitions]]
+from = "slow_start"
+to = "recovery"
+trigger = "3 duplicate ACKs"
+
+[[transitions]]
+from = "avoidance"
+to = "recovery"
+trigger = "3 duplicate ACKs"
+
+[[transitions]]
+from = "recovery"
+to = "avoidance"
+trigger = "new ACK"
+
+[[transitions]]
+from = "avoidance"
+to = "slow_start"
+trigger = "timeout"
+
+[[transitions]]
+from = "recovery"
+to = "slow_start"
+trigger = "timeout"
+
+[[transitions]]
+from = "slow_start"
+to = "slow_start"
+trigger = "timeout"

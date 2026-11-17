@@ -14,16 +14,18 @@ fn run(input: &str) -> (String, Vec<declart_core::Diagnostic>) {
     render_diagnosed(&diagram, &DEFAULT_THEME, None).expect("renders")
 }
 
+/// Too long for even the largest state circle: wrapped, shrunk to the smallest size, and still cut.
+const TOO_LONG: &str = "Awaiting approval from every regional compliance reviewer before release";
+
 #[test]
 fn a_label_cut_short_is_reported_with_the_label_as_declared() {
-    // A Korean label with a space is cut short in a state circle (measured on the published 0.22.0).
-    let (svg, diagnostics) = run(&state("느린 시작"));
+    let (svg, diagnostics) = run(&state(TOO_LONG));
     assert!(svg.contains('…'), "the picture shows the ellipsis");
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
     assert_eq!(diagnostics[0].code, DiagnosticCode::LabelTruncated);
     assert_eq!(diagnostics[0].code.as_str(), "label_truncated");
-    assert_eq!(diagnostics[0].label, "느린 시작");
-    assert!(diagnostics[0].message.contains("느린 시작"));
+    assert_eq!(diagnostics[0].label, TOO_LONG);
+    assert!(diagnostics[0].message.contains(TOO_LONG));
     assert!(!diagnostics[0].hint.is_empty());
 }
 
@@ -36,8 +38,16 @@ fn a_label_that_fits_is_not_reported() {
 }
 
 #[test]
+fn a_korean_label_with_a_space_grows_its_circle_instead_of_being_cut() {
+    // 0.22.0 cut this label to "느린 시…"; the circle now grows to hold it.
+    let (svg, diagnostics) = run(&state("느린 시작"));
+    assert!(!svg.contains('…'));
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
+}
+
+#[test]
 fn the_picture_is_the_same_as_render_gives() {
-    let input = state("느린 시작");
+    let input = state(TOO_LONG);
     let diagram = parse(&input).unwrap();
     let plain = render(&diagram, &DEFAULT_THEME).unwrap();
     let (svg, _) = render_diagnosed(&diagram, &DEFAULT_THEME, None).unwrap();
@@ -46,7 +56,7 @@ fn the_picture_is_the_same_as_render_gives() {
 
 #[test]
 fn one_render_does_not_leak_into_the_next() {
-    let (_, first) = run(&state("느린 시작"));
+    let (_, first) = run(&state(TOO_LONG));
     assert_eq!(first.len(), 1);
     let (_, second) = run(&state("느린시작"));
     assert!(second.is_empty(), "{second:?}");
