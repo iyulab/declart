@@ -126,6 +126,20 @@ pub fn limits(kind: &str, view: Option<String>) -> Result<String, JsError> {
     serde_json::to_string(&slots).map_err(|e| JsError::new(&e.to_string()))
 }
 
+/// Reports what a declaration of `kind` may contain, for `view` (omitted: the schema a declaration
+/// without a `view` is read by).
+///
+/// Returns a JSON string `{"kind", "view", "views", "default_view", "fields", "collections",
+/// "rules"}`: `fields` and each collection's `fields` are `{"name", "type", "required", "values"?,
+/// "note"?}`, a collection is `{"name", "min", "max", "fields"}` (`max` is `null` for no limit), and
+/// `rules` are the conditions that do not fit a field, in words.
+#[wasm_bindgen]
+pub fn schema(kind: &str, view: Option<String>) -> Result<String, JsError> {
+    let schema =
+        declart_core::schema(kind, view.as_deref()).map_err(|e| JsError::new(&e.to_string()))?;
+    serde_json::to_string(&schema).map_err(|e| JsError::new(&e.to_string()))
+}
+
 /// Returns a comma-separated list of supported theme names.
 #[wasm_bindgen]
 pub fn themes() -> String {

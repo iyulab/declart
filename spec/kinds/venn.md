@@ -62,3 +62,30 @@ A dash means the engine reports nothing for the slot up to 120 characters. That 
 | `intersections[].label` | 2 sets | — / — | — / — |
 
 <!-- limits:end -->
+
+<!-- schema:start — generated; do not edit by hand -->
+## Schema
+
+What a declaration of this kind may contain, as `declart schema` and `schema()` report it. The value lists and counts are the ones the parser checks, and a test holds every field, count and rule to the parser in both directions, so a declaration written to this page parses. The prose above is the explanation; this is the reference.
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `venn` |
+| `title` | string | no |  |
+
+**`sets`** — 2 to 3 elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+
+**`intersections`** — any number of elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `sets` | string[] | yes | the labels of the sets that overlap |
+| `label` | string | yes |  |
+
+<!-- schema:end -->

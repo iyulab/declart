@@ -92,3 +92,46 @@ A dash means the engine reports nothing for the slot up to 120 characters. That 
 | `items[].label` | 3 items | 11 / 11 | 19 / 19 |
 
 <!-- limits:end -->
+
+<!-- schema:start — generated; do not edit by hand -->
+## Schema
+
+What a declaration of this kind may contain, as `declart schema` and `schema()` report it. The value lists and counts are the ones the parser checks, and a test holds every field, count and rule to the parser in both directions, so a declaration written to this page parses. The prose above is the explanation; this is the reference.
+
+### `pyramid`
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `tier` |
+| `view` | enum | no | `pyramid`, `concentric` |
+| `title` | string | no |  |
+
+**`items`** — 1 or more elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `emphasis` | enum | no | `primary`, `secondary` |
+| `status` | enum | no | `success`, `normal`, `warning`, `critical` |
+
+### `concentric`
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `tier` |
+| `view` | enum | no | `pyramid`, `concentric` |
+| `title` | string | no |  |
+
+**`items`** — 1 or more elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `emphasis` | enum | no | `primary`, `secondary` |
+| `status` | enum | no | `success`, `normal`, `warning`, `critical` |
+
+<!-- schema:end -->

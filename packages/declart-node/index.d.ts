@@ -41,6 +41,45 @@ export interface SlotLimit {
   ascii: LabelCapacity;
 }
 
+/** One field of a declaration, or of an element of a collection. */
+export interface SchemaField {
+  name: string;
+  /** `enum` takes one of `values`; `reference` names another element by its `id` or `label`; `date` is `YYYY`, `YYYY-MM` or `YYYY-MM-DD`. */
+  type: 'string' | 'enum' | 'date' | 'reference' | 'string[]';
+  /** A declaration without a required field is an error. */
+  required: boolean;
+  /** What an `enum` field takes. */
+  values?: string[];
+  /** What the field means where its type alone does not say. */
+  note?: string;
+}
+
+/** A repeated element, written `[[name]]` in TOML or as an array in JSON. */
+export interface SchemaCollection {
+  name: string;
+  /** Fewest elements. */
+  min: number;
+  /** Most elements; `null` for no limit. */
+  max: number | null;
+  fields: SchemaField[];
+}
+
+/** What a declaration of one kind (and view) may contain. */
+export interface Schema {
+  kind: string;
+  /** The view this schema is for; `null` when the kind has none or none was asked for. */
+  view: string | null;
+  /** Every view the kind accepts; empty for a kind without a `view` field. */
+  views: string[];
+  /** The view used when a declaration has no `view`; `null` when the content decides (a hierarchy with one root is an `org_chart`, with more a `fishbone`). */
+  default_view: string | null;
+  /** Fields at the top of the declaration. */
+  fields: SchemaField[];
+  collections: SchemaCollection[];
+  /** What else must hold, in words. Each one is enforced by the parser. */
+  rules: string[];
+}
+
 /** Options for {@link validate}. */
 export interface ValidateOptions {
   /** Also fail when the declaration does not fit: a label the engine would cut short with "…". */
@@ -87,6 +126,16 @@ export function renderDetailed(input: string, theme?: string, width?: number, op
  * @throws If the kind or the view is unknown
  */
 export function limits(kind: string, view?: string): SlotLimit[];
+
+/**
+ * Reports what a declaration of a diagram kind may contain: its fields and their values, how many
+ * elements each collection takes, and the rules that do not fit a field. The numbers and value lists
+ * are the ones the parser checks, so a declaration written to the schema parses.
+ * @param kind - Diagram kind, one of {@link kinds}
+ * @param view - View of the kind; omitted: the schema a declaration without `view` is read by
+ * @throws If the kind or the view is unknown
+ */
+export function schema(kind: string, view?: string): Schema;
 
 /**
  * Renders a JSON diagram declaration to SVG.

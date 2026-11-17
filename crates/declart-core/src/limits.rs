@@ -12,7 +12,7 @@
 //! itself.
 
 use crate::error::DeclartError;
-use crate::parse::views;
+use crate::parse::checked_view;
 use crate::render::{render_diagnosed, DEFAULT_THEME};
 use crate::{parse, DiagnosticCode};
 use serde::Serialize;
@@ -65,23 +65,8 @@ struct Slot {
 /// [`DeclartError::UnknownKind`] for an unknown kind, [`DeclartError::InvalidValue`] for a view the
 /// kind does not have.
 pub fn limits(kind: &str, view: Option<&str>) -> Result<Vec<SlotLimit>, DeclartError> {
-    let known = views(kind).ok_or_else(|| DeclartError::UnknownKind(kind.to_string()))?;
-    let view = match view {
-        Some(v) if known.contains(&v) => v,
-        Some(v) => {
-            let hint = if known.is_empty() {
-                format!("`{kind}` has no views")
-            } else {
-                format!("Valid views for `{kind}`: {}", known.join(", "))
-            };
-            return Err(DeclartError::InvalidValue {
-                field: "view".to_string(),
-                value: v.to_string(),
-                hint,
-            });
-        }
-        None => known.first().copied().unwrap_or(""),
-    };
+    let (known, view) = checked_view(kind, view)?;
+    let view = view.or_else(|| known.first().copied()).unwrap_or("");
     Ok(slots(kind, view)
         .iter()
         .map(|slot| SlotLimit {

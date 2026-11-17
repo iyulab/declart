@@ -85,3 +85,35 @@ A dash means the engine reports nothing for the slot up to 120 characters. That 
 | `rows[].<column>` | 2 columns, 2 rows | 21 / 21 | 40 / 40 |
 
 <!-- limits:end -->
+
+<!-- schema:start — generated; do not edit by hand -->
+## Schema
+
+What a declaration of this kind may contain, as `declart schema` and `schema()` report it. The value lists and counts are the ones the parser checks, and a test holds every field, count and rule to the parser in both directions, so a declaration written to this page parses. The prose above is the explanation; this is the reference.
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `comparison` |
+| `title` | string | no |  |
+
+**`columns`** — 1 to 8 elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+
+**`rows`** — 1 to 10 elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `<column>` | string | no | one key per declared column, named by the column's label; its value is the cell |
+
+**Rules**
+
+- a column is not labelled `label` (the row field uses that name)
+- a row has no key that is not a declared column
+
+<!-- schema:end -->

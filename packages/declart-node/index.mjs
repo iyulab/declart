@@ -13,3 +13,4 @@ export const describe = declart.describe;
 export const themes = declart.themes;
 export const kinds = declart.kinds;
 export const limits = declart.limits;
+export const schema = declart.schema;

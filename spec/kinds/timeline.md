@@ -119,3 +119,31 @@ A dash means the engine reports nothing for the slot up to 120 characters. That 
 | `events[].label` | 4 milestones | 10 / 10 | 19 / 19 |
 
 <!-- limits:end -->
+
+<!-- schema:start — generated; do not edit by hand -->
+## Schema
+
+What a declaration of this kind may contain, as `declart schema` and `schema()` report it. The value lists and counts are the ones the parser checks, and a test holds every field, count and rule to the parser in both directions, so a declaration written to this page parses. The prose above is the explanation; this is the reference.
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `timeline` |
+| `title` | string | no |  |
+
+**`events`** — 2 or more elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `date` | date | no | a milestone |
+| `start` | date | no | a period; with `end` |
+| `end` | date | no | a period; with `start` |
+| `label` | string | yes |  |
+
+**Rules**
+
+- each event has a `date`, or both `start` and `end`, not both kinds
+- `end` is not before `start`
+
+<!-- schema:end -->

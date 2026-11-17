@@ -45,6 +45,8 @@ A declaration can be valid and still not fit: a label too long for its slot is c
 
 To write labels that fit in the first place, ask for the limits: `declart limits state` (Node `limits('state')`) lists how many Hangul and Latin characters each label slot takes before the engine changes it. The same tables are at the end of every kind's page in the spec.
 
+To write the declaration itself without guessing at a field, ask for the schema: `declart schema flow --view swimlane` (Node `schema('flow', 'swimlane')`) lists the fields with their types and allowed values, how many elements each collection takes, and the rules between fields. Every kind's page in the spec ends with the same reference.
+
 ---
 
 ## Prompt Templates

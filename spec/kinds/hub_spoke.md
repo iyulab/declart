@@ -64,3 +64,26 @@ A dash means the engine reports nothing for the slot up to 120 characters. That 
 | `spokes[].label` | 3 spokes | 9 / 9 | 15 / 15 |
 
 <!-- limits:end -->
+
+<!-- schema:start — generated; do not edit by hand -->
+## Schema
+
+What a declaration of this kind may contain, as `declart schema` and `schema()` report it. The value lists and counts are the ones the parser checks, and a test holds every field, count and rule to the parser in both directions, so a declaration written to this page parses. The prose above is the explanation; this is the reference.
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `hub_spoke` |
+| `title` | string | no |  |
+| `center` | string | yes |  |
+
+**`spokes`** — 2 or more elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `emphasis` | enum | no | `primary`, `secondary` |
+| `status` | enum | no | `success`, `normal`, `warning`, `critical` |
+
+<!-- schema:end -->

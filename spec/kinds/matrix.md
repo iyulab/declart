@@ -135,3 +135,42 @@ A dash means the engine reports nothing for the slot up to 120 characters. That 
 | `quadrants[].label` | 4 quadrants | — / — | — / — |
 
 <!-- limits:end -->
+
+<!-- schema:start — generated; do not edit by hand -->
+## Schema
+
+What a declaration of this kind may contain, as `declart schema` and `schema()` report it. The value lists and counts are the ones the parser checks, and a test holds every field, count and rule to the parser in both directions, so a declaration written to this page parses. The prose above is the explanation; this is the reference.
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `matrix` |
+| `title` | string | no |  |
+| `x_axis` | string | yes |  |
+| `y_axis` | string | yes |  |
+
+**`quadrants`** — exactly 4 elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `emphasis` | enum | no | `primary`, `secondary` |
+| `status` | enum | no | `success`, `normal`, `warning`, `critical` |
+| `position` | enum | no | `top-left`, `top-right`, `bottom-left`, `bottom-right` |
+
+**`items`** — any number of elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `emphasis` | enum | no | `primary`, `secondary` |
+| `status` | enum | no | `success`, `normal`, `warning`, `critical` |
+| `quadrant` | enum | yes | `top-left`, `top-right`, `bottom-left`, `bottom-right` |
+
+**Rules**
+
+- when any quadrant has a `position`, every quadrant has one and each is used once
+- at most 6 items go in one quadrant
+
+<!-- schema:end -->

@@ -51,17 +51,45 @@ pub const KINDS: &[&str] = &[
 
 // ---- The rules the parser enforces, named so `schema` reads the same numbers -----------------
 
-/// Values `emphasis` takes.
-pub(crate) const EMPHASIS_VALUES: &[&str] = &["primary", "secondary"];
-/// Values `status` takes.
-pub(crate) const STATUS_VALUES: &[&str] = &["success", "normal", "warning", "critical"];
+/// What `emphasis` takes. The parser looks values up here and the schema lists them from here, so
+/// a value cannot be accepted without being listed.
+pub(crate) const EMPHASES: &[(&str, Emphasis)] = &[
+    ("primary", Emphasis::Primary),
+    ("secondary", Emphasis::Secondary),
+];
+/// What `status` takes.
+pub(crate) const STATUSES: &[(&str, Status)] = &[
+    ("success", Status::Success),
+    ("normal", Status::Normal),
+    ("warning", Status::Warning),
+    ("critical", Status::Critical),
+];
 /// Quadrant names, in slot order (top-left first).
 pub(crate) const QUADRANT_POSITIONS: &[&str] =
     &["top-left", "top-right", "bottom-left", "bottom-right"];
-/// Values a state's `role` takes.
-pub(crate) const STATE_ROLES: &[&str] = &["initial", "terminal"];
-/// Values a transition's `type` takes.
-pub(crate) const TRANSITION_KINDS: &[&str] = &["normal", "exception"];
+/// What a state's `role` takes.
+pub(crate) const STATE_ROLES: &[(&str, StateRole)] = &[
+    ("initial", StateRole::Initial),
+    ("terminal", StateRole::Terminal),
+];
+/// What a transition's `type` takes.
+pub(crate) const TRANSITION_KINDS: &[(&str, TransitionKind)] = &[
+    ("normal", TransitionKind::Normal),
+    ("exception", TransitionKind::Exception),
+];
+
+/// The value of `table` named `name`.
+fn lookup<T: Clone>(table: &[(&str, T)], name: &str) -> Option<T> {
+    table
+        .iter()
+        .find(|(n, _)| *n == name)
+        .map(|(_, v)| v.clone())
+}
+
+/// The names `table` accepts, in order.
+pub(crate) fn names<T>(table: &[(&'static str, T)]) -> Vec<&'static str> {
+    table.iter().map(|(n, _)| *n).collect()
+}
 
 pub(crate) const FLOW_VIEWS: &[&str] = &["process", "cycle", "funnel", "swimlane"];
 pub(crate) const TIER_VIEWS: &[&str] = &["pyramid", "concentric"];
@@ -92,6 +120,30 @@ pub fn views(kind: &str) -> Option<&'static [&'static str]> {
         "hierarchy" => Some(HIERARCHY_VIEWS),
         "timeline" | "matrix" | "hub_spoke" | "venn" | "comparison" | "state" => Some(&[]),
         _ => None,
+    }
+}
+
+/// Checks `view` against the views of `kind`, returning the kind's views and the view when one was
+/// given. An omitted view stays `None`: what that means differs per kind (and per caller).
+pub(crate) fn checked_view<'a>(
+    kind: &str,
+    view: Option<&'a str>,
+) -> Result<(&'static [&'static str], Option<&'a str>), DeclartError> {
+    let known = views(kind).ok_or_else(|| DeclartError::UnknownKind(kind.to_string()))?;
+    match view {
+        Some(v) if !known.contains(&v) => {
+            let hint = if known.is_empty() {
+                format!("`{kind}` has no views")
+            } else {
+                format!("Valid views for `{kind}`: {}", known.join(", "))
+            };
+            Err(DeclartError::InvalidValue {
+                field: "view".to_string(),
+                value: v.to_string(),
+                hint,
+            })
+        }
+        _ => Ok((known, view)),
     }
 }
 
@@ -131,28 +183,26 @@ pub fn parse_auto(input: &str) -> Result<Diagram, DeclartError> {
 fn parse_emphasis(s: Option<&str>) -> Result<Option<Emphasis>, DeclartError> {
     match s {
         None => Ok(None),
-        Some("primary") => Ok(Some(Emphasis::Primary)),
-        Some("secondary") => Ok(Some(Emphasis::Secondary)),
-        Some(other) => Err(DeclartError::InvalidValue {
-            field: "emphasis".to_string(),
-            value: other.to_string(),
-            hint: format!("Valid values are: {}", EMPHASIS_VALUES.join(", ")),
-        }),
+        Some(name) => lookup(EMPHASES, name)
+            .map(Some)
+            .ok_or_else(|| DeclartError::InvalidValue {
+                field: "emphasis".to_string(),
+                value: name.to_string(),
+                hint: format!("Valid values are: {}", names(EMPHASES).join(", ")),
+            }),
     }
 }
 
 fn parse_status(s: Option<&str>) -> Result<Option<Status>, DeclartError> {
     match s {
         None => Ok(None),
-        Some("success") => Ok(Some(Status::Success)),
-        Some("normal") => Ok(Some(Status::Normal)),
-        Some("warning") => Ok(Some(Status::Warning)),
-        Some("critical") => Ok(Some(Status::Critical)),
-        Some(other) => Err(DeclartError::InvalidValue {
-            field: "status".to_string(),
-            value: other.to_string(),
-            hint: format!("Valid values are: {}", STATUS_VALUES.join(", ")),
-        }),
+        Some(name) => lookup(STATUSES, name)
+            .map(Some)
+            .ok_or_else(|| DeclartError::InvalidValue {
+                field: "status".to_string(),
+                value: name.to_string(),
+                hint: format!("Valid values are: {}", names(STATUSES).join(", ")),
+            }),
     }
 }
 
@@ -774,18 +824,21 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
     for s in raw.states {
         let role = match s.role.as_deref() {
             None => None,
-            Some("initial") => {
-                initial_count += 1;
-                Some(StateRole::Initial)
-            }
-            Some("terminal") => Some(StateRole::Terminal),
-            Some(other) => {
-                return Err(DeclartError::InvalidValue {
-                    field: "role".to_string(),
-                    value: other.to_string(),
-                    hint: format!("Valid values: {}", STATE_ROLES.join(", ")),
-                })
-            }
+            Some(name) => match lookup(STATE_ROLES, name) {
+                Some(role) => {
+                    if role == StateRole::Initial {
+                        initial_count += 1;
+                    }
+                    Some(role)
+                }
+                None => {
+                    return Err(DeclartError::InvalidValue {
+                        field: "role".to_string(),
+                        value: name.to_string(),
+                        hint: format!("Valid values: {}", names(STATE_ROLES).join(", ")),
+                    })
+                }
+            },
         };
         states.push(StateNode {
             label: s.label,
@@ -831,15 +884,17 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
             });
         }
         let kind = match t.kind.as_deref() {
-            None | Some("normal") => TransitionKind::Normal,
-            Some("exception") => TransitionKind::Exception,
-            Some(other) => {
-                return Err(DeclartError::InvalidValue {
-                    field: "type".to_string(),
-                    value: other.to_string(),
-                    hint: format!("Valid values: {}", TRANSITION_KINDS.join(", ")),
-                })
-            }
+            None => TransitionKind::Normal,
+            Some(name) => match lookup(TRANSITION_KINDS, name) {
+                Some(kind) => kind,
+                None => {
+                    return Err(DeclartError::InvalidValue {
+                        field: "type".to_string(),
+                        value: name.to_string(),
+                        hint: format!("Valid values: {}", names(TRANSITION_KINDS).join(", ")),
+                    })
+                }
+            },
         };
         transitions.push(StateTransition {
             from: t.from,

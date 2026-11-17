@@ -108,4 +108,17 @@ function limits(kind, view) {
     return JSON.parse(wasm.limits(kind, view ?? null));
 }
 
-module.exports = { render, renderDetailed, renderJson, renderWithThemeToml, validate, describe, themes, kinds, limits };
+/**
+ * Reports what a declaration of a diagram kind may contain: its fields and their values, how many
+ * elements each collection takes, and the rules that do not fit a field. Every part is checked
+ * against the parser, so a declaration written to the schema parses.
+ * @param {string} kind - Diagram kind, one of {@link kinds}
+ * @param {string} [view] - View of the kind; omitted: the schema a declaration without `view` is read by
+ * @returns {object} See the `Schema` type
+ * @throws {Error} If the kind or the view is unknown
+ */
+function schema(kind, view) {
+    return JSON.parse(wasm.schema(kind, view ?? null));
+}
+
+module.exports = { render, renderDetailed, renderJson, renderWithThemeToml, validate, describe, themes, kinds, limits, schema };

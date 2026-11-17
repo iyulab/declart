@@ -161,3 +161,114 @@ A dash means the engine reports nothing for the slot up to 120 characters. That 
 | `nodes[].label (parent set)` | a root, 2 children | 8 / 8 | 16 / 16 |
 
 <!-- limits:end -->
+
+<!-- schema:start — generated; do not edit by hand -->
+## Schema
+
+What a declaration of this kind may contain, as `declart schema` and `schema()` report it. The value lists and counts are the ones the parser checks, and a test holds every field, count and rule to the parser in both directions, so a declaration written to this page parses. The prose above is the explanation; this is the reference.
+
+### Without `view`
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `hierarchy` |
+| `view` | enum | no | `org_chart`, `fishbone`, `mind_map` |
+| `title` | string | no |  |
+| `effect` | string | no | fishbone: the label at the end of the spine; falls back to `title` |
+
+**`nodes`** — 1 or more elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `id` | string | no | a short name to refer to the node by |
+| `parent` | reference | no | the id or label of the node above; a node without one is a root |
+
+**Rules**
+
+- node labels are unique
+- node ids are unique
+- `parent` names another node's id or label, never the node itself
+- without `view`: one node without a `parent` makes an org_chart, more make a fishbone (2 to 20 of them)
+
+### `org_chart`
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `hierarchy` |
+| `view` | enum | no | `org_chart`, `fishbone`, `mind_map` |
+| `title` | string | no |  |
+| `effect` | string | no | fishbone: the label at the end of the spine; falls back to `title` |
+
+**`nodes`** — 1 or more elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `id` | string | no | a short name to refer to the node by |
+| `parent` | reference | no | the id or label of the node above; a node without one is a root |
+
+**Rules**
+
+- node labels are unique
+- node ids are unique
+- `parent` names another node's id or label, never the node itself
+- exactly one node has no `parent` (the root)
+
+### `fishbone`
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `hierarchy` |
+| `view` | enum | no | `org_chart`, `fishbone`, `mind_map` |
+| `title` | string | no |  |
+| `effect` | string | no | fishbone: the label at the end of the spine; falls back to `title` |
+
+**`nodes`** — 1 or more elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `id` | string | no | a short name to refer to the node by |
+| `parent` | reference | no | the id or label of the node above; a node without one is a root |
+
+**Rules**
+
+- node labels are unique
+- node ids are unique
+- `parent` names another node's id or label, never the node itself
+- 2 to 20 nodes have no `parent` (the cause categories)
+
+### `mind_map`
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `hierarchy` |
+| `view` | enum | no | `org_chart`, `fishbone`, `mind_map` |
+| `title` | string | no |  |
+| `effect` | string | no | fishbone: the label at the end of the spine; falls back to `title` |
+
+**`nodes`** — 1 or more elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `label` | string | yes |  |
+| `id` | string | no | a short name to refer to the node by |
+| `parent` | reference | no | the id or label of the node above; a node without one is a root |
+
+**Rules**
+
+- node labels are unique
+- node ids are unique
+- `parent` names another node's id or label, never the node itself
+- exactly one node has no `parent` (the root)
+
+<!-- schema:end -->

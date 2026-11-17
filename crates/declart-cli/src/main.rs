@@ -61,6 +61,14 @@ enum Commands {
         #[arg(long)]
         view: Option<String>,
     },
+    /// Show what a declaration of a diagram kind may contain: fields, values, counts and rules
+    Schema {
+        /// Diagram kind: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison, state
+        kind: String,
+        /// View of the kind [default: what a declaration without `view` is read as]
+        #[arg(long)]
+        view: Option<String>,
+    },
     /// Print a starter TOML declaration for a diagram kind
     Init {
         /// Diagram kind: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison, state
@@ -160,6 +168,9 @@ fn run() -> Result<()> {
                     format!("{} / {}", shown(s.ascii.unchanged), shown(s.ascii.whole)),
                 );
             }
+        }
+        Commands::Schema { kind, view } => {
+            print_schema(&declart_core::schema(&kind, view.as_deref())?);
         }
         Commands::Init { kind } => {
             let template = init_template(&kind).with_context(|| {
@@ -320,6 +331,65 @@ fn named_or_file_theme(name: &str) -> Result<Theme> {
         name,
         Theme::names().join(", ")
     )
+}
+
+fn print_schema(s: &declart_core::Schema) {
+    match &s.view {
+        Some(view) => println!("{} · view {view}", s.kind),
+        None => println!("{}", s.kind),
+    }
+    if !s.views.is_empty() {
+        let default = s
+            .default_view
+            .map_or("the content decides, see the rules".to_string(), |v| {
+                format!("`{v}`")
+            });
+        println!("views: {} · without `view`: {default}", s.views.join(", "));
+    }
+    println!();
+    println!("fields");
+    print_fields(&s.fields);
+    for c in &s.collections {
+        let count = match (c.min, c.max) {
+            (min, Some(max)) if min == max => format!("exactly {min}"),
+            (min, Some(max)) => format!("{min} to {max}"),
+            (0, None) => "any number".to_string(),
+            (min, None) => format!("{min} or more"),
+        };
+        println!();
+        println!("{}[]  ({count})", c.name);
+        print_fields(&c.fields);
+    }
+    if !s.rules.is_empty() {
+        println!();
+        println!("rules");
+        for rule in &s.rules {
+            println!("  - {rule}");
+        }
+    }
+}
+
+fn print_fields(fields: &[declart_core::Field]) {
+    for f in fields {
+        let mut detail = if f.values.is_empty() {
+            String::new()
+        } else {
+            f.values.join(" | ")
+        };
+        if let Some(note) = f.note {
+            if !detail.is_empty() {
+                detail.push_str(" — ");
+            }
+            detail.push_str(note);
+        }
+        let line = format!(
+            "  {:<12} {:<9} {:<9} {detail}",
+            f.name,
+            f.ty.as_str(),
+            if f.required { "required" } else { "optional" }
+        );
+        println!("{}", line.trim_end());
+    }
 }
 
 fn init_template(kind: &str) -> Option<&'static str> {

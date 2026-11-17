@@ -36,6 +36,7 @@ mod limits;
 mod model;
 pub(crate) mod parse;
 pub mod render;
+mod schema;
 
 pub use describe::{accessible_name, describe};
 pub use diagnostic::{Diagnostic, DiagnosticCode};
@@ -49,3 +50,4 @@ pub use model::{
 };
 pub use parse::{parse, parse_auto, parse_json, views, KINDS};
 pub use render::{render, render_diagnosed, render_opts, ACCESSIBLE_THEME, WARM_THEME};
+pub use schema::{schema, Collection, Field, FieldType, Schema};
