@@ -49,6 +49,52 @@ pub const KINDS: &[&str] = &[
     "system",
 ];
 
+// ---- The rules the parser enforces, named so `schema` reads the same numbers -----------------
+
+/// Values `emphasis` takes.
+pub(crate) const EMPHASIS_VALUES: &[&str] = &["primary", "secondary"];
+/// Values `status` takes.
+pub(crate) const STATUS_VALUES: &[&str] = &["success", "normal", "warning", "critical"];
+/// Quadrant names, in slot order (top-left first).
+pub(crate) const QUADRANT_POSITIONS: &[&str] =
+    &["top-left", "top-right", "bottom-left", "bottom-right"];
+/// Values a state's `role` takes.
+pub(crate) const STATE_ROLES: &[&str] = &["initial", "terminal"];
+/// Values a transition's `type` takes.
+pub(crate) const TRANSITION_KINDS: &[&str] = &["normal", "exception"];
+
+pub(crate) const FLOW_VIEWS: &[&str] = &["process", "cycle", "funnel", "swimlane"];
+pub(crate) const TIER_VIEWS: &[&str] = &["pyramid", "concentric"];
+pub(crate) const HIERARCHY_VIEWS: &[&str] = &["org_chart", "fishbone", "mind_map"];
+
+pub(crate) const CYCLE_MIN_ITEMS: usize = 2;
+pub(crate) const FUNNEL_MIN_ITEMS: usize = 2;
+pub(crate) const FUNNEL_MAX_ITEMS: usize = 10;
+pub(crate) const SWIMLANE_MIN_ACTORS: usize = 2;
+pub(crate) const FISHBONE_MIN_CATEGORIES: usize = 2;
+pub(crate) const FISHBONE_MAX_CATEGORIES: usize = 20;
+pub(crate) const MATRIX_QUADRANT_COUNT: usize = 4;
+pub(crate) const MAX_ITEMS_PER_QUADRANT: usize = 6;
+pub(crate) const VENN_MIN_SETS: usize = 2;
+pub(crate) const VENN_MAX_SETS: usize = 3;
+pub(crate) const TIMELINE_MIN_EVENTS: usize = 2;
+pub(crate) const HUB_SPOKE_MIN_SPOKES: usize = 2;
+pub(crate) const STATE_MIN_STATES: usize = 2;
+pub(crate) const COMPARISON_MAX_ROWS: usize = 10;
+pub(crate) const COMPARISON_MAX_COLUMNS: usize = 8;
+
+/// The views a kind accepts, in declaration order. Empty for a kind without a `view` field; `None`
+/// for a kind that does not exist.
+pub fn views(kind: &str) -> Option<&'static [&'static str]> {
+    match kind {
+        "flow" => Some(FLOW_VIEWS),
+        "tier" => Some(TIER_VIEWS),
+        "hierarchy" => Some(HIERARCHY_VIEWS),
+        "timeline" | "matrix" | "hub_spoke" | "venn" | "comparison" | "state" => Some(&[]),
+        _ => None,
+    }
+}
+
 pub fn parse_json(input: &str) -> Result<Diagram, DeclartError> {
     let probe: raw::KindProbe = serde_json::from_str(input)?;
     match probe.kind.as_str() {
@@ -90,7 +136,7 @@ fn parse_emphasis(s: Option<&str>) -> Result<Option<Emphasis>, DeclartError> {
         Some(other) => Err(DeclartError::InvalidValue {
             field: "emphasis".to_string(),
             value: other.to_string(),
-            hint: "Valid values are: primary, secondary".to_string(),
+            hint: format!("Valid values are: {}", EMPHASIS_VALUES.join(", ")),
         }),
     }
 }
@@ -105,7 +151,7 @@ fn parse_status(s: Option<&str>) -> Result<Option<Status>, DeclartError> {
         Some(other) => Err(DeclartError::InvalidValue {
             field: "status".to_string(),
             value: other.to_string(),
-            hint: "Valid values are: success, normal, warning, critical".to_string(),
+            hint: format!("Valid values are: {}", STATUS_VALUES.join(", ")),
         }),
     }
 }
@@ -159,30 +205,30 @@ fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
         Some(other) => return Err(DeclartError::InvalidValue {
             field: "view".to_string(),
             value: other.to_string(),
-            hint: "Valid view values for flow: process, cycle, funnel, swimlane".to_string(),
+            hint: format!("Valid view values for flow: {}", FLOW_VIEWS.join(", ")),
         }),
     };
     let n = raw.items.len();
     match view {
-        FlowView::Cycle if n < 2 => {
+        FlowView::Cycle if n < CYCLE_MIN_ITEMS => {
             return Err(DeclartError::TooFewItems {
                 kind: "flow/cycle",
-                min: 2,
+                min: CYCLE_MIN_ITEMS,
                 got: n,
             })
         }
-        FlowView::Funnel if n < 2 => {
+        FlowView::Funnel if n < FUNNEL_MIN_ITEMS => {
             return Err(DeclartError::TooFewItems {
                 kind: "flow/funnel",
-                min: 2,
+                min: FUNNEL_MIN_ITEMS,
                 got: n,
             })
         }
-        FlowView::Funnel if n > 10 => {
+        FlowView::Funnel if n > FUNNEL_MAX_ITEMS => {
             return Err(DeclartError::InvalidValue {
                 field: "items".to_string(),
                 value: format!("{n} items"),
-                hint: "Funnel view supports at most 10 stages.".to_string(),
+                hint: format!("Funnel view supports at most {FUNNEL_MAX_ITEMS} stages."),
             })
         }
         FlowView::Swimlane => {
@@ -202,11 +248,13 @@ fn validate_flow(raw: raw::RawFlowDiagram) -> Result<Diagram, DeclartError> {
                 .iter()
                 .map(|i| i.actor.as_deref().unwrap_or(""))
                 .collect();
-            if distinct.len() < 2 {
+            if distinct.len() < SWIMLANE_MIN_ACTORS {
                 return Err(DeclartError::InvalidValue {
                     field: "actor".to_string(),
                     value: format!("{} distinct actor(s)", distinct.len()),
-                    hint: "Swimlane view requires at least 2 distinct actor values".to_string(),
+                    hint: format!(
+                        "Swimlane view requires at least {SWIMLANE_MIN_ACTORS} distinct actor values"
+                    ),
                 });
             }
         }
@@ -232,7 +280,7 @@ fn validate_tier(raw: raw::RawTierDiagram) -> Result<Diagram, DeclartError> {
             return Err(DeclartError::InvalidValue {
                 field: "view".to_string(),
                 value: other.to_string(),
-                hint: "Valid view values for tier: pyramid, concentric".to_string(),
+                hint: format!("Valid view values for tier: {}", TIER_VIEWS.join(", ")),
             })
         }
     };
@@ -318,7 +366,10 @@ fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartE
             return Err(DeclartError::InvalidValue {
                 field: "view".to_string(),
                 value: other.to_string(),
-                hint: "Valid view values for hierarchy: org_chart, fishbone, mind_map".to_string(),
+                hint: format!(
+                    "Valid view values for hierarchy: {}",
+                    HIERARCHY_VIEWS.join(", ")
+                ),
             })
         }
     };
@@ -330,18 +381,20 @@ fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartE
                 hint: "org_chart and mind_map views require exactly one root node".to_string(),
             })
         }
-        HierarchyView::Fishbone if root_count < 2 => {
+        HierarchyView::Fishbone if root_count < FISHBONE_MIN_CATEGORIES => {
             return Err(DeclartError::TooFewItems {
                 kind: "hierarchy/fishbone",
-                min: 2,
+                min: FISHBONE_MIN_CATEGORIES,
                 got: root_count,
             })
         }
-        HierarchyView::Fishbone if root_count > 20 => {
+        HierarchyView::Fishbone if root_count > FISHBONE_MAX_CATEGORIES => {
             return Err(DeclartError::InvalidValue {
                 field: "nodes".to_string(),
                 value: format!("{root_count} root nodes"),
-                hint: "fishbone view supports at most 20 cause categories".to_string(),
+                hint: format!(
+                    "fishbone view supports at most {FISHBONE_MAX_CATEGORIES} cause categories"
+                ),
             })
         }
         _ => {}
@@ -365,7 +418,7 @@ fn validate_hierarchy(raw: raw::RawHierarchyDiagram) -> Result<Diagram, DeclartE
 
 fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "matrix");
-    if raw.quadrants.len() != 4 {
+    if raw.quadrants.len() != MATRIX_QUADRANT_COUNT {
         return Err(DeclartError::InvalidQuadrantCount(raw.quadrants.len()));
     }
 
@@ -378,19 +431,18 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
             let pos = q.position.ok_or_else(|| DeclartError::InvalidValue {
                 field: "position".to_string(),
                 value: "(missing)".to_string(),
-                hint: "When any quadrant has position, all must specify it. Valid: top-left, top-right, bottom-left, bottom-right".to_string(),
+                hint: format!(
+                    "When any quadrant has position, all must specify it. Valid: {}",
+                    QUADRANT_POSITIONS.join(", ")
+                ),
             })?;
-            let slot = match pos.as_str() {
-                "top-left" => 0_usize,
-                "top-right" => 1,
-                "bottom-left" => 2,
-                "bottom-right" => 3,
-                other => {
+            let slot = match QUADRANT_POSITIONS.iter().position(|p| *p == pos.as_str()) {
+                Some(slot) => slot,
+                None => {
                     return Err(DeclartError::InvalidValue {
                         field: "position".to_string(),
-                        value: other.to_string(),
-                        hint: "Valid values: top-left, top-right, bottom-left, bottom-right"
-                            .to_string(),
+                        value: pos,
+                        hint: format!("Valid values: {}", QUADRANT_POSITIONS.join(", ")),
                     })
                 }
             };
@@ -423,7 +475,6 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
     };
 
     // Parse optional items classified into quadrants.
-    const MAX_ITEMS_PER_QUADRANT: usize = 6;
     let mut per_quadrant = [0usize; 4];
     let mut items = Vec::with_capacity(raw.items.len());
     for raw_item in raw.items {
@@ -433,7 +484,9 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
             return Err(DeclartError::InvalidValue {
                 field: "items".to_string(),
                 value: format!("{} items in one quadrant", per_quadrant[slot]),
-                hint: "A matrix quadrant supports at most 6 items for legibility".to_string(),
+                hint: format!(
+                    "A matrix quadrant supports at most {MAX_ITEMS_PER_QUADRANT} items for legibility"
+                ),
             });
         }
         items.push(crate::model::MatrixItem {
@@ -455,27 +508,24 @@ fn validate_matrix(raw: raw::RawMatrixDiagram) -> Result<Diagram, DeclartError> 
 
 /// Maps a quadrant position name to its slot index 0–3 ([TL, TR, BL, BR]).
 fn position_slot(pos: &str) -> Result<usize, DeclartError> {
-    match pos {
-        "top-left" => Ok(0),
-        "top-right" => Ok(1),
-        "bottom-left" => Ok(2),
-        "bottom-right" => Ok(3),
-        other => Err(DeclartError::InvalidValue {
+    QUADRANT_POSITIONS
+        .iter()
+        .position(|p| *p == pos)
+        .ok_or_else(|| DeclartError::InvalidValue {
             field: "quadrant".to_string(),
-            value: other.to_string(),
-            hint: "Valid values: top-left, top-right, bottom-left, bottom-right".to_string(),
-        }),
-    }
+            value: pos.to_string(),
+            hint: format!("Valid values: {}", QUADRANT_POSITIONS.join(", ")),
+        })
 }
 
 fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "venn");
     let n = raw.sets.len();
-    if !(2..=3).contains(&n) {
+    if !(VENN_MIN_SETS..=VENN_MAX_SETS).contains(&n) {
         return Err(DeclartError::InvalidValue {
             field: "sets".to_string(),
             value: format!("{} sets", n),
-            hint: "Venn diagrams require exactly 2 or 3 sets".to_string(),
+            hint: format!("Venn diagrams require exactly {VENN_MIN_SETS} or {VENN_MAX_SETS} sets"),
         });
     }
     let sets = raw
@@ -500,10 +550,10 @@ fn validate_venn(raw: raw::RawVennDiagram) -> Result<Diagram, DeclartError> {
 
 fn validate_timeline(raw: raw::RawTimelineDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "timeline");
-    if raw.events.len() < 2 {
+    if raw.events.len() < TIMELINE_MIN_EVENTS {
         return Err(DeclartError::TooFewItems {
             kind: "timeline",
-            min: 2,
+            min: TIMELINE_MIN_EVENTS,
             got: raw.events.len(),
         });
     }
@@ -580,10 +630,10 @@ fn validate_timeline_event(e: raw::RawTimelineEvent) -> Result<(i64, TimelineEve
 
 fn validate_hub_spoke(raw: raw::RawHubSpokeDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "hub_spoke");
-    if raw.spokes.len() < 2 {
+    if raw.spokes.len() < HUB_SPOKE_MIN_SPOKES {
         return Err(DeclartError::TooFewItems {
             kind: "hub_spoke",
-            min: 2,
+            min: HUB_SPOKE_MIN_SPOKES,
             got: raw.spokes.len(),
         });
     }
@@ -611,18 +661,22 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
             hint: "Comparison tables require at least 1 column".to_string(),
         });
     }
-    if raw.rows.len() > 10 {
+    if raw.rows.len() > COMPARISON_MAX_ROWS {
         return Err(DeclartError::InvalidValue {
             field: "rows".to_string(),
             value: format!("{} rows", raw.rows.len()),
-            hint: "Comparison tables support at most 10 rows for legibility".to_string(),
+            hint: format!(
+                "Comparison tables support at most {COMPARISON_MAX_ROWS} rows for legibility"
+            ),
         });
     }
-    if raw.columns.len() > 8 {
+    if raw.columns.len() > COMPARISON_MAX_COLUMNS {
         return Err(DeclartError::InvalidValue {
             field: "columns".to_string(),
             value: format!("{} columns", raw.columns.len()),
-            hint: "Comparison tables support at most 8 columns for legibility".to_string(),
+            hint: format!(
+                "Comparison tables support at most {COMPARISON_MAX_COLUMNS} columns for legibility"
+            ),
         });
     }
 
@@ -683,10 +737,10 @@ fn validate_comparison(raw: raw::RawComparisonDiagram) -> Result<Diagram, Declar
 fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
     debug_assert_eq!(raw.kind, "state");
 
-    if raw.states.len() < 2 {
+    if raw.states.len() < STATE_MIN_STATES {
         return Err(DeclartError::TooFewItems {
             kind: "state",
-            min: 2,
+            min: STATE_MIN_STATES,
             got: raw.states.len(),
         });
     }
@@ -729,7 +783,7 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
                 return Err(DeclartError::InvalidValue {
                     field: "role".to_string(),
                     value: other.to_string(),
-                    hint: "Valid values: initial, terminal".to_string(),
+                    hint: format!("Valid values: {}", STATE_ROLES.join(", ")),
                 })
             }
         };
@@ -783,7 +837,7 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
                 return Err(DeclartError::InvalidValue {
                     field: "type".to_string(),
                     value: other.to_string(),
-                    hint: "Valid values: normal, exception".to_string(),
+                    hint: format!("Valid values: {}", TRANSITION_KINDS.join(", ")),
                 })
             }
         };

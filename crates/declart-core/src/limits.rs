@@ -12,6 +12,7 @@
 //! itself.
 
 use crate::error::DeclartError;
+use crate::parse::views;
 use crate::render::{render_diagnosed, DEFAULT_THEME};
 use crate::{parse, DiagnosticCode};
 use serde::Serialize;
@@ -45,17 +46,6 @@ pub struct SlotLimit {
     pub hangul: Capacity,
     /// Lowercase Latin letters, written without spaces.
     pub ascii: Capacity,
-}
-
-/// The views a kind accepts, in declaration order. Empty for a kind without a `view` field.
-pub fn views(kind: &str) -> Option<&'static [&'static str]> {
-    match kind {
-        "flow" => Some(&["process", "cycle", "funnel", "swimlane"]),
-        "tier" => Some(&["pyramid", "concentric"]),
-        "hierarchy" => Some(&["org_chart", "fishbone", "mind_map"]),
-        "timeline" | "matrix" | "hub_spoke" | "venn" | "comparison" | "state" => Some(&[]),
-        _ => None,
-    }
 }
 
 type Build = fn(view: &str, labels: &[String]) -> String;
