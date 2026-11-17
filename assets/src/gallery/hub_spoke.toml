@@ -1,0 +1,18 @@
+kind = "hub_spoke"
+title = "Platform"
+center = "API Gateway"
+
+[[spokes]]
+label = "Auth"
+
+[[spokes]]
+label = "Orders"
+
+[[spokes]]
+label = "Payments"
+
+[[spokes]]
+label = "Search"
+
+[[spokes]]
+label = "Alerts"

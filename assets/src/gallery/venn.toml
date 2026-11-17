@@ -1,0 +1,12 @@
+kind = "venn"
+title = "Product Sense"
+
+[[sets]]
+label = "Desirable"
+
+[[sets]]
+label = "Feasible"
+
+[[intersections]]
+sets = ["Desirable", "Feasible"]
+label = "Build it"

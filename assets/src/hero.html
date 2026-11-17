@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html { width: 1600px; height: 900px; background: linear-gradient(135deg, #f6f9fd 0%, #e6edf7 100%); }
+  body { width: 1600px; height: 900px; }
+  body { font-family: "Segoe UI", "Noto Sans", Arial, sans-serif; color: #1c3557;
+         padding: 56px 80px 0; }
+  h1 { font-size: 76px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
+  .tag { margin-top: 14px; font-size: 32px; color: #35567f; font-weight: 600; }
+  .sub { margin-top: 6px; font-size: 22px; color: #5b6f8a; }
+  .row { margin-top: 36px; display: flex; align-items: center; gap: 36px; }
+  .code { width: 640px; background: #121d2c; border-radius: 16px; box-shadow: 0 18px 40px rgba(20,40,80,.28); overflow: hidden; }
+  .bar { height: 42px; background: #1b293d; display: flex; align-items: center; padding: 0 16px; gap: 8px; color: #8da2bf; font-size: 15px; }
+  .bar i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .bar span { margin-left: 12px; }
+  pre { font-family: Consolas, "Cascadia Mono", monospace; font-size: 21px; line-height: 27px; color: #d6e2f5; padding: 20px 28px 24px; }
+  .k { color: #8fc1ff; } .s { color: #a6e3a1; } .t { color: #f9c784; } .c { color: #6f84a3; }
+  .arrow { font-size: 15px; color: #35567f; text-align: center; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .arrow b { display: block; font-size: 54px; line-height: 40px; font-weight: 400; }
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 18px 40px rgba(20,40,80,.18); padding: 14px 40px; flex: 1;
+          display: flex; justify-content: center; align-items: center; height: 540px; }
+  .card img { height: 500px; }
+  .chips { margin-top: 26px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .chips span { font-family: Consolas, monospace; font-size: 19px; padding: 6px 16px; border-radius: 20px; background: #fff; color: #35567f; border: 1px solid #c6d4e8; }
+</style></head>
+<body>
+  <h1>Declart</h1>
+  <div class="tag">Prose diagrams for written content.</div>
+  <div class="sub">Declare what to show — the engine decides how it looks.</div>
+  <div class="row">
+    <div class="code">
+      <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>release-loop.toml</span></div>
+<pre><span class="k">kind</span> = <span class="s">"flow"</span>
+<span class="k">view</span> = <span class="s">"cycle"</span>
+<span class="k">title</span> = <span class="s">"Release Loop"</span>
+
+<span class="t">[[items]]</span>
+<span class="k">label</span> = <span class="s">"Plan"</span>
+
+<span class="t">[[items]]</span>
+<span class="k">label</span> = <span class="s">"Build"</span>
+<span class="k">emphasis</span> = <span class="s">"primary"</span>
+
+<span class="t">[[items]]</span>
+<span class="k">label</span> = <span class="s">"Ship"</span>
+
+<span class="t">[[items]]</span>
+<span class="k">label</span> = <span class="s">"Learn"</span></pre>
+    </div>
+    <div class="arrow"><b>→</b>render</div>
+    <div class="card"><img src=".tmp/hero.png" alt=""></div>
+  </div>
+  <div class="chips"><span>flow</span><span>tier</span><span>hierarchy</span><span>timeline</span><span>matrix</span><span>hub_spoke</span><span>venn</span><span>comparison</span><span>state</span></div>
+</body></html>

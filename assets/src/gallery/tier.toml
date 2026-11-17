@@ -1,0 +1,17 @@
+kind = "tier"
+title = "Maslow's Needs"
+
+[[items]]
+label = "Self-actualization"
+
+[[items]]
+label = "Esteem"
+
+[[items]]
+label = "Belonging"
+
+[[items]]
+label = "Safety"
+
+[[items]]
+label = "Physiological"

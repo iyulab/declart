@@ -1,0 +1,26 @@
+kind = "state"
+title = "Order Lifecycle"
+
+[[states]]
+id = "new"
+label = "New"
+role = "initial"
+
+[[states]]
+id = "paid"
+label = "Paid"
+
+[[states]]
+id = "done"
+label = "Done"
+role = "terminal"
+
+[[transitions]]
+from = "new"
+to = "paid"
+trigger = "Pay"
+
+[[transitions]]
+from = "paid"
+to = "done"
+trigger = "Deliver"

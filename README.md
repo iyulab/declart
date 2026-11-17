@@ -5,45 +5,95 @@
 [![Crates.io](https://img.shields.io/crates/v/declart-core)](https://crates.io/crates/declart-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+<p align="center">
+  <img src="assets/hero.png" alt="A Declart declaration — kind, view, title and four labeled items in TOML — rendered as a four-step cycle diagram" width="100%">
+</p>
+
 > Prose diagrams for written content. Declare what to show — the engine decides how it looks.
 
-Declart is a **prose diagram** library: diagrams that belong in blog posts, reports, documentation, and slide decks — not in codebases. You describe the structure. The engine handles layout, typography, spacing, and styling.
+Declart is a **prose diagram** library: diagrams that belong in blog posts, reports, documentation, and slide decks — not in codebases. You describe the structure in a few lines of TOML or JSON. The engine handles layout, typography, spacing, and styling. No colors, coordinates, or fonts in the source.
 
-<table>
-<tr>
-<td width="50%" valign="top">
+**[📖 Documentation & Spec](https://iyulab.github.io/declart/)** · **[🛝 Live Playground](https://iyulab.github.io/declart/playground/index.html)** — edit a declaration and watch it render in your browser · **[🔌 Obsidian plugin](https://github.com/iyulab/obsidian-declart)** — render `declart` code blocks in your notes
 
-```toml
-kind = "matrix"
-title = "Eisenhower Matrix"
-x_axis = "Importance"
-y_axis = "Urgency"
+## Nine diagram kinds
 
-[[quadrants]]
-label = "Do First"
+<img src="assets/gallery.png" alt="Gallery of the nine diagram kinds: flow, tier, hierarchy, timeline, matrix, hub_spoke, venn, comparison and state, each rendered from a short declaration" width="100%">
 
-[[quadrants]]
-label = "Schedule"
+Every diagram above is rendered from a declaration of a few lines; the sources are in [`assets/src/`](assets/src/). See [Scope](#scope) for what each kind covers.
 
-[[quadrants]]
-label = "Delegate"
+## Install
 
-[[quadrants]]
-label = "Eliminate"
+```bash
+cargo install --git https://github.com/iyulab/declart
 ```
 
-</td>
-<td width="50%" valign="top">
+Or build locally:
 
-<img src="assets/eisenhower-matrix.png" alt="Eisenhower Matrix rendered by Declart" width="100%">
+```bash
+git clone https://github.com/iyulab/declart
+cd declart
+cargo build --release
+# binary at target/release/declart
+```
 
-</td>
-</tr>
-</table>
+## Usage
 
-That declaration on the left renders the diagram on the right. No colors, coordinates, or fonts — the engine decides how it looks.
+Create a declaration file:
 
-**[📖 Documentation & Spec](https://iyulab.github.io/declart/)** · **[🛝 Live Playground](https://iyulab.github.io/declart/playground/index.html)** — edit a declaration and watch it render in your browser.
+```toml
+# maslow.toml
+kind = "tier"
+title = "Maslow's Hierarchy of Needs"
+
+[[items]]
+label = "Self-actualization"
+
+[[items]]
+label = "Esteem"
+
+[[items]]
+label = "Love & Belonging"
+
+[[items]]
+label = "Safety"
+
+[[items]]
+label = "Physiological"
+```
+
+Render to SVG:
+
+```bash
+declart render maslow.toml
+# writes maslow.svg
+```
+
+Validate without rendering:
+
+```bash
+declart validate maslow.toml
+```
+
+Export to PNG:
+
+```bash
+declart render maslow.toml --format png
+# writes maslow.png
+```
+
+Watch and auto-rebuild on changes:
+
+```bash
+declart watch maslow.toml
+# watches maslow.toml, rewrites maslow.svg on every save
+# use --format png for PNG output
+```
+
+Pipe to stdout:
+
+```bash
+declart render maslow.toml --stdout > diagram.svg
+```
 
 ## Why Declart
 
@@ -184,7 +234,7 @@ Explicit boundaries that protect focus:
 - **Interactive playground** — [live WASM editor](https://iyulab.github.io/declart/playground/index.html) with URL permalinks and zoom/pan.
 - **Spec site** — language-independent grammar specification, published at [iyulab.github.io/declart](https://iyulab.github.io/declart/).
 - **LLM guide** — prompt templates for generating every kind, so a model can produce valid declarations on the first try.
-- **Editor & docs tooling** — VS Code extension (live preview, diagnostics, Markdown code blocks) and an `mdbook-declart` preprocessor for inline SVG in mdBook.
+- **Editor & docs tooling** — VS Code extension (live preview, diagnostics, Markdown code blocks), an [Obsidian plugin](https://github.com/iyulab/obsidian-declart), and an `mdbook-declart` preprocessor for inline SVG in mdBook.
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
 
@@ -234,80 +284,6 @@ img.alt = describe(source); // e.g. "Process: Plan → Do → Check."
 ```
 
 > **Note:** `@iyulab/declart` is Node.js-only (`require('fs')` in the WASM glue). For browser environments always use `@iyulab/declart-web`.
-
-## Install
-
-```bash
-cargo install --git https://github.com/iyulab/declart
-```
-
-Or build locally:
-
-```bash
-git clone https://github.com/iyulab/declart
-cd declart
-cargo build --release
-# binary at target/release/declart
-```
-
-## Usage
-
-Create a declaration file:
-
-```toml
-# maslow.toml
-kind = "tier"
-title = "Maslow's Hierarchy of Needs"
-
-[[items]]
-label = "Self-actualization"
-
-[[items]]
-label = "Esteem"
-
-[[items]]
-label = "Love & Belonging"
-
-[[items]]
-label = "Safety"
-
-[[items]]
-label = "Physiological"
-```
-
-Render to SVG:
-
-```bash
-declart render maslow.toml
-# writes maslow.svg
-```
-
-Validate without rendering:
-
-```bash
-declart validate maslow.toml
-```
-
-Export to PNG:
-
-```bash
-declart render maslow.toml --format png
-# writes maslow.png
-```
-
-Watch and auto-rebuild on changes:
-
-```bash
-declart watch maslow.toml
-# watches maslow.toml, rewrites maslow.svg on every save
-# use --format png for PNG output
-```
-
-Pipe to stdout:
-
-```bash
-declart render maslow.toml --stdout > diagram.svg
-```
 
 ## License
 

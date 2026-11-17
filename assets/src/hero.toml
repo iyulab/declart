@@ -1,0 +1,16 @@
+kind = "flow"
+view = "cycle"
+title = "Release Loop"
+
+[[items]]
+label = "Plan"
+
+[[items]]
+label = "Build"
+emphasis = "primary"
+
+[[items]]
+label = "Ship"
+
+[[items]]
+label = "Learn"

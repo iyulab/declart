@@ -15,4 +15,4 @@ docs/src/playground/wasm/
 .serena/
 tests/vite-integration/node_modules/
 tests/vite-integration/dist/
-tests/vite-integration/screenshot-*.png
+tests/vite-integration/screenshot-*.pngassets/src/.tmp/

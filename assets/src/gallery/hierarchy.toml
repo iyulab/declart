@@ -1,0 +1,30 @@
+kind = "hierarchy"
+view = "org_chart"
+title = "Engineering"
+
+[[nodes]]
+label = "VP Engineering"
+
+[[nodes]]
+label = "Platform"
+parent = "VP Engineering"
+
+[[nodes]]
+label = "Product"
+parent = "VP Engineering"
+
+[[nodes]]
+label = "Infra"
+parent = "Platform"
+
+[[nodes]]
+label = "Data"
+parent = "Platform"
+
+[[nodes]]
+label = "Web"
+parent = "Product"
+
+[[nodes]]
+label = "Mobile"
+parent = "Product"

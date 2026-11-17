@@ -1,0 +1,29 @@
+kind = "comparison"
+title = "Framework Comparison"
+
+[[columns]]
+label = "Performance"
+
+[[columns]]
+label = "Ecosystem"
+
+[[columns]]
+label = "Learning curve"
+
+[[rows]]
+label = "React"
+Performance = "★★★★"
+Ecosystem = "★★★★★"
+"Learning curve" = "★★★"
+
+[[rows]]
+label = "Vue"
+Performance = "★★★★"
+Ecosystem = "★★★"
+"Learning curve" = "★★★★"
+
+[[rows]]
+label = "Svelte"
+Performance = "★★★★★"
+Ecosystem = "★★"
+"Learning curve" = "★★★★★"
