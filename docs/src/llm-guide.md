@@ -41,6 +41,8 @@ Declart v0.16+ uses a two-level structure:
 
 If `validate` fails, paste the error message back to the LLM and ask it to fix the specific field.
 
+A declaration can be valid and still not fit: a label too long for its slot is cut short with "…" in the picture. `declart validate --strict` (and `declart render --strict`, which then writes nothing) fails on that, and its message names each label and what to change, so the loop above closes without anyone looking at the SVG.
+
 ---
 
 ## Prompt Templates

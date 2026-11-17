@@ -74,6 +74,12 @@ Validate without rendering:
 declart validate maslow.toml
 ```
 
+`--strict` additionally fails when a label would be cut short with "…" (`declart render --strict` fails the same way and writes nothing):
+
+```bash
+declart validate --strict maslow.toml
+```
+
 Export to PNG:
 
 ```bash

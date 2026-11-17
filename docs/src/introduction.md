@@ -26,6 +26,9 @@ declart watch diagram.toml
 
 # Validate without rendering
 declart validate diagram.toml
+
+# Also fail when a label would be cut short with "…"
+declart validate --strict diagram.toml
 ```
 
 ### Node.js

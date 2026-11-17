@@ -41,11 +41,17 @@ enum Commands {
         /// Write output to stdout instead of file
         #[arg(long)]
         stdout: bool,
+        /// Fail, and write nothing, when a label would be cut short with "…"
+        #[arg(long)]
+        strict: bool,
     },
     /// Validate a diagram declaration without rendering
     Validate {
         /// Input TOML or JSON file
         input: PathBuf,
+        /// Also fail when a label would be cut short with "…"
+        #[arg(long)]
+        strict: bool,
     },
     /// Print a starter TOML declaration for a diagram kind
     Init {
@@ -93,6 +99,7 @@ fn run() -> Result<()> {
             transparent,
             format,
             stdout,
+            strict,
         } => {
             let theme = resolve_theme(&theme_name, transparent)?;
             let content = fs::read_to_string(&input)
@@ -100,6 +107,9 @@ fn run() -> Result<()> {
             let diagram = declart_core::parse_auto(&content)
                 .with_context(|| format!("invalid declaration: {}", input.display()))?;
             warn_hierarchy_auto_view(&diagram, &content);
+            if strict {
+                require_labels_fit(&diagram, &theme, &input)?;
+            }
             let bytes = render_to_bytes(&diagram, &theme, width, &format)?;
             if stdout {
                 std::io::stdout().write_all(&bytes)?;
@@ -110,12 +120,15 @@ fn run() -> Result<()> {
                     .with_context(|| format!("failed to write {}", out_path.display()))?;
             }
         }
-        Commands::Validate { input } => {
+        Commands::Validate { input, strict } => {
             let content = fs::read_to_string(&input)
                 .with_context(|| format!("failed to read {}", input.display()))?;
             let diagram = declart_core::parse_auto(&content)
                 .with_context(|| format!("invalid declaration: {}", input.display()))?;
             warn_hierarchy_auto_view(&diagram, &content);
+            if strict {
+                require_labels_fit(&diagram, &resolve_theme("default", false)?, &input)?;
+            }
         }
         Commands::Init { kind } => {
             let template = init_template(&kind).with_context(|| {
@@ -185,6 +198,30 @@ fn run() -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Fails when the engine would cut a label short with "…" — text missing from the picture. A label
+/// only set smaller is not an error (nothing is missing), matching `validate(input, { strict: true })`
+/// in the Node package.
+fn require_labels_fit(diagram: &Diagram, theme: &Theme, input: &std::path::Path) -> Result<()> {
+    let (_, diagnostics) = declart_core::render_diagnosed(diagram, theme, None)?;
+    let cut: Vec<_> = diagnostics
+        .iter()
+        .filter(|d| d.code == declart_core::DiagnosticCode::LabelTruncated)
+        .collect();
+    if cut.is_empty() {
+        return Ok(());
+    }
+    let lines: Vec<String> = cut
+        .iter()
+        .map(|d| format!("  {}\n  = hint: {}", d.message, d.hint))
+        .collect();
+    anyhow::bail!(
+        "{} label(s) would be cut short in {}\n{}",
+        cut.len(),
+        input.display(),
+        lines.join("\n")
+    )
 }
 
 fn render_to_bytes(
