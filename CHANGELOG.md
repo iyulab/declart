@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **`venn` with three sets lays out its regions**: the three circles overlapped so much that the regions covered by only two of them all but vanished, and every intersection label was drawn near the middle on top of the others (`APIs`, `Infra`, `CI/CD` and `Full-Stack` ran together). The circles now sit with each one's edge through the other two's centers, a set's name is drawn in the part only that circle covers, a two-set intersection label in the part only those two cover, and the three-way label in the middle. Two-set diagrams are unchanged.
 - **A very long label no longer costs seconds**: fitting a label into its box was more than linear in the label's length — a 15,000-character label took about five seconds to render in every kind. Only the first 300 characters of a label are looked at now; a longer one is cut there with "…" and reported as `label_truncated`, as a label that does not fit its box already was. Rendering time no longer depends on the label's length. Labels of up to 300 characters render exactly as before.
 
 ## v0.23.0
