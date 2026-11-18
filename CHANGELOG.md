@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **A very long label no longer costs seconds**: fitting a label into its box was more than linear in the label's length — a 15,000-character label took about five seconds to render in every kind. Only the first 300 characters of a label are looked at now; a longer one is cut there with "…" and reported as `label_truncated`, as a label that does not fit its box already was. Rendering time no longer depends on the label's length. Labels of up to 300 characters render exactly as before.
+
 ## v0.23.0
 
 The `system` kind — conceptual architecture diagrams with nested boundaries and labelled links — plus label diagnostics and a `state` that fits its labels.

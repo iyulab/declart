@@ -75,3 +75,42 @@ fn a_label_set_smaller_is_reported_as_shrunk_not_truncated() {
     }
     assert!(!svg.contains('…'), "no text is dropped");
 }
+
+/// A label far longer than any box could hold: fitting it must cost time in proportion to the
+/// box, not to the text. Before the cut moved into `font`, 15,000 characters took about five
+/// seconds in a release build and the cost grew faster than the length.
+fn very_long() -> String {
+    "wide ".repeat(8_000)
+}
+
+#[test]
+fn a_very_long_label_is_cut_at_a_bound_and_reported_in_every_kind_that_fits_labels() {
+    let long = very_long();
+    let inputs = [
+        format!("kind = \"flow\"\n[[items]]\nlabel = \"{long}\"\n[[items]]\nlabel = \"B\"\n"),
+        format!(
+            "kind = \"hub_spoke\"\ncenter = \"{long}\"\n[[spokes]]\nlabel = \"A\"\n[[spokes]]\nlabel = \"B\"\n"
+        ),
+        format!(
+            "kind = \"system\"\n[[nodes]]\nid = \"a\"\nlabel = \"{long}\"\n[[nodes]]\nid = \"b\"\nlabel = \"B\"\n[[links]]\nfrom = \"a\"\nto = \"b\"\n"
+        ),
+        state(&long),
+    ];
+    for input in &inputs {
+        let started = std::time::Instant::now();
+        let (svg, diagnostics) = run(input);
+        assert!(
+            started.elapsed() < std::time::Duration::from_secs(10),
+            "fitting a very long label took {:?}",
+            started.elapsed()
+        );
+        assert!(svg.contains('…'), "the picture shows the ellipsis");
+        assert!(
+            diagnostics
+                .iter()
+                .any(|d| d.code == DiagnosticCode::LabelTruncated && d.label == long),
+            "{:?}",
+            diagnostics.iter().map(|d| d.code).collect::<Vec<_>>()
+        );
+    }
+}

@@ -57,6 +57,23 @@ fn is_wide(c: char) -> bool {
     )
 }
 
+/// Most characters of a label that are looked at. A box holds a few dozen characters at most,
+/// so anything past this is cut, and fitting a longer text only costs time — measuring and
+/// wrapping a label is more than linear in its length.
+pub(crate) const LABEL_MAX_CHARS: usize = 300;
+
+/// `text` cut to [`LABEL_MAX_CHARS`] characters, the last of them an ellipsis, and whether it
+/// was cut. A text that is already within the limit comes back unchanged, so cutting twice
+/// changes nothing.
+pub(crate) fn bounded(text: &str) -> (String, bool) {
+    if text.chars().count() <= LABEL_MAX_CHARS {
+        return (text.to_string(), false);
+    }
+    let mut cut: String = text.chars().take(LABEL_MAX_CHARS - 1).collect();
+    cut.push('…');
+    (cut, true)
+}
+
 /// Returns `text` truncated to fit within `max_width` at `font_size`, appending "…" if needed.
 /// A truncation is recorded as a [`DiagnosticCode::LabelTruncated`] diagnostic.
 pub fn truncate_text(text: &str, font_size: f32, max_width: f32) -> String {
@@ -68,6 +85,11 @@ pub fn truncate_text(text: &str, font_size: f32, max_width: f32) -> String {
 }
 
 fn truncate_unrecorded(text: &str, font_size: f32, max_width: f32) -> String {
+    let (text, was_cut) = bounded(text);
+    if was_cut {
+        return truncate_unrecorded(&text, font_size, max_width);
+    }
+    let text = text.as_str();
     if measure_text(text, font_size) <= max_width {
         return text.to_string();
     }
@@ -152,6 +174,11 @@ fn fit(
     max_width: f32,
     max_height: f32,
 ) -> (Vec<String>, f32, FitOutcome) {
+    let (bounded_text, was_cut) = bounded(text);
+    if was_cut {
+        let (lines, size, _) = fit(&bounded_text, font_size, min_size, max_width, max_height);
+        return (lines, size, FitOutcome::Truncated);
+    }
     let width = measure_text(text, font_size);
     if max_width <= 0.0 || width <= max_width {
         return (vec![text.to_string()], font_size, FitOutcome::AsIs);

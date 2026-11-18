@@ -136,19 +136,6 @@ struct Measured {
     links: Vec<Option<(String, f32, f32, f32)>>,
 }
 
-/// Most characters of a label that are looked at. A box holds a few dozen characters at most,
-/// so anything past this is cut, and fitting a longer text only costs time.
-const LABEL_MAX_CHARS: usize = 300;
-
-/// `text` cut to [`LABEL_MAX_CHARS`] characters (with an ellipsis), and whether it was cut.
-fn bounded(text: &str) -> (String, bool) {
-    if text.chars().count() <= LABEL_MAX_CHARS {
-        return (text.to_string(), false);
-    }
-    let cut: String = text.chars().take(LABEL_MAX_CHARS).collect();
-    (format!("{cut}…"), true)
-}
-
 /// [`font::fit_lines`] for a label of any length, reporting the label as declared.
 fn fit_label(
     text: &str,
@@ -157,13 +144,7 @@ fn fit_label(
     max_width: f32,
     max_height: f32,
 ) -> (Vec<String>, f32) {
-    let (cut, was_cut) = bounded(text);
-    let (lines, size, outcome) = font::fit_probe(&cut, font_size, min_size, max_width, max_height);
-    let outcome = if was_cut {
-        font::FitOutcome::Truncated
-    } else {
-        outcome
-    };
+    let (lines, size, outcome) = font::fit_probe(text, font_size, min_size, max_width, max_height);
     match outcome {
         font::FitOutcome::AsIs => {}
         font::FitOutcome::Shrunk => {
@@ -190,7 +171,7 @@ fn measure(d: &SystemDiagram, theme: &Theme) -> Measured {
         .nodes
         .iter()
         .map(|n| {
-            let (label, _) = bounded(&n.label);
+            let (label, _) = font::bounded(&n.label);
             let mut w = NODE_MIN_W;
             let fits = loop {
                 let inner = w - 2.0 * NODE_PAD_X;
