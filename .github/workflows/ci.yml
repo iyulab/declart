@@ -79,7 +79,8 @@ jobs:
 
   e2e:
     name: Playground e2e
-    runs-on: ubuntu-latest
+    # Pinned: `ubuntu-latest` is 26.04 now, and Playwright cannot install Chromium there yet.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
