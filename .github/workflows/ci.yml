@@ -76,3 +76,55 @@ jobs:
 
       - name: Build WASM (nodejs target)
         run: wasm-pack build crates/declart-wasm --target nodejs --out-dir pkg-node
+
+  e2e:
+    name: Playground e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust stable + wasm32 target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-e2e-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-e2e-
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Install mdBook
+        run: |
+          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz --directory=/usr/local/bin
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+
+      # Builds the preprocessor, the playground WASM and the book — what the e2e suite serves.
+      - name: Build the docs site
+        run: bash docs/build.sh
+
+      - name: Install e2e dependencies and Chromium
+        working-directory: tests/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run e2e
+        working-directory: tests/e2e
+        run: npx playwright test
