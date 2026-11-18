@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.23.0
+
+The `system` kind — conceptual architecture diagrams with nested boundaries and labelled links — plus label diagnostics and a `state` that fits its labels.
 
 - **`system` kind** (new): a conceptual architecture diagram — components in nested boundaries, joined by labelled links. `[[groups]]` (with an optional `parent`, two deep at most), `[[nodes]]` (`group`, `role` = `store` / `external` / `actor`, plus `emphasis` and `status`) and `[[links]]` (`from` / `to` naming a node or a whole group, `label`, `direction` = `forward` / `both` / `none`, `relation` = `direct` / `indirect`). Coordinates, sizes and routes are never declared: the engine lays each group out first and treats it as one box, so boxes never overlap; links run along horizontal and vertical lines around the components, not through them, and every label is set whole (a group label is held to one line and a link label to about 180 px; `render_diagnosed` reports a label that had to be shrunk or cut). Diagrams drawn near the limits take well under 100 ms in a release build. A diagram holds at most 16 nodes, 6 groups and 24 links — more is a validation error that says to split it. `declart init system`, the playground, the spec page and the LLM guide cover it; the README's non-goals now say where `system` stops.
 - **Breaking (Rust API)**: `Diagram` gains a `System` variant, so an exhaustive `match` on it needs a new arm. TOML/JSON declarations are unaffected, and `KINDS` now lists `system`.
