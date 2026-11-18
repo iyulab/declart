@@ -132,6 +132,8 @@ pub struct RawTimelineEvent {
     pub start: Option<String>,
     pub end: Option<String>,
     pub label: String,
+    pub emphasis: Option<String>,
+    pub status: Option<String>,
 }
 
 /// Raw representation for `hierarchy` kind.

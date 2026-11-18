@@ -1,6 +1,7 @@
 use crate::date::PartialDate;
-use crate::model::{TimelineDiagram, TimelineWhen};
-use crate::render::{font, svg::SvgBuilder, theme::Theme};
+use crate::model::{Emphasis, Status, TimelineDiagram, TimelineWhen};
+use crate::render::status::STATUS_MARKER_R;
+use crate::render::{font, status, svg::SvgBuilder, theme::Theme};
 
 const CANVAS_WIDTH_MIN: f32 = 800.0;
 const MIN_EVENT_SPACING: f32 = 55.0; // minimum average pixels per event
@@ -23,6 +24,8 @@ const MIN_BAR_WIDTH: f32 = 6.0;
 const BAR_TEXT_PAD: f32 = 6.0; // horizontal inset of a label inside its bar
 const MIN_INSIDE_LABEL: f32 = 24.0; // narrower bars put their label to the right
 const LANE_GAP: f32 = 8.0; // minimum horizontal clearance between items sharing a lane
+const STATUS_GAP: f32 = 4.0; // clearance between a label and the status marker beside it
+const PRIMARY_DOT_SCALE: f32 = 1.6; // a primary milestone's dot, relative to the normal one
 
 /// A period laid out on the canvas.
 struct Bar<'a> {
@@ -31,6 +34,8 @@ struct Bar<'a> {
     label: &'a str,
     dates: String,
     lane: usize,
+    emphasis: Option<Emphasis>,
+    status: Option<Status>,
 }
 
 pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
@@ -105,17 +110,18 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
     // Period guides go first so milestones, labels, and bars all sit on top of them.
     draw_guides(&mut builder, &bars, theme, axis_y, band_top);
 
-    let points: Vec<(&str, &str)> = diagram
+    let points: Vec<(&str, &crate::model::TimelineEvent)> = diagram
         .events
         .iter()
         .filter_map(|e| match &e.when {
-            TimelineWhen::Point(date) => Some((date.as_str(), e.label.as_str())),
+            TimelineWhen::Point(date) => Some((date.as_str(), e)),
             TimelineWhen::Span { .. } => None,
         })
         .collect();
     let n_points = points.len();
 
-    for (i, (date, label)) in points.iter().enumerate() {
+    for (i, (date, event)) in points.iter().enumerate() {
+        let label = event.label.as_str();
         let ex = x_for(start_day(date));
         let above = i % 2 == 0; // alternate above/below
 
@@ -129,8 +135,16 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
             1.5,
         );
 
-        // Dot
-        builder.circle(ex, axis_y, DOT_RADIUS, &theme.layers.apex.to_hex(), 1.0);
+        // Dot: a primary milestone is larger, a secondary one a lighter tint.
+        let (dot_r, dot_color) = match event.emphasis {
+            Some(Emphasis::Primary) => (DOT_RADIUS * PRIMARY_DOT_SCALE, theme.layers.apex),
+            Some(Emphasis::Secondary) => (
+                DOT_RADIUS,
+                theme.layers.apex.interpolate(&theme.layers.base, 0.5),
+            ),
+            None => (DOT_RADIUS, theme.layers.apex),
+        };
+        builder.circle(ex, axis_y, dot_r, &dot_color.to_hex(), 1.0);
 
         // Event label (above or below axis)
         let label_y = if above {
@@ -148,7 +162,23 @@ pub fn render(diagram: &TimelineDiagram, theme: &Theme) -> String {
         };
         let available = (avg_spacing * 0.45).clamp(40.0, 100.0);
         let (display_label, fs) = fit_label(label, theme, available);
-        builder.text(ex, label_y, &display_label, &theme.title_color.to_hex(), fs);
+        builder.text_weighted(
+            ex,
+            label_y,
+            &display_label,
+            &theme.title_color.to_hex(),
+            fs,
+            matches!(event.emphasis, Some(Emphasis::Primary)),
+        );
+        // Status marker: just right of the label, level with it.
+        let label_w = font::measure_text(&display_label, fs);
+        status::draw_marker_at(
+            &mut builder,
+            &event.status,
+            ex + label_w / 2.0 + STATUS_GAP + STATUS_MARKER_R,
+            label_y,
+            theme,
+        );
 
         // Date label (below axis, smaller)
         let date_y = if above {
@@ -193,9 +223,20 @@ fn fit_label(label: &str, theme: &Theme, available: f32) -> (String, f32) {
     (display, fs)
 }
 
-/// Whether a bar is wide enough to hold its label; narrower bars put it just to the right.
-fn label_inside(bar_w: f32) -> bool {
-    bar_w - 2.0 * BAR_TEXT_PAD >= MIN_INSIDE_LABEL
+/// Horizontal room a status marker takes beside a label (zero when no marker is drawn).
+fn marker_room(status: &Option<Status>) -> f32 {
+    match status {
+        Some(Status::Success | Status::Warning | Status::Critical) => {
+            2.0 * STATUS_MARKER_R + STATUS_GAP
+        }
+        Some(Status::Normal) | None => 0.0,
+    }
+}
+
+/// Whether a bar is wide enough to hold its label (and its status marker); narrower bars put
+/// them just to the right.
+fn label_inside(bar_w: f32, status: &Option<Status>) -> bool {
+    bar_w - 2.0 * BAR_TEXT_PAD - marker_room(status) >= MIN_INSIDE_LABEL
 }
 
 /// Positions every period and packs overlapping ones into lanes (first lane that fits).
@@ -223,9 +264,10 @@ fn layout_bars<'a>(
         let half_dates = font::measure_text(&dates, DATE_FONT_SIZE) / 2.0;
         let left = f32::min(x0, center - half_dates) - LANE_GAP / 2.0;
         let mut right = f32::max(x1, center + half_dates);
-        if !label_inside(x1 - x0) {
+        if !label_inside(x1 - x0, &event.status) {
             let outside = x1
                 + BAR_TEXT_PAD
+                + marker_room(&event.status)
                 + font::measure_text(&event.label, theme.typography.label_size_min);
             right = f32::max(right, outside);
         }
@@ -245,6 +287,8 @@ fn layout_bars<'a>(
             label: &event.label,
             dates,
             lane,
+            emphasis: event.emphasis.clone(),
+            status: event.status.clone(),
         });
     }
     bars
@@ -261,32 +305,72 @@ fn draw_guides(builder: &mut SvgBuilder, bars: &[Bar], theme: &Theme, axis_y: f3
 }
 
 fn draw_bars(builder: &mut SvgBuilder, bars: &[Bar], theme: &Theme, band_top: f32) {
-    let fill = theme.layers.apex.interpolate(&theme.layers.base, 0.35);
-    let on_fill = theme.text_on(&fill);
+    let base_fill = theme.layers.apex.interpolate(&theme.layers.base, 0.35);
     for bar in bars {
         let top = band_top + bar.lane as f32 * LANE_HEIGHT;
         let w = bar.x1 - bar.x0;
         let mid_y = top + BAR_HEIGHT / 2.0;
+        let room = marker_room(&bar.status);
+        let primary = matches!(bar.emphasis, Some(Emphasis::Primary));
 
-        builder.rect_rounded(bar.x0, top, w, BAR_HEIGHT, 4, &fill.to_hex(), "none", 0.0);
-        if label_inside(w) {
-            let (label, fs) = fit_label(bar.label, theme, w - 2.0 * BAR_TEXT_PAD);
-            builder.text(
-                (bar.x0 + bar.x1) / 2.0,
+        // Primary: ringed in the background color, like an emphasised box elsewhere.
+        // Secondary: a lighter tint.
+        let fill = match bar.emphasis {
+            Some(Emphasis::Secondary) => base_fill.interpolate(&theme.layers.base, 0.45),
+            _ => base_fill,
+        };
+        let on_fill = theme.text_on(&fill);
+        let (stroke, stroke_w) = if primary {
+            (theme.background.to_hex(), 3.0)
+        } else {
+            ("none".to_string(), 0.0)
+        };
+        builder.rect_rounded(
+            bar.x0,
+            top,
+            w,
+            BAR_HEIGHT,
+            4,
+            &fill.to_hex(),
+            &stroke,
+            stroke_w,
+        );
+        if label_inside(w, &bar.status) {
+            // The label is centered in the part of the bar the marker leaves free.
+            let inner_x1 = bar.x1 - room;
+            let (label, fs) = fit_label(bar.label, theme, w - 2.0 * BAR_TEXT_PAD - room);
+            builder.text_weighted(
+                (bar.x0 + inner_x1) / 2.0,
                 mid_y,
                 &label,
                 &on_fill.to_hex(),
                 fs,
+                primary,
+            );
+            status::draw_marker_at(
+                builder,
+                &bar.status,
+                bar.x1 - BAR_TEXT_PAD - STATUS_MARKER_R,
+                mid_y,
+                theme,
             );
         } else {
             let fs = theme.typography.label_size_min;
             let lw = font::measure_text(bar.label, fs);
-            builder.text(
-                bar.x1 + BAR_TEXT_PAD + lw / 2.0,
+            status::draw_marker_at(
+                builder,
+                &bar.status,
+                bar.x1 + BAR_TEXT_PAD + STATUS_MARKER_R,
+                mid_y,
+                theme,
+            );
+            builder.text_weighted(
+                bar.x1 + BAR_TEXT_PAD + room + lw / 2.0,
                 mid_y,
                 bar.label,
                 &theme.title_color.to_hex(),
                 fs,
+                primary,
             );
         }
         builder.text(
@@ -302,13 +386,15 @@ fn draw_bars(builder: &mut SvgBuilder, bars: &[Bar], theme: &Theme, band_top: f3
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{TimelineDiagram, TimelineEvent, TimelineWhen};
+    use crate::model::{Emphasis, Status, TimelineDiagram, TimelineEvent, TimelineWhen};
     use crate::render::DEFAULT_THEME;
 
     fn point(date: &str, label: &str) -> TimelineEvent {
         TimelineEvent {
             when: TimelineWhen::Point(date.to_string()),
             label: label.to_string(),
+            emphasis: None,
+            status: None,
         }
     }
 
@@ -319,6 +405,8 @@ mod tests {
                 end: end.to_string(),
             },
             label: label.to_string(),
+            emphasis: None,
+            status: None,
         }
     }
 
@@ -457,5 +545,127 @@ mod tests {
             (right - (CANVAS_WIDTH_MIN - PADDING_H)).abs() < 0.5,
             "bar should end at the right edge, got {right}"
         );
+    }
+
+    fn with(
+        mut e: TimelineEvent,
+        emphasis: Option<Emphasis>,
+        status: Option<Status>,
+    ) -> TimelineEvent {
+        e.emphasis = emphasis;
+        e.status = status;
+        e
+    }
+
+    fn two_points(first: TimelineEvent) -> TimelineDiagram {
+        TimelineDiagram {
+            title: None,
+            events: vec![first, point("2024-12-01", "Last")],
+        }
+    }
+
+    #[test]
+    fn a_milestone_status_draws_a_marker_beside_its_label() {
+        let critical = DEFAULT_THEME.status.critical.to_hex();
+        let plain = render(&two_points(point("2024-01-01", "First")), &DEFAULT_THEME);
+        assert!(!plain.contains(&critical), "no status, no marker");
+        let marked = render(
+            &two_points(with(
+                point("2024-01-01", "First"),
+                None,
+                Some(Status::Critical),
+            )),
+            &DEFAULT_THEME,
+        );
+        assert!(marked.contains(&critical));
+    }
+
+    #[test]
+    fn a_normal_status_draws_no_marker() {
+        // NEGATIVE: `normal` is the unmarked baseline.
+        let svg = render(
+            &two_points(with(
+                point("2024-01-01", "First"),
+                None,
+                Some(Status::Normal),
+            )),
+            &DEFAULT_THEME,
+        );
+        let plain = render(&two_points(point("2024-01-01", "First")), &DEFAULT_THEME);
+        assert_eq!(svg, plain);
+    }
+
+    #[test]
+    fn a_period_status_draws_a_marker_and_keeps_its_label() {
+        let warning = DEFAULT_THEME.status.warning.to_hex();
+        let d = TimelineDiagram {
+            title: None,
+            events: vec![
+                with(
+                    span("2024-01", "2024-09", "Build"),
+                    None,
+                    Some(Status::Warning),
+                ),
+                point("2024-12-01", "Last"),
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains(&warning));
+        assert!(svg.contains(">Build<"));
+    }
+
+    #[test]
+    fn a_narrow_period_puts_its_marker_and_label_to_the_right() {
+        let critical = DEFAULT_THEME.status.critical.to_hex();
+        let d = TimelineDiagram {
+            title: None,
+            events: vec![
+                point("2024-01-01", "First"),
+                with(
+                    span("2024-06-10", "2024-06-12", "Audit"),
+                    None,
+                    Some(Status::Critical),
+                ),
+                point("2024-12-31", "Last"),
+            ],
+        };
+        let svg = render(&d, &DEFAULT_THEME);
+        assert!(svg.contains(&critical));
+        assert!(svg.contains(">Audit<"));
+    }
+
+    #[test]
+    fn primary_emphasis_is_bold_and_secondary_is_not() {
+        let primary = render(
+            &two_points(with(
+                point("2024-01-01", "First"),
+                Some(Emphasis::Primary),
+                None,
+            )),
+            &DEFAULT_THEME,
+        );
+        assert!(primary.contains("font-weight=\"bold\""));
+        let secondary = render(
+            &two_points(with(
+                point("2024-01-01", "First"),
+                Some(Emphasis::Secondary),
+                None,
+            )),
+            &DEFAULT_THEME,
+        );
+        assert!(!secondary.contains("font-weight=\"bold\""));
+        assert_ne!(
+            secondary,
+            render(&two_points(point("2024-01-01", "First")), &DEFAULT_THEME),
+            "a secondary milestone is tinted"
+        );
+    }
+
+    #[test]
+    fn without_emphasis_or_status_the_picture_is_unchanged() {
+        // NEGATIVE: declarations that use neither field draw no marker and nothing bold.
+        let svg = render(&make_diagram(Some("T")), &DEFAULT_THEME);
+        assert!(!svg.contains("font-weight=\"bold\""));
+        assert!(!svg.contains(&DEFAULT_THEME.status.critical.to_hex()));
     }
 }

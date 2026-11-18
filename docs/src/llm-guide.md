@@ -316,7 +316,7 @@ date = "2024-07-01"
 label = "GA Launch"
 ```
 
-> **Rule**: an event is a milestone (`date`) **or** a period (`start` + `end`) — never both. `end` is inclusive: `end = "2024-04"` runs through April 30. Periods render as bars below the axis and overlapping periods stack automatically. There are no dependency or progress fields — timeline is a qualitative roadmap, not a Gantt scheduler.
+> **Rule**: an event is a milestone (`date`) **or** a period (`start` + `end`) — never both. `end` is inclusive: `end = "2024-04"` runs through April 30. Periods render as bars below the axis and overlapping periods stack automatically. An event may carry `emphasis` and `status` like items in other kinds (a milestone gets a marker beside its label, a period a marker in its bar). There are no dependency or progress fields — timeline is a qualitative roadmap, not a Gantt scheduler.
 
 ---
 
@@ -668,7 +668,7 @@ status = "normal"
 > `critical`. The engine renders a corner marker dual-encoded by color **and** shape
 > (success=circle, warning=triangle, critical=diamond), so it reads in monochrome and for colorblind
 > users. `normal` and omitted `status` render no marker. Supported on `flow`, `tier`,
-> `hub_spoke`, and `matrix` items. Declaring `status` on other kinds is a parse error.
+> `hub_spoke`, `matrix`, and `timeline` items. Declaring `status` on other kinds is a parse error.
 
 ---
 
@@ -680,7 +680,7 @@ status = "normal"
 | `view` is optional | Omit to use the default; include to declare intent explicitly |
 | No unknown fields | Don't add `color`, `style`, or other keys not in the spec |
 | `emphasis` values | Only `"primary"` or `"secondary"` |
-| `status` values | Only `"success"`, `"normal"`, `"warning"`, `"critical"`. Orthogonal to `emphasis`. Supported on `flow`, `tier`, `hub_spoke`, `matrix` |
+| `status` values | Only `"success"`, `"normal"`, `"warning"`, `"critical"`. Orthogonal to `emphasis`. Supported on `flow`, `tier`, `hub_spoke`, `matrix`, `timeline` |
 | Flow views | `kind = "flow"` + `view`: `process` (default), `cycle`, `funnel`, `swimlane` |
 | Swimlane actors | `view = "swimlane"` requires an `actor` on every item; ≥2 distinct actors |
 | Tier views | `kind = "tier"` + `view`: `pyramid` (default and only) |

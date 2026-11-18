@@ -18,6 +18,8 @@ A timeline diagram. Events are placed along a horizontal axis at positions propo
 | start | period      | string | First date of the period                                      |
 | end   | period      | string | Last date of the period (inclusive)                           |
 | label | yes         | string | Text displayed with the milestone marker or period bar        |
+| emphasis | no       | `"primary"` \| `"secondary"` | Importance — see the shared [Emphasis](../schema.md) field |
+| status   | no       | `"success"` \| `"normal"` \| `"warning"` \| `"critical"` | Condition — see the shared [Status](../schema.md) field |
 
 Each event declares **either** `date` (a milestone) **or** both `start` and `end` (a period). Any other
 combination is a validation error.
@@ -43,6 +45,11 @@ All date fields accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`, and must name a real 
 - Periods are bars below the axis, spanning their dates, with the label inside the bar (or beside
   it when the bar is too short) and the date range underneath. Overlapping periods stack into
   separate rows; periods that do not overlap share a row.
+- `emphasis` and `status` are the shared optional fields. A `primary` milestone has a larger marker
+  and a bold label, a `primary` period a bold label and a background-colored outline; `secondary`
+  tints the marker or bar lighter. A `status` other than `normal` draws a small marker, dual-encoded
+  by color and shape: beside a milestone's label, and in the right end of a period bar (just right
+  of a bar too narrow to hold its label). The two fields are independent — an event may carry both.
 - At least two events are required to establish a time range.
 - This is a qualitative roadmap, not a scheduler: there are no dependencies, progress, or
   resource fields. Use a project-management tool for precise Gantt charts.

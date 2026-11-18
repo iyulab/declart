@@ -189,6 +189,8 @@ impl TimelineWhen {
 pub struct TimelineEvent {
     pub when: TimelineWhen,
     pub label: String,
+    pub emphasis: Option<Emphasis>,
+    pub status: Option<Status>,
 }
 
 /// Model for the Timeline kind.

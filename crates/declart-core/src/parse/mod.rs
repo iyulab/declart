@@ -529,6 +529,8 @@ fn validate_timeline_event(e: raw::RawTimelineEvent) -> Result<(i64, TimelineEve
         start,
         end,
         label,
+        emphasis,
+        status,
     } = e;
     let shape_error = |problem: &str| DeclartError::InvalidValue {
         field: "events".to_string(),
@@ -563,7 +565,17 @@ fn validate_timeline_event(e: raw::RawTimelineEvent) -> Result<(i64, TimelineEve
             s.start_day()
         }
     };
-    Ok((start_day, TimelineEvent { when, label }))
+    let emphasis = parse_emphasis(emphasis.as_deref())?;
+    let status = parse_status(status.as_deref())?;
+    Ok((
+        start_day,
+        TimelineEvent {
+            when,
+            label,
+            emphasis,
+            status,
+        },
+    ))
 }
 
 fn validate_hub_spoke(raw: raw::RawHubSpokeDiagram) -> Result<Diagram, DeclartError> {

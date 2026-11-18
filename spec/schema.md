@@ -60,4 +60,4 @@ monochrome and under color-vision deficiency: `success` = circle, `warning` = tr
 `accessible` theme uses a colorblind-safe Okabe-Ito palette).
 
 Supported on items of: `flow` (process / cycle / funnel / swimlane), `tier`, `hub_spoke`, `matrix`
-(quadrants). Like `emphasis`, declaring it on a kind that does not support it is a parse error.
+(quadrants), `timeline` (milestones and periods). Like `emphasis`, declaring it on a kind that does not support it is a parse error.

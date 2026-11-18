@@ -1,0 +1,50 @@
+kind = "timeline"
+title = "Platform Migration"
+
+[[events]]
+date = "2025-01-15"
+label = "Kickoff"
+status = "success"
+
+[[events]]
+date = "2025-04-01"
+label = "Pilot"
+emphasis = "primary"
+status = "warning"
+
+[[events]]
+date = "2025-09-30"
+label = "Cutover"
+emphasis = "primary"
+status = "critical"
+
+[[events]]
+date = "2025-12-01"
+label = "Retire legacy"
+emphasis = "secondary"
+
+[[events]]
+start = "2025-01"
+end = "2025-03"
+label = "Discovery"
+status = "success"
+
+[[events]]
+start = "2025-03"
+end = "2025-09"
+label = "Build"
+emphasis = "primary"
+status = "warning"
+
+[[events]]
+start = "2025-10"
+end = "2025-11"
+label = "Hypercare"
+emphasis = "secondary"
+status = "critical"
+
+[[events]]
+start = "2025-11-10"
+end = "2025-11-20"
+label = "Audit"
+status = "critical"
