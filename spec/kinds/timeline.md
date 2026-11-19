@@ -140,6 +140,8 @@ What a declaration of this kind may contain, as `declart schema` and `schema()` 
 | `start` | date | no | a period; with `end` |
 | `end` | date | no | a period; with `start` |
 | `label` | string | yes |  |
+| `emphasis` | enum | no | `primary`, `secondary` |
+| `status` | enum | no | `success`, `normal`, `warning`, `critical` |
 
 **Rules**
 

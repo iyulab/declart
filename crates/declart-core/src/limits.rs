@@ -322,6 +322,28 @@ fn triggers(view: &str, labels: &[String]) -> String {
     s
 }
 
+/// A system diagram: `groups` (ids `g0`…), `nodes` (ids `n0`…, node `i` inside group `i` modulo the
+/// number of groups) and `links` (link `i` joins node `i` to the next).
+fn system_source(view: &str, groups: &[String], nodes: &[String], links: &[String]) -> String {
+    let mut s = header("system", view);
+    for (i, label) in groups.iter().enumerate() {
+        s.push_str(&format!("[[groups]]\nid = \"g{i}\"\nlabel = \"{label}\"\n"));
+    }
+    for (i, label) in nodes.iter().enumerate() {
+        s.push_str(&format!("[[nodes]]\nid = \"n{i}\"\nlabel = \"{label}\"\n"));
+        if !groups.is_empty() {
+            s.push_str(&format!("group = \"g{}\"\n", i % groups.len()));
+        }
+    }
+    for (i, label) in links.iter().enumerate() {
+        s.push_str(&format!(
+            "[[links]]\nfrom = \"n{i}\"\nto = \"n{}\"\nlabel = \"{label}\"\n",
+            i + 1
+        ));
+    }
+    s
+}
+
 fn slots(kind: &str, view: &str) -> Vec<Slot> {
     let slot = |path, count, reference, build| Slot {
         path,
@@ -387,6 +409,17 @@ fn slots(kind: &str, view: &str) -> Vec<Slot> {
         "state" => vec![
             slot("states[].label", 3, "3 states", states),
             slot("transitions[].trigger", 2, "3 states", triggers),
+        ],
+        "system" => vec![
+            slot("groups[].label", 2, "2 groups, 2 nodes, 1 link", |v, l| {
+                system_source(v, l, &[filler(10), filler(11)], &[filler(12)])
+            }),
+            slot("nodes[].label", 3, "3 nodes, 2 links", |v, l| {
+                system_source(v, &[], l, &[filler(10), filler(11)])
+            }),
+            slot("links[].label", 2, "3 nodes, 2 links", |v, l| {
+                system_source(v, &[], &[filler(10), filler(11), filler(12)], l)
+            }),
         ],
         _ => Vec::new(),
     }

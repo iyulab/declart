@@ -10,9 +10,10 @@ use crate::error::DeclartError;
 use crate::parse::{
     checked_view, names, COMPARISON_MAX_COLUMNS, COMPARISON_MAX_ROWS, CYCLE_MIN_ITEMS, EMPHASES,
     FISHBONE_MAX_CATEGORIES, FISHBONE_MIN_CATEGORIES, FUNNEL_MAX_ITEMS, FUNNEL_MIN_ITEMS,
-    HUB_SPOKE_MIN_SPOKES, KINDS, MATRIX_QUADRANT_COUNT, MAX_ITEMS_PER_QUADRANT, QUADRANT_POSITIONS,
-    STATE_MIN_STATES, STATE_ROLES, STATUSES, SWIMLANE_MIN_ACTORS, TIMELINE_MIN_EVENTS,
-    TRANSITION_KINDS, VENN_MAX_SETS, VENN_MIN_SETS,
+    HUB_SPOKE_MIN_SPOKES, KINDS, LINK_DIRECTIONS, LINK_RELATIONS, MATRIX_QUADRANT_COUNT,
+    MAX_ITEMS_PER_QUADRANT, QUADRANT_POSITIONS, STATE_MIN_STATES, STATE_ROLES, STATUSES,
+    SWIMLANE_MIN_ACTORS, SYSTEM_MAX_GROUPS, SYSTEM_MAX_LINKS, SYSTEM_MAX_NODES, SYSTEM_MIN_NODES,
+    SYSTEM_ROLES, TIMELINE_MIN_EVENTS, TRANSITION_KINDS, VENN_MAX_SETS, VENN_MIN_SETS,
 };
 use serde::Serialize;
 
@@ -153,6 +154,7 @@ pub fn schema(kind: &str, view: Option<&str>) -> Result<Schema, DeclartError> {
         "venn" => venn(&mut s),
         "comparison" => comparison(&mut s),
         "state" => state(&mut s),
+        "system" => system(&mut s),
         _ => unreachable!("every kind in KINDS is handled"),
     }
     Ok(s)
@@ -294,6 +296,8 @@ fn timeline(s: &mut Schema) {
                 Some("a period; with `start`"),
             ),
             text("label", true, None),
+            choice("emphasis", names(EMPHASES), false),
+            choice("status", names(STATUSES), false),
         ],
     ));
     s.rules
@@ -421,4 +425,74 @@ fn state(s: &mut Schema) {
         .push("at most one state has the role `initial`".to_string());
     s.rules
         .push("`from` and `to` name an existing state's id or label".to_string());
+}
+
+fn system(s: &mut Schema) {
+    s.collections.push(collection(
+        "groups",
+        0,
+        Some(SYSTEM_MAX_GROUPS),
+        vec![
+            text("id", true, Some("a short name to refer to the group by")),
+            text("label", true, None),
+            typed(
+                "parent",
+                FieldType::Reference,
+                false,
+                Some("the id of the group this one sits inside"),
+            ),
+        ],
+    ));
+    s.collections.push(collection(
+        "nodes",
+        SYSTEM_MIN_NODES,
+        Some(SYSTEM_MAX_NODES),
+        vec![
+            text("id", true, Some("a short name to refer to the node by")),
+            text("label", true, None),
+            typed(
+                "group",
+                FieldType::Reference,
+                false,
+                Some("the id of the group the node sits in"),
+            ),
+            choice("role", names(SYSTEM_ROLES), false),
+            choice("emphasis", names(EMPHASES), false),
+            choice("status", names(STATUSES), false),
+        ],
+    ));
+    s.collections.push(collection(
+        "links",
+        0,
+        Some(SYSTEM_MAX_LINKS),
+        vec![
+            typed(
+                "from",
+                FieldType::Reference,
+                true,
+                Some("the id of a node or a group"),
+            ),
+            typed(
+                "to",
+                FieldType::Reference,
+                true,
+                Some("the id of a node or a group"),
+            ),
+            text("label", false, None),
+            choice("direction", names(LINK_DIRECTIONS), false),
+            choice("relation", names(LINK_RELATIONS), false),
+        ],
+    ));
+    s.rules
+        .push("node ids and group ids are unique, all in one set".to_string());
+    s.rules
+        .push("`parent` names another group's id, never the group itself".to_string());
+    s.rules
+        .push("groups nest two deep at most (a group inside a group)".to_string());
+    s.rules.push("`group` names a group's id".to_string());
+    s.rules
+        .push("`from` and `to` name the id of a node or a group".to_string());
+    s.rules.push("a link joins two different ends".to_string());
+    s.rules
+        .push("a link does not join a group to something inside it".to_string());
 }

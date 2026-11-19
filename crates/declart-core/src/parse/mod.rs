@@ -135,7 +135,9 @@ pub fn views(kind: &str) -> Option<&'static [&'static str]> {
         "flow" => Some(FLOW_VIEWS),
         "tier" => Some(TIER_VIEWS),
         "hierarchy" => Some(HIERARCHY_VIEWS),
-        "timeline" | "matrix" | "hub_spoke" | "venn" | "comparison" | "state" => Some(&[]),
+        "timeline" | "matrix" | "hub_spoke" | "venn" | "comparison" | "state" | "system" => {
+            Some(&[])
+        }
         _ => None,
     }
 }

@@ -108,3 +108,35 @@ fn print_the_measured_table() {
         }
     }
 }
+
+#[test]
+fn a_system_link_label_just_over_the_limit_is_cut_and_one_at_the_limit_is_not() {
+    // Written out by hand, not built by `limits`: a chain of three nodes, the first link's label grows.
+    let slots = limits("system", None).unwrap();
+    let slot = slots.iter().find(|s| s.path == "links[].label").unwrap();
+    let whole = slot.hangul.whole.expect("a link label has a limit");
+
+    let render = |n: usize| {
+        let label: String = "가나다라마바사아자차카타파하"
+            .chars()
+            .cycle()
+            .take(n)
+            .collect();
+        let input = format!(
+            "kind = \"system\"\n[[nodes]]\nid = \"a\"\nlabel = \"Aa10\"\n[[nodes]]\nid = \"b\"\nlabel = \"Aa11\"\n[[nodes]]\nid = \"c\"\nlabel = \"Aa12\"\n[[links]]\nfrom = \"a\"\nto = \"b\"\nlabel = \"{label}\"\n[[links]]\nfrom = \"b\"\nto = \"c\"\nlabel = \"Aa11\"\n"
+        );
+        let diagram = parse(&input).unwrap();
+        render_diagnosed(&diagram, &DEFAULT_THEME, None).unwrap().1
+    };
+    let cut =
+        |d: &[declart_core::Diagnostic]| d.iter().any(|d| d.code == DiagnosticCode::LabelTruncated);
+    assert!(
+        !cut(&render(whole)),
+        "{whole} characters should be shown whole"
+    );
+    assert!(
+        cut(&render(whole + 1)),
+        "{} characters should be cut",
+        whole + 1
+    );
+}

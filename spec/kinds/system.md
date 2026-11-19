@@ -211,3 +211,71 @@ to = "app"
 label = "reference"
 relation = "indirect"
 ```
+
+<!-- limits:start — generated; do not edit by hand -->
+## Label capacity
+
+How long a label can be before the engine sets it smaller, wraps it, or cuts it short with "…". Each number is measured by rendering a small reference declaration with a growing label and reading the diagnostics `render_detailed` returns, so the table always agrees with them. Lengths are in characters written without spaces: Hangul syllables are one em wide, Latin lowercase letters about half that. **unchanged** is the longest label shown at the usual size on one line; **whole** is the longest shown without "…". A slot's width depends on its siblings, so read a number as a guide for the reference declaration named in the second column and use `declart validate --strict` for the declaration itself.
+
+A dash means the engine reports nothing for the slot up to 120 characters. That is not a promise that any length fits: a slot the engine does not fit at all draws a long label past the picture without a warning.
+
+| Slot | Measured in | Hangul (unchanged / whole) | Latin (unchanged / whole) |
+|------|-------------|----------------------------|---------------------------|
+| `groups[].label` | 2 groups, 2 nodes, 1 link | 22 / 32 | 42 / 60 |
+| `nodes[].label` | 3 nodes, 2 links | 30 / 42 | 28 / 79 |
+| `links[].label` | 3 nodes, 2 links | 15 / 21 | 28 / 40 |
+
+<!-- limits:end -->
+
+<!-- schema:start — generated; do not edit by hand -->
+## Schema
+
+What a declaration of this kind may contain, as `declart schema` and `schema()` report it. The value lists and counts are the ones the parser checks, and a test holds every field, count and rule to the parser in both directions, so a declaration written to this page parses. The prose above is the explanation; this is the reference.
+
+**Fields**
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `kind` | enum | yes | `system` |
+| `title` | string | no |  |
+
+**`groups`** — 0 to 6 elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `id` | string | yes | a short name to refer to the group by |
+| `label` | string | yes |  |
+| `parent` | reference | no | the id of the group this one sits inside |
+
+**`nodes`** — 2 to 16 elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `id` | string | yes | a short name to refer to the node by |
+| `label` | string | yes |  |
+| `group` | reference | no | the id of the group the node sits in |
+| `role` | enum | no | `store`, `external`, `actor` |
+| `emphasis` | enum | no | `primary`, `secondary` |
+| `status` | enum | no | `success`, `normal`, `warning`, `critical` |
+
+**`links`** — 0 to 24 elements
+
+| Field | Type | Required | Values / meaning |
+|-------|------|----------|------------------|
+| `from` | reference | yes | the id of a node or a group |
+| `to` | reference | yes | the id of a node or a group |
+| `label` | string | no |  |
+| `direction` | enum | no | `forward`, `both`, `none` |
+| `relation` | enum | no | `direct`, `indirect` |
+
+**Rules**
+
+- node ids and group ids are unique, all in one set
+- `parent` names another group's id, never the group itself
+- groups nest two deep at most (a group inside a group)
+- `group` names a group's id
+- `from` and `to` name the id of a node or a group
+- a link joins two different ends
+- a link does not join a group to something inside it
+
+<!-- schema:end -->

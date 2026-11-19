@@ -99,7 +99,7 @@ A dash means the engine reports nothing for the slot up to 120 characters. That 
 
 | Slot | Measured in | Hangul (unchanged / whole) | Latin (unchanged / whole) |
 |------|-------------|----------------------------|---------------------------|
-| `states[].label` | 3 states | 5 / 5 | 12 / 12 |
+| `states[].label` | 3 states | 7 / 30 | 14 / 55 |
 | `transitions[].trigger` | 3 states | — / — | — / — |
 
 <!-- limits:end -->

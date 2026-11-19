@@ -65,6 +65,10 @@ fn fixture(kind: &str, view: Option<&str>) -> Value {
             json!({ "kind": kind, "columns": labelled("C", 1), "rows": labelled("R", 1) })
         }
         "state" => json!({ "kind": kind, "states": labelled("L", 2) }),
+        "system" => json!({ "kind": kind, "nodes": [
+            { "id": "n0", "label": "L0" },
+            { "id": "n1", "label": "L1" },
+        ]}),
         other => panic!("no fixture for {other}"),
     };
     if let Some(view) = view {
@@ -96,6 +100,11 @@ fn ensure(v: &mut Value, c: &Collection) {
         let mut e = Map::new();
         for f in c.fields.iter().filter(|f| f.required) {
             e.insert(f.name.to_string(), sample(f));
+        }
+        // A link joins two different ends: the two nodes of the system fixture.
+        if c.name == "links" {
+            e.insert("from".to_string(), json!("n0"));
+            e.insert("to".to_string(), json!("n1"));
         }
         v[c.name] = json!([e]);
     }
@@ -195,6 +204,8 @@ fn belongs_to_a_rule(kind: &str, collection: &str, field: &str) -> bool {
             | ("hierarchy", "nodes", "parent")
             | ("comparison", "rows", "<column>")
             | ("matrix", "quadrants", "position")
+            | ("system", "groups", "parent")
+            | ("system", "nodes", "group")
     )
 }
 
@@ -343,6 +354,9 @@ fn with_count(v: &Value, c: &Collection, n: usize) -> Value {
             if e.get("label").is_some() {
                 e["label"] = json!(format!("L{i}"));
             }
+            if e.get("id").is_some() {
+                e["id"] = json!(format!("i{i}"));
+            }
             if e.get("actor").is_some() {
                 e["actor"] = json!(if i % 2 == 0 { "a" } else { "b" });
             }
@@ -477,6 +491,34 @@ fn violations(kind: &str, view: Option<&str>) -> Vec<Vec<Mutation>> {
             })],
             vec![m(|v| {
                 v["transitions"] = json!([{ "from": "ghost", "to": "L1" }])
+            })],
+        ],
+        ("system", _) => vec![
+            vec![
+                m(|v| v["nodes"][1]["id"] = json!("n0")),
+                m(|v| v["groups"] = json!([{ "id": "n0", "label": "G" }])),
+            ],
+            vec![
+                m(|v| v["groups"] = json!([{ "id": "g", "label": "G", "parent": "g" }])),
+                m(|v| v["groups"] = json!([{ "id": "g", "label": "G", "parent": "nope" }])),
+            ],
+            vec![m(|v| {
+                v["groups"] = json!([
+                    { "id": "a", "label": "A" },
+                    { "id": "b", "label": "B", "parent": "a" },
+                    { "id": "c", "label": "C", "parent": "b" },
+                ])
+            })],
+            vec![m(|v| v["nodes"][0]["group"] = json!("nope"))],
+            vec![
+                m(|v| v["links"] = json!([{ "from": "n0", "to": "nope" }])),
+                m(|v| v["links"] = json!([{ "from": "nope", "to": "n1" }])),
+            ],
+            vec![m(|v| v["links"] = json!([{ "from": "n0", "to": "n0" }]))],
+            vec![m(|v| {
+                v["groups"] = json!([{ "id": "g", "label": "G" }]);
+                v["nodes"][0]["group"] = json!("g");
+                v["links"] = json!([{ "from": "g", "to": "n0" }]);
             })],
         ],
         other => panic!("no rule cases for {other:?}"),
