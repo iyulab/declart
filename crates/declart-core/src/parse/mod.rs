@@ -77,6 +77,23 @@ pub(crate) const TRANSITION_KINDS: &[(&str, TransitionKind)] = &[
     ("normal", TransitionKind::Normal),
     ("exception", TransitionKind::Exception),
 ];
+/// What a system node's `role` takes.
+pub(crate) const SYSTEM_ROLES: &[(&str, SystemRole)] = &[
+    ("store", SystemRole::Store),
+    ("external", SystemRole::External),
+    ("actor", SystemRole::Actor),
+];
+/// What a system link's `direction` takes; the first is the default.
+pub(crate) const LINK_DIRECTIONS: &[(&str, LinkDirection)] = &[
+    ("forward", LinkDirection::Forward),
+    ("both", LinkDirection::Both),
+    ("none", LinkDirection::None),
+];
+/// What a system link's `relation` takes; the first is the default.
+pub(crate) const LINK_RELATIONS: &[(&str, LinkRelation)] = &[
+    ("direct", LinkRelation::Direct),
+    ("indirect", LinkRelation::Indirect),
+];
 
 /// The value of `table` named `name`.
 fn lookup<T: Clone>(table: &[(&str, T)], name: &str) -> Option<T> {
@@ -913,9 +930,10 @@ fn validate_state(raw: raw::RawStateDiagram) -> Result<Diagram, DeclartError> {
 
 /// Most nodes, groups and links one system diagram holds — past this a diagram stops being
 /// readable at a glance, and splitting it is the better drawing.
-const SYSTEM_MAX_NODES: usize = 16;
-const SYSTEM_MAX_GROUPS: usize = 6;
-const SYSTEM_MAX_LINKS: usize = 24;
+pub(crate) const SYSTEM_MIN_NODES: usize = 2;
+pub(crate) const SYSTEM_MAX_NODES: usize = 16;
+pub(crate) const SYSTEM_MAX_GROUPS: usize = 6;
+pub(crate) const SYSTEM_MAX_LINKS: usize = 24;
 
 fn invalid(field: &str, value: impl Into<String>, hint: impl Into<String>) -> DeclartError {
     DeclartError::InvalidValue {
@@ -929,10 +947,10 @@ fn validate_system(raw: raw::RawSystemDiagram) -> Result<Diagram, DeclartError> 
     debug_assert_eq!(raw.kind, "system");
     use std::collections::{HashMap, HashSet};
 
-    if raw.nodes.len() < 2 {
+    if raw.nodes.len() < SYSTEM_MIN_NODES {
         return Err(DeclartError::TooFewItems {
             kind: "system",
-            min: 2,
+            min: SYSTEM_MIN_NODES,
             got: raw.nodes.len(),
         });
     }
@@ -1046,27 +1064,24 @@ fn validate_system(raw: raw::RawSystemDiagram) -> Result<Diagram, DeclartError> 
             ));
         }
         let direction = match l.direction.as_deref() {
-            None | Some("forward") => LinkDirection::Forward,
-            Some("both") => LinkDirection::Both,
-            Some("none") => LinkDirection::None,
-            Some(other) => {
-                return Err(invalid(
+            None => LINK_DIRECTIONS[0].1.clone(),
+            Some(name) => lookup(LINK_DIRECTIONS, name).ok_or_else(|| {
+                invalid(
                     "direction",
-                    other,
-                    "Valid values are: forward, both, none",
-                ))
-            }
+                    name,
+                    format!("Valid values are: {}", names(LINK_DIRECTIONS).join(", ")),
+                )
+            })?,
         };
         let relation = match l.relation.as_deref() {
-            None | Some("direct") => LinkRelation::Direct,
-            Some("indirect") => LinkRelation::Indirect,
-            Some(other) => {
-                return Err(invalid(
+            None => LINK_RELATIONS[0].1.clone(),
+            Some(name) => lookup(LINK_RELATIONS, name).ok_or_else(|| {
+                invalid(
                     "relation",
-                    other,
-                    "Valid values are: direct, indirect",
-                ))
-            }
+                    name,
+                    format!("Valid values are: {}", names(LINK_RELATIONS).join(", ")),
+                )
+            })?,
         };
         links.push(SystemLink {
             from: l.from,
@@ -1081,16 +1096,13 @@ fn validate_system(raw: raw::RawSystemDiagram) -> Result<Diagram, DeclartError> 
     for n in raw.nodes {
         let role = match n.role.as_deref() {
             None => None,
-            Some("store") => Some(SystemRole::Store),
-            Some("external") => Some(SystemRole::External),
-            Some("actor") => Some(SystemRole::Actor),
-            Some(other) => {
-                return Err(invalid(
+            Some(name) => Some(lookup(SYSTEM_ROLES, name).ok_or_else(|| {
+                invalid(
                     "role",
-                    other,
-                    "Valid values are: store, external, actor",
-                ))
-            }
+                    name,
+                    format!("Valid values are: {}", names(SYSTEM_ROLES).join(", ")),
+                )
+            })?),
         };
         nodes.push(SystemNode {
             id: n.id,
